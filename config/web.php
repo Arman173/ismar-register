@@ -8,6 +8,11 @@ $config = [
     'bootstrap' => ['log'],
 	// 'language' => 'es-MX',
 	'defaultRoute' => 'registration/submit',
+    'modules' => [
+        'gridview' =>  [
+            'class' => '\kartik\grid\Module'
+        ]
+    ],
     'components' => [
 		'authManager' => [
 			'class' => 'yii\rbac\DbManager',

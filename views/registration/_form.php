@@ -5,7 +5,8 @@ use yii\helpers\ArrayHelper;
 use yii\bootstrap\ActiveForm;
 use app\models\RegistrationType;
 
-use yii\grid\GridView;
+use kartik\grid\GridView;
+//use yii\grid\GridView;
 use yii\data\ActiveDataProvider;
 
 /* @var $this yii\web\View */
@@ -109,6 +110,17 @@ use yii\data\ActiveDataProvider;
 	
 	toggleStudentId();
 	toggleInvoice();
+
+
+	var $grid = $(\'#fee_type\'); // your grid identifier
+
+	$("input[name=kvradio][value=\'1\']").prop("checked",true);
+
+	$grid.on(\'grid.radiochecked\', function(ev, key, val) {
+		$("#registration-registration_type_id").val(val);
+
+	});
+
 '); ?>
 
 
@@ -191,20 +203,33 @@ use yii\data\ActiveDataProvider;
     
     <h3><?= Html::encode('Registration Information') ?></h3>
 
-    
-    <?= $form->field($registration, 'registration_type_id')->radioList(
-		ArrayHelper::map(
-			RegistrationType::find()->all(),
-			'id',
-			'nameCost'
-		)
+    <?php $dataProvider = new ActiveDataProvider([
+		'query' => RegistrationType::find(),
+	]); ?>
+
+	<?= $form->field($registration, 'registration_type_id')->hiddenInput(
+
 	) ?>
+
+	<?= GridView::widget([
+		'id' => 'fee_type',
+		'dataProvider' => $dataProvider,
+		'columns' => [
+			['class' => 'kartik\grid\RadioColumn'
+
+			],
+			'name',
+			'nameCostEarlyBird',
+			'nameCostRegistration',
+			'nameCostOnSite',
+		]
+	]);?>
 
 	<p> <?= Html::encode('* Student Registration and Life Member Registration require a proof of status or, for students, a student ID confirming that the registered person is a full-time student at the time of the conference.')?> </p>
 	<?php if(!$registration->isNewRecord): ?>
 
 	<?php $this->registerJs('
-		
+
 		function showChangeFileStudentId()
 		{
 			$("[name=\'Registration[change_file_student_id][]\']").removeAttr("disabled");

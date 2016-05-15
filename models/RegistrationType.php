@@ -10,7 +10,9 @@ use Yii;
  * @property string $id
  * @property string $name
  * @property string $cost
- *
+ * @property string $cost_early_bird
+ * @property string $cost_registration
+ * @property string $cost_on_site
  * @property Registration[] $registrations
  */
 class RegistrationType extends \yii\db\ActiveRecord
@@ -29,8 +31,8 @@ class RegistrationType extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['name', 'cost'], 'required'],
-            [['cost'], 'number'],
+            [['name', 'cost','cost_early_bird', 'cost_registration','cost_on_site'], 'required'],
+            [['cost', 'cost_early_bird', 'cost_registration','cost_on_site'], 'number'],
             [['name'], 'string', 'max' => 45]
         ];
     }
@@ -44,6 +46,9 @@ class RegistrationType extends \yii\db\ActiveRecord
             'id' => Yii::t('app', 'ID'),
             'name' => Yii::t('app', 'Name'),
             'cost' => Yii::t('app', 'Cost'),
+            'cost_early_bird' => Yii::t('app', 'Early Bird Fee Deadline'),
+            'cost_registration' => Yii::t('app', 'Registration Fee Deadline'),
+            'cost_on_site' => Yii::t('app', 'On Site Fee'),
         ];
     }
 
@@ -59,4 +64,19 @@ class RegistrationType extends \yii\db\ActiveRecord
 	{
 		return $this->name . ' ($' . $this->cost . ' USD)';
 	}
+
+    public function getNameCostEarlyBird()
+    {
+        return ' ($' . $this->cost_early_bird . ' USD)';
+    }
+
+    public function getNameCostRegistration()
+    {
+        return ' ($' . $this->cost_registration . ' USD)';
+    }
+
+    public function getNameCostOnSite()
+    {
+        return ' ($' . $this->cost_on_site . ' USD)';
+    }
 }
