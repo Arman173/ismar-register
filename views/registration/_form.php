@@ -4,9 +4,8 @@ use yii\helpers\Html;
 use yii\helpers\ArrayHelper;
 use yii\bootstrap\ActiveForm;
 use app\models\RegistrationType;
-
+use app\models\AdditionalTickets;
 use kartik\grid\GridView;
-//use yii\grid\GridView;
 use yii\data\ActiveDataProvider;
 
 /* @var $this yii\web\View */
@@ -225,6 +224,7 @@ use yii\data\ActiveDataProvider;
 		]
 	]);?>
 
+
 	<p> <?= Html::encode('* Student Registration and Life Member Registration require a proof of status or, for students, a student ID confirming that the registered person is a full-time student at the time of the conference.')?> </p>
 	<?php if(!$registration->isNewRecord): ?>
 
@@ -327,6 +327,20 @@ use yii\data\ActiveDataProvider;
     <h3><?= Html::encode('Workshop and Tutorials') ?></h3>
     
     <h3><?= Html::encode('Additional Tickets') ?></h3>
+
+	<?php $dataProvider2 = new ActiveDataProvider([
+		'query' => AdditionalTickets::find(),
+	]); ?>
+
+	<?= GridView::widget([
+		'id' => 'fee_type',
+		'dataProvider' => $dataProvider2,
+		'columns' => [
+			['class' => 'kartik\grid\CheckboxColumn'],
+			'name',
+			'namePrice'
+		]
+	]);?>
     
     <h3><?= Html::encode('Social Events') ?></h3>
 	<p> <?= Html::encode('To aid in conference planning, please let us know which events you will be attending.')?>
