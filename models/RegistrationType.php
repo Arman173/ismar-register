@@ -11,8 +11,8 @@ use Yii;
  * @property string $name
  * @property string $cost
  * @property string $cost_early_bird
- * @property string $cost_registration
- * @property string $cost_on_site
+ * @property string $cost_late
+ * @property string $cost_us
  * @property Registration[] $registrations
  */
 class RegistrationType extends \yii\db\ActiveRecord
@@ -31,9 +31,9 @@ class RegistrationType extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['name', 'cost','cost_early_bird', 'cost_registration','cost_on_site'], 'required'],
-            [['cost', 'cost_early_bird', 'cost_registration','cost_on_site'], 'number'],
-            [['name'], 'string', 'max' => 45]
+            [['name', 'cost','cost_early_bird', 'cost_late','cost_us'], 'required'],
+            [['cost', 'cost_early_bird', 'cost_late','cost_us'], 'number'],
+            [['name'], 'string', 'max' => 70]
         ];
     }
 
@@ -44,11 +44,11 @@ class RegistrationType extends \yii\db\ActiveRecord
     {
         return [
             'id' => Yii::t('app', 'ID'),
-            'name' => Yii::t('app', 'Name'),
+            'name' => Yii::t('app', 'Registration Type'),
             'cost' => Yii::t('app', 'Cost'),
-            'cost_early_bird' => Yii::t('app', 'Early Bird Fee Deadline'),
-            'cost_registration' => Yii::t('app', 'Registration Fee Deadline'),
-            'cost_on_site' => Yii::t('app', 'On Site Fee'),
+            'cost_early_bird' => Yii::t('app', 'Advanced Fee'),
+            'cost_late' => Yii::t('app', 'Late Fee'),
+            'cost_us' => Yii::t('app', 'U.S. Fee'),
         ];
     }
 
@@ -60,23 +60,28 @@ class RegistrationType extends \yii\db\ActiveRecord
         return $this->hasMany(Registration::className(), ['registration_type_id' => 'id']);
     }
 	
+	public function getRegistrationType()
+	{
+		return $this->name;
+	}
+	
 	public function getNameCost()
 	{
-		return $this->name . ' ($' . $this->cost . ' USD)';
+		return $this->name . ' $' . $this->cost . ' MXN';
 	}
 
-    public function getNameCostEarlyBird()
+    public function getAdvanceRegistration()
     {
-        return ' ($' . $this->cost_early_bird . ' USD)';
+        return  'US $' . $this->cost_early_bird;
     }
 
-    public function getNameCostRegistration()
+    public function getLateRegistration()
     {
-        return ' ($' . $this->cost_registration . ' USD)';
+        return  'US $' . $this->cost_late;
     }
 
-    public function getNameCostOnSite()
+    public function getCostOnSite()
     {
-        return ' ($' . $this->cost_on_site . ' USD)';
+        return ' $' . $this->cost_us . ' US';
     }
 }

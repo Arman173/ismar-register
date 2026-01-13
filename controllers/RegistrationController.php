@@ -150,6 +150,8 @@ class RegistrationController extends Controller
 		$registration->invoice_required = 0;
 		$registration->registration_type_id = 1;
 		$registration->diet = 'None';
+		$registration->payment_type = 1; // credit card
+
 
 		$invoice = new Invoice();
         if ($registration->load(Yii::$app->request->post())) {
@@ -159,11 +161,12 @@ class RegistrationController extends Controller
 			{
 				case 3:
 				case 4:
-				case 5:
-				case 8:
+				case 7:
 				case 9:
 				case 12:
-				case 13: $registration->file_student_id = UploadedFile::getInstance($registration,'file_student_id'); break;
+				case 13:
+				case 16:
+				case 17: $registration->file_student_id = UploadedFile::getInstance($registration,'file_student_id'); break;
 			}
 			
 			$valid = true;
@@ -209,21 +212,23 @@ class RegistrationController extends Controller
 		$registration->prefix = 'Ms.';
 		$registration->registration_type_id = 1;
 		$registration->diet = 'None';
+		$registration->payment_type = 1; // credit card
 		$registration->invoice_required = 0;
 
 		$invoice = new Invoice();
         if ($registration->load(Yii::$app->request->post())) {
-			// $registration->file_payment_receipt = UploadedFile::getInstance($registration,'file_payment_receipt');
+			$registration->file_payment_receipt = UploadedFile::getInstance($registration,'file_payment_receipt');
 			
 			switch($registration->registration_type_id)
 			{
 				case 3:
 				case 4:
-				case 5:
-				case 8:
+				case 7:
 				case 9:
 				case 12:
-				case 13: $registration->file_student_id = UploadedFile::getInstance($registration,'file_student_id'); break;
+				case 13:
+				case 16:
+				case 17: $registration->file_student_id = UploadedFile::getInstance($registration,'file_student_id'); break;
 			}
 			
 			$valid = true;
@@ -301,9 +306,14 @@ class RegistrationController extends Controller
 			
 			switch($registration->registration_type_id)
 			{
-				case 2:
+				case 3:
 				case 4:
-				case 5: if( isset( $registration->change_file_student_id[0] ) && $registration->change_file_student_id[0] === '1' )
+				case 7:
+				case 9:
+				case 12:
+				case 13:
+				case 16:
+				case 17: if( isset( $registration->change_file_student_id[0] ) && $registration->change_file_student_id[0] === '1' )
 				$registration->file_student_id = UploadedFile::getInstance($registration,'file_student_id'); break;
 			}
 			
@@ -395,9 +405,14 @@ class RegistrationController extends Controller
 			
 			switch($registration->registration_type_id)
 			{
-				case 2:
+				case 3:
 				case 4:
-				case 5: if( isset( $registration->change_file_student_id[0] ) && $registration->change_file_student_id[0] === '1' )
+				case 7:
+				case 9:
+				case 12:
+				case 13:
+				case 16:
+				case 17: if( isset( $registration->change_file_student_id[0] ) && $registration->change_file_student_id[0] === '1' )
 				$registration->file_student_id = UploadedFile::getInstance($registration,'file_student_id'); break;
 			}
 			

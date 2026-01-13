@@ -6,6 +6,10 @@ $config = [
     'id' => 'basic',
     'basePath' => dirname(__DIR__),
     'bootstrap' => ['log'],
+    'aliases' => [
+        '@bower' => '@vendor/bower-asset', // IMPORTANTE
+        '@npm'   => '@vendor/npm-asset',   // IMPORTANTE
+    ],
 	// 'language' => 'es-MX',
 	'defaultRoute' => 'registration/submit',
     'modules' => [

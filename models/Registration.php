@@ -28,8 +28,19 @@ use app\models\RegistrationType;
  * @property string $payment_receipt
  * @property string $emergency_name
  * @property string $emergency_phone
+ * @property string $diet
  * @property string $token
- *
+ * @property int $banquet_ticket
+ * @property int $proceedings_copies
+ * @property int $W1
+ * @property int $W2
+ * @property int $W3
+ * @property int $W4
+ * @property int $W5
+ * @property int $W6
+ * @property int $W7
+ * @property int $T1
+ * @property string $one_day_registration
  * @property Invoice $invoice
  * @property RegistrationType $registrationType
  */
@@ -41,6 +52,7 @@ class Registration extends \yii\db\ActiveRecord
 	public $change_file_payment_receipt;
 	// public $invoice_required = 0;
 	public $registration_type_name;
+	public $payment_type;
 	
     /**
      * @inheritdoc
@@ -57,11 +69,11 @@ class Registration extends \yii\db\ActiveRecord
     {
         return [
             [['registration_type_id', 'organization_name', 'first_name', 'last_name', 'email', 'invoice_required', 'city', 'zip','country',], 'required'],
-            [['registration_type_id'], 'integer'],
+            [['registration_type_id', 'W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'T1', 'banquet_ticket', 'proceedings_copies'], 'integer'],
 			[['diet', 'type1'], 'string', 'max' => 20],
             [['organization_name', 'display_name', 'email', 'email2', 'address', 'emergency_name'], 'string', 'max' => 150],
             [['first_name', 'last_name', 'city', 'state', 'country','title1'], 'string', 'max' => 100],
-            [['business_phone', 'fax', 'student_id', 'payment_receipt', 'emergency_phone'], 'string', 'max' => 45],
+            [['business_phone', 'fax', 'student_id', 'payment_receipt', 'emergency_phone','one_day_registration',], 'string', 'max' => 45],
 			[['registration_type_id'], 'exist', 'targetClass' => 'app\models\RegistrationType', 'targetAttribute' => 'id'],
 			// [['business_phone', 'fax', 'emergency_phone'], 'match', 'pattern' => '/^(?:1(?:[. -])?)?(?:\((?=\d{3}\)))?([2-9]\d{2})(?:(?<=\(\d{3})\))? ?(?:(?<=\d{3})[.-])?([2-9]\d{2})[. -]?(\d{4})(?: (?i:ext)\.? ?(\d{1,5}))?$/', 'message' => '{attribute} is invalid. Please enter your {attribute} with area code in a valid format (e.g. 001-555-5555555)'],
             [['zip', 'prefix'], 'string', 'max' => 10],
@@ -69,28 +81,46 @@ class Registration extends \yii\db\ActiveRecord
 			[['email'], 'email'],
 			[['file_payment_receipt'], 'file', 'skipOnEmpty' => false, 'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx', 'on' => 'UploadPaymentReceipt'],
 			[['file_payment_receipt'], 'file', 'skipOnEmpty' => true, 'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx', 'on' => 'Update'],
-			/*[['file_student_id'], 'file', 'skipOnEmpty' => false, 'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx', 'when' => function ($model){
+			
+			
+/*			[['file_student_id'], 'file', 'skipOnEmpty' => false, 'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx', 'when' => function ($model){
 				switch($model->registration_type_id)
 				{
-					case 2:
-					case 4:
-					case 5: return true;
-					case 1:
-					case 3: 
-					case 6: return false;
+					case "1":
+					case "2": 
+					case "6":
+					case "7":
+					case "10":
+					case "11": return true;
+					case "3": 
+					case "4": 
+					case "5": 
+					case "8": 
+					case "9": 
+					case "12": 
+					case "13": return false;
 				}
 			}, 'whenClient' => 'function (attribute,value){
 				switch( $("[name=\'Registration[registration_type_id]\']:checked").val() )
 				{
-					case "2": 
-					case "4": 
-					case "5": return true;
 					case "1":
+					case "2": 
+					case "6":
+					case "7":
+					case "10":
+					case "11": return true;
 					case "3": 
-					case "6": return false;
+					case "4": 
+					case "5": 
+					case "8": 
+					case "9": 
+					case "12": 
+					case "13": return false;
 				}
 			}', 'on' => 'Create'],
 			[['file_student_id'], 'file', 'skipOnEmpty' => true, 'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx', 'on' => 'Update'],*/
+			
+			
 			[['file_student_id'], 'file', 'skipOnEmpty' => true, 'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx'],
 			[['invoice_required'], 'boolean'],
 			[['change_file_payment_receipt', 'change_file_student_id'], 'each', 'rule'=>['in', 'range'=>[0,1]]],
@@ -105,13 +135,13 @@ class Registration extends \yii\db\ActiveRecord
         return [
             'id' => Yii::t('app', 'ID'),
 			'folio' => Yii::t('app', 'Registration Number'),
-            'registration_type_id' => Yii::t('app', 'Registration Type'),
+            'registration_type_id' => Yii::t('app', 'Registration Fee'),
             'organization_name' => Yii::t('app', 'Organization / Company'),
 			'prefix' => Yii::t('app', 'Prefix'),
             'first_name' => Yii::t('app', 'First Name'),
             'last_name' => Yii::t('app', 'Last name / Family name'),
             'display_name' => Yii::t('app', 'Display Name'),
-            'degree' => Yii::t('app', 'Degree'),
+//          'degree' => Yii::t('app', 'Degree'),
             'business_phone' => Yii::t('app', 'Phone (incl. country code)'),
             'fax' => Yii::t('app', 'Fax'),
             'email' => Yii::t('app', 'Email'),
@@ -124,7 +154,7 @@ class Registration extends \yii\db\ActiveRecord
 			'payment_receipt' => Yii::t('app', 'Payment Receipt'),
 			'file_student_id' => Yii::t('app', 'Status Proof (PDF)'),
 			'change_file_student_id' => Yii::t('app', 'Status Proof (PDF)'),
-			'file_payment_receipt' => Yii::t('app', 'Payment Receipt'),
+			'file_payment_receipt' => Yii::t('app', 'Payment Receipt File'),
 			'change_file_payment_receipt' => Yii::t('app', 'Payment Receipt'),
             'emergency_name' => Yii::t('app', 'Emergency Name'),
             'emergency_phone' => Yii::t('app', 'Emergency Phone'),
@@ -137,12 +167,23 @@ class Registration extends \yii\db\ActiveRecord
 			'payment' => Yii::t('app', 'Payment'),
 			'type1' => Yii::t('app', 'Type'),
 			'title1' => Yii::t('app', 'Title'),
+			'one_day_registration' => Yii::t('app', 'One Day Registration'),
+			'banquet_ticket' => Yii::t('app', 'Additional Ticket to Attend the Banquet '),
+			'proceedings_copies' => Yii::t('app', 'Additional Copy of Conference Proceedings'),
         ];
     }
 
     /**
      * @return \yii\db\ActiveQuery
      */
+
+
+
+	public function getRegistration()
+	{
+		return $this->name;
+	}
+
     public function getInvoice()
     {
         return $this->hasOne(Invoice::className(), ['registration_id' => 'id']);
@@ -237,9 +278,9 @@ class Registration extends \yii\db\ActiveRecord
 	{
 		$c_referencia  = $this->folio; // Folio (4)
 		$c_referencia .= $this->rightToken; // Folio (8)
-		$c_referencia .= '09'; // Día (2)
-		$c_referencia .= '11'; // Mes (2)
-		$c_referencia .= '2015'; // Año (4)
+		$c_referencia .= '01'; // Día (2)
+		$c_referencia .= '06'; // Mes (2)
+		$c_referencia .= '2016'; // Año (4)
 		return $c_referencia;
 	}
 	

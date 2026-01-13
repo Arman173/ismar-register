@@ -11,13 +11,6 @@ use yii\bootstrap\ActiveForm;
 ?>
 <div class="registration-view">
 	
-	<?php if(Yii::$app->session->hasFlash('registration-submitted-successfully')): ?>
-	<div class="alert alert-success">
-		<h1>Data submitted successfully!</h1>
-		<p><?= Html::encode($model->fullName) ?>, your data was submitted sucessfully.</p>
-	</div>
-	<?php endif; ?>
-	
 	<?php if( empty( $model->paid_by_credit_card ) && empty($model->payment_receipt) ): ?>
 	<div class="alert alert-warning">
 		<h1>Attention!</h1>
@@ -34,8 +27,8 @@ use yii\bootstrap\ActiveForm;
 	<?php endif; ?>
 	
 	<div class="alert alert-info">
-		<p>You can update your data if you require using the link below!</p>
-		<p><?= Html::a(Yii::t('app', 'Update Registration'), ['view', 'id' => $model->id], ['class' => 'btn btn-primary']) ?></p>
+		<p>You can view your data using the link below!</p>
+		<p><?= Html::a(Yii::t('app', 'Registration Data'), ['view', 'id' => $model->id], ['class' => 'btn btn-primary']) ?></p>
 	</div>
 	
     <?= DetailView::widget([

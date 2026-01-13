@@ -41,15 +41,16 @@ class AdditionalTickets extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'name' => 'Name',
+            'name' => 'Ticket Description',
             'price' => 'Price',
             'quantity' => 'Quantity',
         ];
     }
 
-    public function getNamePrice()
+//    public function getNamePrice()
+    public function getCost()
     {
-        return ' ($' . $this->price . ' USD)';
+        return 'US $' . $this->price;
     }
 
 

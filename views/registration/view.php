@@ -37,40 +37,28 @@ use yii\bootstrap\ActiveForm;
 
 ?>
 <div class="registration-view">
-	
-		<?php if(Yii::$app->session->hasFlash('registration-submitted-successfully')): ?>
-		<div class="alert alert-success">
-			<h1>Registration Confirmation</h1>
-			<p><?= Html::encode($model->prefix) ?> <?= Html::encode($model->fullName) ?>, your data was submitted sucessfully.</p>
-		</div>
-		<?php endif; ?>
-		
-        
+   
 		<?php if( empty( $model->paid_by_credit_card ) && empty($model->payment_receipt) ): ?>
 		<div class="alert alert-warning">
-			<h1>Attention!</h1>
+        	<h2>Data Submission</h2>
+			<p><?= Html::encode($model->prefix) ?> <?= Html::encode($model->fullName) ?>, your data was submitted sucessfully.</p>
+			<h2>Attention!</h2>
 			<p>To complete your registration you need to pay online with credit or debit card or upload a payment receipt using the buttons below.</p>
 		</div>
 		<?php endif; ?>
 		
 		<?php if( !empty( $model->paid_by_credit_card ) || !empty($model->payment_receipt) ): ?>
 		<div class="alert alert-success">
-			<h1>Registration completed.</h1>
-			<p><?= Html::encode($model->fullName) ?>, your registration was completed sucessfully.</p>
+			<h2>Registration Confirmation - IEEE ISMAR 2016</h2>
+			<p><?= Html::encode($model->prefix) ?> <?= Html::encode($model->fullName) ?>, <br /> Thank you for registering for the IEEE ISMAR 2016 taking place at Merida, Mexico from September 19-23, 2016.</p>
 		</div>
 		<?php endif; ?>
-		
-		<div class="alert alert-info">
-			<p>You can update your data.</p>
-		</div>
 
 	
 	<?= Html::beginForm('http://www.pagos.uady.mx/sim/RecibePago/uady/registropago.php') ?>
 	
     <p>
         <?php if( Yii::$app->user->isGuest ): ?>
-		
-		<?= Html::a(Yii::t('app', 'Update'), ['update-submit', 'id' => $model->id, 'token' => $model->token ], ['class' => 'btn btn-primary']) ?>
 		
 		
 		<?= Html::a(Yii::t('app', 'Upload Payment Receipt'), ['upload-payment-receipt', 'id' => $model->id, 'token' => $model->token ], ['class' => 'btn btn-primary']) ?>
@@ -106,8 +94,6 @@ use yii\bootstrap\ActiveForm;
 		<?= Html::hiddenInput('s_verificacion', $s_verificacion) ?>
 		
 		<?= Html::submitButton('Pay by Credit Card', ['class' => 'btn btn-primary']) ?>
-		
-		
 		
     </p>
 	
