@@ -197,9 +197,10 @@ use yii\bootstrap\ActiveForm;
 		<?php endif; ?>
 
 		<?php
-			$s1 = ($model->banquet_ticket);
-			$s2 = ($model->proceedings_copies);
-			$total = ($model->registrationType->cost) + $s1*70 + $s2*30;
+			// UPDATE: implementacion de cast numerico.
+			$s1 = (int)($model->banquet_ticket);
+			$s2 = (int)($model->proceedings_copies);
+			$total = (float)($model->registrationType->cost) + $s1*70 + $s2*30;
 		?>
 			<tr>
 				<td></td>
