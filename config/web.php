@@ -40,12 +40,11 @@ $config = [
         'errorHandler' => [
             'errorAction' => 'site/error',
         ],
-        'mailer' => [
-            'class' => 'yii\swiftmailer\Mailer',
-            // send all mails to a file by default. You have to set
-            // 'useFileTransport' to false and configure a transport
-            // for the mailer to send real emails.
-            'useFileTransport' => true,
+        'mailer' => (file_exists(__DIR__ . '/smtp.php')) 
+            ? require(__DIR__ . '/smtp.php') 
+            : [
+                'class' => 'yii\swiftmailer\Mailer',
+                'useFileTransport' => true,
         ],
         'log' => [
             'traceLevel' => YII_DEBUG ? 3 : 0,
