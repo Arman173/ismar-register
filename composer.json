@@ -11,7 +11,8 @@
         "yiisoft/yii2-swiftmailer": "~2.1.0",
         "kartik-v/yii2-grid": "^3.3",
         "kartik-v/yii2-krajee-base": "^3.0",
-        "kartik-v/yii2-mpdf": "^1.0"
+        "kartik-v/yii2-mpdf": "^1.0",
+        "phpmailer/phpmailer": "^7.0"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.1.0",
