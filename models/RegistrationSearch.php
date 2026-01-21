@@ -12,6 +12,7 @@ use app\models\Registration;
  */
 class RegistrationSearch extends Registration
 {
+    public $a1;
     /**
      * @inheritdoc
      */
