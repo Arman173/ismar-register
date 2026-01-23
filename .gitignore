@@ -29,3 +29,5 @@ phpunit.phar
 # payment and studentid ignore
 /web/files/payment
 /web/files/studentid
+
+/.env
