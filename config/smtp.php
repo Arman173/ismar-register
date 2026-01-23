@@ -1,13 +1,15 @@
 <?php
 // Archivo: config/smtp.php
+
 return [
     'class' => 'yii\swiftmailer\Mailer',
-    'useFileTransport' => false, // IMPORTANTE: false para enviar de verdad
+    'useFileTransport' => false,
     'transport' => [
         'class' => 'Swift_SmtpTransport',
         'host' => 'smtp.gmail.com',
-        'username' => 'correo@gmail.com', // Tu correo real
-        'password' => 'xxxx xxxx xxxx xxxx', // <--- La clave google
+        // AQUI HACEMOS EL CAMBIO:
+        'username' => $_ENV['SMTP_USERNAME'], 
+        'password' => $_ENV['SMTP_PASSWORD'],
         'port' => '587',
         'encryption' => 'tls',
         'streamOptions' => [ 
