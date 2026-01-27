@@ -10,7 +10,7 @@ $config = [
         '@bower' => '@vendor/bower-asset', // IMPORTANTE
         '@npm'   => '@vendor/npm-asset',   // IMPORTANTE
     ],
-	// 'language' => 'es-MX',
+	'language' => 'es-MX',
 	'defaultRoute' => 'registration/submit',
     'modules' => [
         'gridview' =>  [

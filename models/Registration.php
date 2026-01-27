@@ -68,62 +68,35 @@ class Registration extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['registration_type_id', 'organization_name', 'first_name', 'last_name', 'email', 'invoice_required', 'city', 'zip','country',], 'required'],
+            // 1. ELIMINADO 'zip' de la lista de required
+            [['registration_type_id', 'organization_name', 'first_name', 'last_name', 'email', 'invoice_required', 'city', 'country',], 'required'],
+            
             [['registration_type_id', 'W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'T1', 'banquet_ticket', 'proceedings_copies'], 'integer'],
-			[['diet', 'type1'], 'string', 'max' => 20],
-            [['organization_name', 'display_name', 'email', 'email2', 'address', 'emergency_name'], 'string', 'max' => 150],
+            [['diet', 'type1'], 'string', 'max' => 20],
+            
+            // 2. ELIMINADOS 'display_name', 'address', 'emergency_name' de max 150
+            [['organization_name', 'email', 'email2'], 'string', 'max' => 150],
+            
             [['first_name', 'last_name', 'city', 'state', 'country','title1'], 'string', 'max' => 100],
-            [['business_phone', 'fax', 'student_id', 'payment_receipt', 'emergency_phone','one_day_registration',], 'string', 'max' => 45],
-			[['registration_type_id'], 'exist', 'targetClass' => 'app\models\RegistrationType', 'targetAttribute' => 'id'],
-			// [['business_phone', 'fax', 'emergency_phone'], 'match', 'pattern' => '/^(?:1(?:[. -])?)?(?:\((?=\d{3}\)))?([2-9]\d{2})(?:(?<=\(\d{3})\))? ?(?:(?<=\d{3})[.-])?([2-9]\d{2})[. -]?(\d{4})(?: (?i:ext)\.? ?(\d{1,5}))?$/', 'message' => '{attribute} is invalid. Please enter your {attribute} with area code in a valid format (e.g. 001-555-5555555)'],
-            [['zip', 'prefix'], 'string', 'max' => 10],
+            
+            // 3. ELIMINADOS 'fax', 'emergency_phone' de max 45
+            [['business_phone', 'student_id', 'payment_receipt', 'one_day_registration',], 'string', 'max' => 45],
+            
+            [['registration_type_id'], 'exist', 'targetClass' => 'app\models\RegistrationType', 'targetAttribute' => 'id'],
+            
+            // 4. ELIMINADOS 'zip' y 'prefix' de max 10 (esta línea casi desaparece si no hay otros campos cortos)
+            // Si no tienes otro campo de max 10, puedes borrar esta línea o dejarla vacía, o dejar zip solo como opcional:
+            [['zip'], 'string', 'max' => 10], 
+
             [['email'], 'unique'],
-			[['email'], 'email'],
-			[['file_payment_receipt'], 'file', 'skipOnEmpty' => false, 'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx', 'on' => 'UploadPaymentReceipt'],
-			[['file_payment_receipt'], 'file', 'skipOnEmpty' => true, 'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx', 'on' => 'Update'],
-			
-			
-/*			[['file_student_id'], 'file', 'skipOnEmpty' => false, 'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx', 'when' => function ($model){
-				switch($model->registration_type_id)
-				{
-					case "1":
-					case "2": 
-					case "6":
-					case "7":
-					case "10":
-					case "11": return true;
-					case "3": 
-					case "4": 
-					case "5": 
-					case "8": 
-					case "9": 
-					case "12": 
-					case "13": return false;
-				}
-			}, 'whenClient' => 'function (attribute,value){
-				switch( $("[name=\'Registration[registration_type_id]\']:checked").val() )
-				{
-					case "1":
-					case "2": 
-					case "6":
-					case "7":
-					case "10":
-					case "11": return true;
-					case "3": 
-					case "4": 
-					case "5": 
-					case "8": 
-					case "9": 
-					case "12": 
-					case "13": return false;
-				}
-			}', 'on' => 'Create'],
-			[['file_student_id'], 'file', 'skipOnEmpty' => true, 'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx', 'on' => 'Update'],*/
-			
-			
-			[['file_student_id'], 'file', 'skipOnEmpty' => true, 'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx'],
-			[['invoice_required'], 'boolean'],
-			[['change_file_payment_receipt', 'change_file_student_id'], 'each', 'rule'=>['in', 'range'=>[0,1]]],
+            [['email'], 'email'],
+            
+            [['file_payment_receipt'], 'file', 'skipOnEmpty' => false, 'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx', 'on' => 'UploadPaymentReceipt'],
+            [['file_payment_receipt'], 'file', 'skipOnEmpty' => true, 'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx', 'on' => 'Update'],
+            
+            [['file_student_id'], 'file', 'skipOnEmpty' => true, 'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx'],
+            [['invoice_required'], 'boolean'],
+            [['change_file_payment_receipt', 'change_file_student_id'], 'each', 'rule'=>['in', 'range'=>[0,1]]],
         ];
     }
 
@@ -201,6 +174,20 @@ class Registration extends \yii\db\ActiveRecord
 	{
 		if(parent::beforeSave($insert))
 		{
+			// --- NUEVO CODIGO: Rellenar datos ocultos ---
+            // Como ocultamos el input, lo calculamos aquí:
+            $this->display_name = $this->first_name . ' ' . $this->last_name;
+            
+            // Si tu base de datos NO permite nulos en estos campos, 
+            // ponemos cadenas vacías para que no truene el sistema:
+            if(empty($this->address)) $this->address = ''; 
+            if(empty($this->zip)) $this->zip = '';
+            if(empty($this->fax)) $this->fax = '';
+            if(empty($this->prefix)) $this->prefix = '';
+            if(empty($this->emergency_name)) $this->emergency_name = '';
+            if(empty($this->emergency_phone)) $this->emergency_phone = '';
+            // ---------------------------------------------
+			
 			if($this->paid_by_credit_card == true)
 				$this->payment = 'Credit Card';
 			// PAYMENT_RECEIPT

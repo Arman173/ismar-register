@@ -27,8 +27,8 @@ AppAsset::register($this);
 <div class="wrap">
     <?php
     NavBar::begin([
-        'brandLabel' => 'International Symposium on Mixed and Augmented Reality 2016',
-        'brandUrl' => 'http://www.ismar.vgtc.org/registration',
+        'brandLabel' => 'Congreso de Ciencias Exactas e Ingenierias (ConCEI) 2026',
+        'brandUrl' => 'https://concei.uady.mx/',
         'options' => [
             'class' => 'navbar-inverse navbar-fixed-top',
         ],

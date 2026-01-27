@@ -207,51 +207,55 @@ use yii\data\ActiveDataProvider;
 	]); ?>
 	
 
-    <h3><?= Html::encode('Personal Information') ?></h3>
+    <h3><?= Html::encode('Información Personal') ?></h3>
 
 
-	<?= $form->field($registration, 'prefix')->inline(true)->radioList(
+	<!-- PREFIX FIELD -->
+	<!-- <?= $form->field($registration, 'prefix')->inline(true)->radioList(
 		[
 			'Ms.' => 'Ms.',
 			'Mr.' => 'Mr.',
 			'Dr.' => 'Dr.',
 			'Prof.' => 'Prof.',			
 		]
-	) ?>    
+	) ?> -->
 
 
 	
 
     <?= $form->field($registration, 'first_name')->textInput([
 		'maxlength' => true,
-		'onchange' => "$('#registration-display_name').val(
-			$('#registration-first_name').val() + ' ' + 
-			$('#registration-last_name').val()
-		)",
+		// 'onchange' => "$('#registration-display_name').val(
+		// 	$('#registration-first_name').val() + ' ' + 
+		// 	$('#registration-last_name').val()
+		// )",
 	]) ?>
 
     <?= $form->field($registration, 'last_name')->textInput([
 		'maxlength' => true,
-		'onchange' => "$('#registration-display_name').val(
-			$('#registration-first_name').val() + ' ' + 
-			$('#registration-last_name').val()
-		)",
+		// 'onchange' => "$('#registration-display_name').val(
+		// 	$('#registration-first_name').val() + ' ' + 
+		// 	$('#registration-last_name').val()
+		// )",
 	]) ?>
 
-    <?= $form->field($registration, 'display_name')->textInput([
+    <!-- DISPLAY NAME -->
+    <!-- <?= $form->field($registration, 'display_name')->textInput([
 		'maxlength' => true,
 		'placeholder' => 'As displayed in badge',
-	]) ?>
+	]) ?> -->
 
 	<?= $form->field($registration, 'organization_name')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($registration, 'address')->textInput(['maxlength' => true]) ?>
+	<!-- ADDRESS -->
+    <!-- <?= $form->field($registration, 'address')->textInput(['maxlength' => true]) ?> -->
 
     <?= $form->field($registration, 'city')->textInput(['maxlength' => true]) ?>
 
     <?= $form->field($registration, 'state')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($registration, 'zip')->textInput(['maxlength' => true]) ?>
+	<!-- POSTAL CODE / ZIP -->
+    <!-- <?= $form->field($registration, 'zip')->textInput(['maxlength' => true]) ?> -->
 
     <?= $form->field($registration, 'country')->textInput(['maxlength' => true]) ?>
 
@@ -260,36 +264,43 @@ use yii\data\ActiveDataProvider;
 		'placeholder' => 'Please enter your phone number with code area (e.g. 001-555-555-5555)',
 	]) ?>
 
-    <?= $form->field($registration, 'fax')->textInput(['maxlength' => true]) ?>
+    <!-- FAX -->
+    <!-- <?= $form->field($registration, 'fax')->textInput(['maxlength' => true]) ?> -->
 
     <?= $form->field($registration, 'email')->textInput(['maxlength' => true]) ?>
 
-	<?= $form->field($registration, 'diet')->inline(true)->radioList(
+	<!-- NOTA: comentando diet, NO DEBERIA fallar -->
+	<!-- <?= $form->field($registration, 'diet')->inline(true)->radioList(
 		[
 			'None' => 'None',
 			'Vegetarian' => 'Vegetarian',
 		]
-	) ?>    
+	) ?> -->
 	
-    <?= $form->field($registration, 'emergency_name')->textInput(['maxlength' => true]) ?>
+	<!-- EMERGENCY NAME AND PHONE -->
+    <!-- <?= $form->field($registration, 'emergency_name')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($registration, 'emergency_phone')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($registration, 'emergency_phone')->textInput(['maxlength' => true]) ?> -->
 	
     
     
     <?= $form->field($registration, 'registration_type_id')->hiddenInput()->label(false) ?>
     
-    <h3><?= Html::encode('Registration Information') ?></h3>
+    <h3><?= Html::encode('Información de Registro') ?></h3>
     
-    <h4><?= Html::encode('Registration Types') ?></h4>
+    <h4><?= Html::encode('Tipos de Registro') ?></h4>
     
-	<p style="margin-left:0.5cm"> <b> <?= Html::encode('Full participation (5 days, 19-23 Sept.):')?> </b> <?= Html::encode('All Conference Sessions Access, Workshops and Tutorials, USB Proceedings, Conference and Workshops Receptions, Lunch, Banquet, Internet.')?> 
+	<p style="margin-left:0.5cm">
+		<!-- <b> <?= Html::encode('Full participation (5 days, 19-23 Sept.):')?> </b> <?= Html::encode('All Conference Sessions Access, Workshops and Tutorials, USB Proceedings, Conference and Workshops Receptions, Lunch, Banquet, Internet.')?>
+        <br> -->
+        <!-- <b> <?= Html::encode('General:')?> </b> <?= Html::encode('All Conference Sessions Access, USB Proceedings, Conference Reception, Lunch, Banquet, Internet.')?>  -->
+		 <b> <?= Html::encode('General:')?> </b> <?= Html::encode('Acceso a todas las conferencias, memorias de congreso, constancia digital de participación, talleres y visitas industriales.')?> 
         <br>
-        <b> <?= Html::encode('Main conference (3 days, 19-21 Sept.):')?> </b> <?= Html::encode('All Conference Sessions Access, USB Proceedings, Conference Reception, Lunch, Banquet, Internet.')?> 
-        <br>
-        <b> <?= Html::encode('Workshops and Tutorials Only (2 days, 22-23 Sept.):')?> </b> <?= Html::encode('Workshops and Tutorials Sessions Access, USB Proceedings, Lunch, Internet.')?> 
+        <!-- <b> <?= Html::encode('Workshops and Tutorials Only (2 days, 22-23 Sept.):')?> </b> <?= Html::encode('Workshops and Tutorials Sessions Access, USB Proceedings, Lunch, Internet.')?>  -->
+		 <b> <?= Html::encode('Estudiante:')?> </b> <?= Html::encode('Acceso a todas las conferencias, memorias de congreso y constancia digital de participación. Incluye un taller o una visita industrial.')?>
 
-        <br> <b> <?= Html::encode('Single Day:')?> </b> <?= Html::encode('Sessions Access for one day only, USB Proceedings, Lunch, Internet. If applicable, a ticket to the social event (Reception/Banquet) of the day must be purchased separately.')?> 
+        <!-- <br> <b> <?= Html::encode('Single Day:')?> </b> <?= Html::encode('Sessions Access for one day only, USB Proceedings, Lunch, Internet. If applicable, a ticket to the social event (Reception/Banquet) of the day must be purchased separately.')?>  -->
+		<br> <b> <?= Html::encode('Estudiante y Profesor UADY:')?> </b> <?= Html::encode('Acceso a todas las conferencias. No incluye talleres ni visitas industriales.')?>
     </p>
 
     <?php $dataProviderReg = new ActiveDataProvider([
@@ -310,7 +321,7 @@ use yii\data\ActiveDataProvider;
 			[
 				'class' => '\kartik\grid\DataColumn',
 				'attribute' => 'cost_early_bird',
-				'header' => 'Advance <br> Registration',
+				'header' => 'Cuota <br> Pre-Registro',
 			],			
 			
 			//'advanceRegistration',			
@@ -318,7 +329,7 @@ use yii\data\ActiveDataProvider;
 			[
 				'class' => '\kartik\grid\DataColumn',
 				'attribute' => 'cost_late',
-				'header' => 'Late <br> Registration',
+				'header' => 'Cuota <br> Registro',
 			],			
 			//'lateRegistration',
 			/*[
@@ -400,67 +411,42 @@ use yii\data\ActiveDataProvider;
 	]); ?>
     
 
-	<h3>Information for Authors</h3>
-	<p> <?= Html::encode('Authors are required to register. At least one non-refundable registration must be attached to each accepted paper.')?> </p>
-	<p> <?= Html::encode('For each contribution, please list:')?>
+	<h3><?= Html::encode('Información para Autores') ?></h3>
+    <p> <?= Html::encode('Se requiere que los autores se registren. Al menos un registro no reembolsable debe estar asociado a cada artículo aceptado.')?> </p>
+    <p> <?= Html::encode('Por cada contribución, por favor indique:')?>
     <br/>
-	<?= Html::encode('1) The type of contribution (Paper, poster, demo, workshop paper, tutorial, etc.).')?>
+    <?= Html::encode('1) El tipo de contribución (artículo, póster, demostración).')?>
     <br/>
-	<?= Html::encode('2) The title of contribution.')?> 
+    <?= Html::encode('2) El título de la contribución.')?> 
     <br/>
     
     </p>
     <table>
-    <tr>
-		<td>
-			Contribution 1:
-		</td>
-		<td>
-			<?= $form->field($registration, 'type1')->textInput(['maxlength' => true]) ?>
-		</td>
-		<td>
-			<?= $form->field($registration, 'title1')->textInput(['maxlength' => true]) ?>
-		</td>
-	</tr>
-    <tr>
-		<td>
-			Contribution 2:
-		</td>
-		<td>
-			<?= $form->field($registration, 'type1')->textInput(['maxlength' => true]) ?>
-		</td>
-		<td>
-			<?= $form->field($registration, 'title1')->textInput(['maxlength' => true]) ?>
-		</td>
-    </tr>
+		<tr>
+			<td>
+				Contribución 1:
+			</td>
+			<td>
+				<?= $form->field($registration, 'type1')->textInput(['maxlength' => true])->label('Tipo') ?>
+			</td>
+			<td>
+				<?= $form->field($registration, 'title1')->textInput(['maxlength' => true])->label('Título') ?>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Contribución 2:
+			</td>
+			<td>
+				<?= $form->field($registration, 'type1')->textInput(['maxlength' => true])->label('Tipo') ?>
+			</td>
+			<td>
+				<?= $form->field($registration, 'title1')->textInput(['maxlength' => true])->label('Título') ?>
+			</td>
+		</tr>
 	</table>
 
-
-    <h3><?= Html::encode('Workshops and Tutorials') ?></h3>
-	
-	<?php $dataProviderWork = new ActiveDataProvider([
-		'query' => Workshops::find(),
-	]); ?>
-
-	<?= GridView::widget([
-		'id' => 'workshop_type',
-		'dataProvider' => $dataProviderWork,
-		'columns' => [
-			[
-				'class' => 'kartik\grid\CheckboxColumn',
-				//'rowHighlight' => true,
-				'header' => '',
-			],
-			//'id',
-			'name',
-			'description',
-		],
-		'summary'=>'',
-		'options' => ['style' => 'width:700px;'],
-	]);?>
-
-	<?= $form->field($registration, 'proceedings_copies')->hiddenInput()->label(false) ?>
-
+	<!------ ADITIONAL TICKETS BEGIN ------>
 	<h3><?= Html::encode('Additional Tickets') ?></h3>
 
 	<?php $dataProviderTickets = new ActiveDataProvider([
@@ -488,15 +474,42 @@ use yii\data\ActiveDataProvider;
 	]);?>
     
    	<?= $form->field($registration, 'banquet_ticket')->hiddenInput()->label(false) ?>
+	<!------ ADITIONAL TICKETS END ------>
 
-	<h3><?= Html::encode('For Mexicans Only (official tax deductable document)')?></h3>
+    <h3><?= Html::encode('Workshops and Tutorials') ?></h3>
+	
+	<?php $dataProviderWork = new ActiveDataProvider([
+		'query' => Workshops::find(),
+	]); ?>
+
+	<?= GridView::widget([
+		'id' => 'workshop_type',
+		'dataProvider' => $dataProviderWork,
+		'columns' => [
+			[
+				'class' => 'kartik\grid\CheckboxColumn',
+				//'rowHighlight' => true,
+				'header' => '',
+			],
+			//'id',
+			'name',
+			'description',
+		],
+		'summary'=>'',
+		'options' => ['style' => 'width:700px;'],
+	]);?>
+
+	<?= $form->field($registration, 'proceedings_copies')->hiddenInput()->label(false) ?>
+
+
+	<h3><?= Html::encode('Solo para Mexicanos (Documento oficial deducible de impuestos)')?></h3>
 
 	<?= $form->field($registration, 'invoice_required')->radioList(
 		[
-			0 => 'Not required',
-			1 => 'Required',
+			0 => 'No requerida',
+			1 => 'Requerida',
 		]
-	) ?>
+	)->label('¿Requiere Factura? (Solo México)') ?>
 
 	
     <?= $form->field($invoice, 'business_name')->textInput(['maxlength' => true]) ?>

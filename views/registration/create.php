@@ -6,7 +6,7 @@ use yii\helpers\Html;
 /* @var $this yii\web\View */
 /* @var $model app\models\Registration */
 
-$this->title = Yii::t('app', 'Online Registration Form');
+$this->title = Yii::t('app', 'Registro ConCEI-2026');
 ?>
 <div class="registration-create">
 
