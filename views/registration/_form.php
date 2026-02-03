@@ -316,7 +316,11 @@ use yii\data\ActiveDataProvider;
 			 	'showClear' => false,
 			],
 			
-			'registrationType',
+			[
+				'class' => '\kartik\grid\DataColumn',
+				'attribute' => 'name',
+				'label' => 'Tipo de Registro'
+			],
 			
 			[
 				'class' => '\kartik\grid\DataColumn',
