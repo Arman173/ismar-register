@@ -46,6 +46,11 @@ AppAsset::register($this);
 				'url' => ['/registration-type/index'],
 				'visible' => !Yii::$app->user->isGuest,
 			],
+            [
+                'label' => 'Workshops',
+                'url' => ['/workshops/index'],
+                'visible' => !Yii::$app->user->isGuest,
+            ],
 			[
 				'label' => 'Users',
 				'url' => ['/user/index'],

@@ -451,7 +451,7 @@ use yii\data\ActiveDataProvider;
 	</table>
 
 	<!------ ADITIONAL TICKETS BEGIN ------>
-	<h3><?= Html::encode('Additional Tickets') ?></h3>
+	<!-- <h3><?= Html::encode('Additional Tickets') ?></h3>
 
 	<?php $dataProviderTickets = new ActiveDataProvider([
 		'query' => AdditionalTickets::find(),
@@ -477,7 +477,7 @@ use yii\data\ActiveDataProvider;
 		'options' => ['style' => 'width:700px;'],
 	]);?>
     
-   	<?= $form->field($registration, 'banquet_ticket')->hiddenInput()->label(false) ?>
+   	<?= $form->field($registration, 'banquet_ticket')->hiddenInput()->label(false) ?> -->
 	<!------ ADITIONAL TICKETS END ------>
 
     <h3><?= Html::encode('Workshops and Tutorials') ?></h3>

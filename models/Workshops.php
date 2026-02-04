@@ -7,13 +7,18 @@ use Yii;
 /**
  * This is the model class for table "workshops".
  *
- * @property integer $id
+ * @property int $id
  * @property string $name
+ * @property string $description
+ * @property string|null $date
+ * @property int $time
  */
 class Workshops extends \yii\db\ActiveRecord
 {
+
+
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public static function tableName()
     {
@@ -21,26 +26,32 @@ class Workshops extends \yii\db\ActiveRecord
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function rules()
     {
         return [
-            [['name'], 'required'],
-            [['name'], 'string', 'max' => 100],
-			[['name'], 'string', 'max' => 200],
+            [['time'], 'default', 'value' => 60],
+            [['name', 'description'], 'required'],
+            [['date'], 'safe'],
+            [['time'], 'integer'],
+            [['name'], 'string', 'max' => 150],
+            [['description'], 'string', 'max' => 200],
         ];
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function attributeLabels()
     {
         return [
             'id' => 'ID',
-            'name' => 'Workshop / Tutorial Title',
-			'description' => 'Details',
+            'name' => 'Name',
+            'description' => 'Description',
+            'date' => 'Date',
+            'time' => 'Time',
         ];
     }
+
 }
