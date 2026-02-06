@@ -53,6 +53,11 @@ class Registration extends \yii\db\ActiveRecord
 	// public $invoice_required = 0;
 	public $registration_type_name;
 	public $payment_type;
+
+	//Se agregaron estas 3 líneas para lo de los autores:
+	public $type2;
+    public $title2;
+    public $revista_seleccionada;
 	
     /**
      * @inheritdoc
@@ -97,6 +102,7 @@ class Registration extends \yii\db\ActiveRecord
             [['file_student_id'], 'file', 'skipOnEmpty' => true, 'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx'],
             [['invoice_required'], 'boolean'],
             [['change_file_payment_receipt', 'change_file_student_id'], 'each', 'rule'=>['in', 'range'=>[0,1]]],
+			[['type2', 'title2', 'revista_seleccionada'], 'safe'],
         ];
     }
 

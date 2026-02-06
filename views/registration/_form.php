@@ -62,22 +62,25 @@ use yii\data\ActiveDataProvider;
 		//alert(registrationType2);
 		switch( registrationType2 )
 		{
-			case "1":
-			case "2": 
-			case "5":
-			case "6":
-			case "10":
-			case "11":
-			case "14":
-			case "15": hideFileStudentId(); break;
-			case "3": 
-			case "4": 
-			case "7": 
-			case "9": 
-			case "12": 
-			case "13": 
-			case "16": 
+			case "12": showFileStudentId(); break;
 			case "17": showFileStudentId(); break;
+			default: hideFileStudentId(); break;
+			// case "1":
+			// case "2": 
+			// case "5":
+			// case "6":
+			// case "10":
+			// case "11":
+			// case "14":
+			// case "15": hideFileStudentId(); break;
+			// case "3": 
+			// case "4": 
+			// case "7": 
+			// case "9": 
+			// case "12": 
+			// case "13": 
+			// case "16": 
+			// case "17": showFileStudentId(); break;
 		}
 	}
 	
@@ -147,22 +150,25 @@ use yii\data\ActiveDataProvider;
 		$("#registration-registration_type_id").val(val);
 			switch( val )
 			{
-				case "1":
-				case "2": 
-				case "5":
-				case "6":
-				case "10":
-				case "11":
-				case "14":
-				case "15": hideFileStudentId(); break;
-				case "3": 
-				case "4": 
-				case "7": 
-				case "9": 
-				case "12": 
-				case "13": 
-				case "16": 
+				case "12": showFileStudentId(); break;
 				case "17": showFileStudentId(); break;
+				default: hideFileStudentId(); break;
+				// case "1":
+				// case "2": 
+				// case "5":
+				// case "6":
+				// case "10":
+				// case "11":
+				// case "14":
+				// case "15": hideFileStudentId(); break;
+				// case "3": 
+				// case "4": 
+				// case "7": 
+				// case "9": 
+				// case "12": 
+				// case "13": 
+				// case "16": 
+				// case "17": showFileStudentId(); break;
 			}
 		}
 	);
@@ -261,7 +267,7 @@ use yii\data\ActiveDataProvider;
 
     <?= $form->field($registration, 'business_phone')->textInput([
 		'maxlength' => true,
-		'placeholder' => 'Please enter your phone number with code area (e.g. 001-555-555-5555)',
+		'placeholder' => 'Por favor, ingrese su número de teléfono con lada (ej. 529995555555)',
 	]) ?>
 
     <!-- FAX -->
@@ -348,7 +354,7 @@ use yii\data\ActiveDataProvider;
 	]);?>
 
 
-	<p> <?= Html::encode('* Student Registration and Life Member Registration require a proof of status or, for students, a student ID confirming that the registered person is a full-time student at the time of the conference.')?> </p>
+	<p> <?= Html::encode('* El registro de estudiante y de profesores de la UADY requiere una prueba de estatus o, para estudiantes, una credencial de estudiante que confirme que la persona registrada es estudiante de tiempo completo en el momento de la conferencia.')?> </p>
     
     
 	<?php if(!$registration->isNewRecord): ?>
@@ -426,29 +432,35 @@ use yii\data\ActiveDataProvider;
     
     </p>
     <table>
-		<tr>
-			<td>
-				Contribución 1:
-			</td>
-			<td>
-				<?= $form->field($registration, 'type1')->textInput(['maxlength' => true])->label('Tipo') ?>
-			</td>
-			<td>
-				<?= $form->field($registration, 'title1')->textInput(['maxlength' => true])->label('Título') ?>
-			</td>
-		</tr>
-		<tr>
-			<td>
-				Contribución 2:
-			</td>
-			<td>
-				<?= $form->field($registration, 'type1')->textInput(['maxlength' => true])->label('Tipo') ?>
-			</td>
-			<td>
-				<?= $form->field($registration, 'title1')->textInput(['maxlength' => true])->label('Título') ?>
-			</td>
-		</tr>
-	</table>
+    <tr>
+        <td>Contribución 1:</td>
+        <td><?= $form->field($registration, 'type1')->textInput(['maxlength' => true])->label('Tipo') ?></td>
+        <td><?= $form->field($registration, 'title1')->textInput(['maxlength' => true])->label('Título') ?></td>
+    </tr>
+    <tr>
+        <td>Contribución 2:</td>
+        <td><?= $form->field($registration, 'type2')->textInput(['maxlength' => true])->label('Tipo') ?></td>
+        <td><?= $form->field($registration, 'title2')->textInput(['maxlength' => true])->label('Título') ?></td>
+    </tr>
+    </table>
+
+    <div class="panel panel-default" style="margin-top: 20px; border: 1px solid #ddd;">
+        <div class="panel-heading" style="background-color: #f5f5f5; font-weight: bold;">
+            Selección de Revista (Número Especial)
+        </div>
+        <div class="panel-body">
+            <p style="font-size: 0.9em; color: #555; margin-bottom: 15px;">
+                En caso de que su trabajo fuera elegido para un número especial de revista, 
+                favor de seleccionar la revista de su preferencia y que concuerde con el área de su investigación:
+            </p>
+            <?= $form->field($registration, 'revista_seleccionada')->dropDownList([
+                'Ninguna' => 'Ninguna',
+                'IEEE Latin America Transactions' => 'IEEE Latin America Transactions (Requiere un pago de $250 USD después de aceptación)',
+                'Ingeniería Revista Académica' => 'Ingeniería Revista Académica (Sin costo extra)',
+                'Abstraction & Application' => 'Abstraction & Application (Sin costo extra)',
+            ])->label(false) ?>
+        </div>
+    </div>
 
 	<!------ ADITIONAL TICKETS BEGIN ------>
 	<!-- <h3><?= Html::encode('Additional Tickets') ?></h3>
@@ -480,6 +492,7 @@ use yii\data\ActiveDataProvider;
    	<?= $form->field($registration, 'banquet_ticket')->hiddenInput()->label(false) ?> -->
 	<!------ ADITIONAL TICKETS END ------>
 
+	<!-- TALLERES Y VISITAS (WORKSHOP) -->
     <h3><?= Html::encode('Workshops and Tutorials') ?></h3>
 	
 	<?php $dataProviderWork = new ActiveDataProvider([
@@ -498,12 +511,25 @@ use yii\data\ActiveDataProvider;
 			//'id',
 			'name',
 			'description',
+			[
+				'attribute' => 'date',
+				'header' => 'Fecha',
+				'format' => ['date', 'php:d-m-Y'],
+			],
+			[
+				'attribute' => 'time',
+				'header' => 'Duración (minutos)',
+				'value' => function($model) {
+					return $model->time . ' minutos';
+				}
+			]
 		],
 		'summary'=>'',
 		'options' => ['style' => 'width:700px;'],
 	]);?>
 
 	<?= $form->field($registration, 'proceedings_copies')->hiddenInput()->label(false) ?>
+	<!-- TALLERES Y VISITAS (WORKSHOP) END -->
 
 
 	<h3><?= Html::encode('Solo para Mexicanos (Documento oficial deducible de impuestos)')?></h3>
@@ -531,13 +557,13 @@ use yii\data\ActiveDataProvider;
     <?= $form->field($invoice, 'email')->textInput(['maxlength' => true]) ?>
         
     
-	<h3>Cancellation Policy</h3>
-	<p> <?= Html::encode('The registration fee will not be refunded to the authors if it is required to cover the publications expenses of accepted papers. Any cancellations after registration will incur $100 USD administrative charges. No refunds will be made for cancellations after August 1st, 2016. No refunds will be given for non-attendance. Note that "No Show" authors will have their paper removed from the Proceedings and would not get a refund. To requests for cancellations, substitutions, or other changes, please contact the Registration Chair at registration@ismar2016.org.')?> </p>
+	<h3>Política de cancelación</h3>
+	<p> <?= Html::encode('Las cuotas de inscripción, talleres y/o visitas industriales no serán rembolsables. Es importante destacar que a los autores que no se presenten se les retirará su artículo de las memorias del congreso. Para cualquier duda o aclaracion favor de contactar concei@correo.uady.mx')?> </p>
 
     
-	<h3>Payment</h3>
+	<h3>Pago</h3>
     	<?= $form->field($registration, 'payment_type')->radioList([
-		1 => 'Credit Card',
+		// 1 => 'Credit Card',
 		2 => 'Bank Wire Transfer (Upload your bank transfer receipt)',
 		// 3 => 'Code',
 	]) ?>

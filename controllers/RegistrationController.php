@@ -150,7 +150,7 @@ class RegistrationController extends Controller
 		$registration->invoice_required = 0;
 		$registration->registration_type_id = 1;
 		$registration->diet = 'None';
-		$registration->payment_type = 1; // credit card
+		$registration->payment_type = 2; // credit card
 
 
 		$invoice = new Invoice();
@@ -212,7 +212,7 @@ class RegistrationController extends Controller
 		$registration->prefix = 'Ms.';
 		$registration->registration_type_id = 1;
 		$registration->diet = 'None';
-		$registration->payment_type = 1; // credit card
+		$registration->payment_type = 2; // credit card
 		$registration->invoice_required = 0;
 
 		$invoice = new Invoice();
