@@ -1,88 +1,116 @@
-const displayElement = (selector, display = true) => {
-    const element = document.querySelector(selector);
-    if (!element) {
-        console.warn(`Elemento no encontrado para selector: ${selector}`);
-        return;
-    }
-    element.style.display = display ? 'block' : 'none';
-}
-
+/**
+ * WorkshopManager
+ * Maneja la lógica de visualización de talleres basada en el tipo de registro
+ * y la selección de múltiples talleres.
+ */
 class WorkshopManager {
-    constructor(containerId) {
-        this.container = document.getElementById(containerId);
-        this.schema = {
-            name: 1,
-            description: 2,
-            date: 3,
-            start: 4,
-            end: 5
+    
+    constructor(config) {
+        // 1. Configuración: Mapeamos los IDs del DOM a propiedades de la clase
+        // Esto hace que si cambias un ID en el HTML, solo cambias aquí la config.
+        this.selectors = {
+            feeType: 'input[name="kvradio"]',           // Radios de la tabla de tipos de registro
+            workshopSelector: 'input[name="workshop_selector"]', // Radio Si/No
+            
+            // Contenedores a mostrar/ocultar
+            tableMulti: '#workshop_type',       // Tabla Checkboxes (Si)
+            tableSingle: '#workshop_type_radio' // Tabla Radios (No)
         };
-        
-        if (!this.container) {
-            console.error(`Contenedor #${containerId} no encontrado.`);
-            return;
-        }
 
+        // IDs de tipos de registro
+        this.types = {
+            GENERAL: '1',
+            STUDENT: '12',
+            UADY: '17'
+        };
+
+        // Inicializamos
         this.init();
     }
 
-    // 1. GESTIÓN DE DATOS (MÉTODOS DE OBTENCIÓN)
-    getAllRows() {
-        return Array.from(this.container.querySelectorAll('table tbody tr'));
-    }
-
-    getData(onlySelected = false) {
-        return this.getAllRows()
-            .filter(row => !onlySelected || row.querySelector('input.kv-row-checkbox')?.checked)
-            .map(row => this._mapRowToData(row));
-    }
-
-    // Método privado (convención _) para mapear celdas a objetos
-    _mapRowToData(row) {
-        return Object.entries(this.schema).reduce((acc, [key, colIndex]) => {
-            const cell = row.querySelector(`td[data-col-seq="${colIndex}"]`);
-            acc[key] = cell ? cell.textContent.trim() : null;
-            return acc;
-        }, { id: row.dataset.key });
-    }
-
-    // 2. GESTIÓN DE EVENTOS
-    // Este método centraliza todos los "escuchadores"
     init() {
-        console.log("WorkshopManager inicializado");
+        // Cacheamos referencias jQuery para no buscarlas cada vez
+        this.$feeTypeInputs = $(this.selectors.feeType);
+        this.$workshopSelectorInputs = $(this.selectors.workshopSelector);
+        this.$tableMulti = $(this.selectors.tableMulti);
+        this.$tableSingle = $(this.selectors.tableSingle);
 
-        // Evento cuando se marca/desmarca algo
-        this.container.addEventListener('change', (e) => {
-            if (e.target.classList.contains('kv-row-checkbox')) {
-                this.handleSelectionChange(e.target);
-            }
+        // Bind de eventos
+        this.bindEvents();
+
+        // Ejecutar lógica inicial (por si el usuario recarga y ya hay datos seleccionados)
+        this.updateVisibility();
+    }
+
+    bindEvents() {
+        // Usamos arrow functions para mantener el contexto de 'this'
+        
+        // Evento: Cambio en Tipo de Registro (Tabla Fee)
+        $(document).on('change', this.selectors.feeType, () => {
+            this.updateVisibility();
+        });
+
+        // Evento: Cambio en Selector Si/No
+        $(document).on('change', this.selectors.workshopSelector, () => {
+            this.updateVisibility();
         });
     }
 
-    handleSelectionChange(checkbox) {
-        const selectedData = this.getData(true);
-        console.log('checkbox:', checkbox);
-        console.log("Cambio detectado. Seleccionados:", selectedData);
-        
-        // Aquí podrías disparar otros métodos, ej:
-        // this.validateScheduleConflicts();
-        // this.updateTotalCost();
+    /**
+     * Obtiene los valores actuales del DOM
+     */
+    getCurrentValues() {
+        return {
+            feeType: this.$feeTypeInputs.filter(':checked').val(),
+            isMultiple: this.$workshopSelectorInputs.filter(':checked').val() === 'si'
+        };
     }
 
-    // 3. MÉTODOS DE UTILIDAD (EJEMPLOS PARA EL FUTURO)
-    highlightRow(id, color = '#fff3cd') {
-        const row = this.container.querySelector(`tr[data-key="${id}"]`);
-        if (row) row.style.backgroundColor = color;
+    /**
+     * Resetea la vista (oculta todo) antes de aplicar lógica
+     */
+    resetView() {
+        this.$tableMulti.hide();
+        this.$tableSingle.hide();
+    }
+
+    /**
+     * Núcleo de la lógica
+     */
+    updateVisibility() {
+        const { feeType, isMultiple } = this.getCurrentValues();
+
+        // 1. Primero ocultamos todo para partir de un estado limpio
+        this.resetView();
+
+        // Si no hay tipo de registro seleccionado, no hacemos nada más
+        if (!feeType) return;
+
+        // 2. Aplicamos la lógica
+        
+        // CASO: Selección Múltiple ("SI")
+        // Aplica para todos (General, Estudiante y UADY)
+        if (isMultiple) {
+            this.$tableMulti.show();
+            return;
+        }
+
+        // CASO: Selección Única ("NO")
+        // Aquí es donde entra la excepción de UADY
+        if (!isMultiple) {
+            if (feeType === this.types.UADY) {
+                // Caso UADY + NO: No mostrar nada (según tu requerimiento)
+                // Ya ocultamos todo en resetView(), así que no hacemos nada.
+            } else {
+                // Caso General (1) o Estudiante (12) + NO: Mostrar tabla de radios
+                this.$tableSingle.show();
+            }
+        }
     }
 }
 
-// --- MODO DE USO ---
-window.onload = () => {
-    const registration_type = document.getElementById("fee_type");
-    console.log("Fee Type Element:", registration_type);
-    // Creamos la instancia
-    const myWorkshops = new WorkshopManager("workshop_type");
-    
-    // Ahora tienes métodos a la mano:
-    // myWorkshops.getData(true) -> Te da los seleccionados en cualquier momento.
-};
+// Inicialización cuando el DOM esté listo
+$(document).ready(function() {
+    // Instanciamos la clase.
+    new WorkshopManager();
+});

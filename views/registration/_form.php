@@ -16,6 +16,7 @@ use yii\data\ActiveDataProvider;
 /* @var $form yii\widgets\ActiveForm */
 ?>
 
+<?php $this->registerJsFile('@web/js/form.js', ['depends' => [\yii\web\JqueryAsset::className()]]); ?>
 
 <?php $this->registerJs('
 	
@@ -502,9 +503,9 @@ use yii\data\ActiveDataProvider;
 	<div id="workshop_selector_container" class="form-group" style="margin-left: 15px;">
         <label class="control-label">¿Desea seleccionar múltiples talleres?</label>
 		<p>leyenda...</p>
-        <?= Html::radioList('workshop_selector', 'si', [
-            'si' => 'Sí (Selección múltiple)',
-            'no' => 'No (Sólo uno o ninguno)'
+        <?= Html::radioList('workshop_selector', 'no', [
+            'no' => 'No (Sólo uno o ninguno)',
+            'si' => 'Sí (Selección múltiple)'
         ], ['id' => 'workshop_selector', 'inline' => true]) ?>
     </div>
 
@@ -648,4 +649,4 @@ use yii\data\ActiveDataProvider;
 
 </div>
 
-<script src="../web/js/form.js"></script>
+<!-- <script src="../web/js/form.js"></script> -->
