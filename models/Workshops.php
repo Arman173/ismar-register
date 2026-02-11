@@ -11,7 +11,8 @@ use Yii;
  * @property string $name
  * @property string $description
  * @property string|null $date
- * @property int $time
+ * @property string $hr_inicio
+ * @property string $hr_fin
  */
 class Workshops extends \yii\db\ActiveRecord
 {
@@ -31,10 +32,8 @@ class Workshops extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['time'], 'default', 'value' => 60],
-            [['name', 'description'], 'required'],
-            [['date'], 'safe'],
-            [['time'], 'integer'],
+            [['name', 'description', 'hr_inicio', 'hr_fin'], 'required'],
+            [['date', 'hr_inicio', 'hr_fin'], 'safe'],
             [['name'], 'string', 'max' => 150],
             [['description'], 'string', 'max' => 200],
         ];
@@ -50,7 +49,8 @@ class Workshops extends \yii\db\ActiveRecord
             'name' => 'Name',
             'description' => 'Description',
             'date' => 'Date',
-            'time' => 'Time',
+            'hr_inicio' => 'Hr Inicio',
+            'hr_fin' => 'Hr Fin',
         ];
     }
 

@@ -493,11 +493,20 @@ use yii\data\ActiveDataProvider;
 	<!------ ADITIONAL TICKETS END ------>
 
 	<!-- TALLERES Y VISITAS (WORKSHOP) -->
-    <h3><?= Html::encode('Workshops and Tutorials') ?></h3>
+    <h3><?= Html::encode('Talleres y Visitas Industriales') ?></h3>
 	
 	<?php $dataProviderWork = new ActiveDataProvider([
 		'query' => Workshops::find(),
 	]); ?>
+
+	<div id="workshop_selector_container" class="form-group" style="margin-left: 15px;">
+        <label class="control-label">¿Desea seleccionar múltiples talleres?</label>
+		<p>leyenda...</p>
+        <?= Html::radioList('workshop_selector', 'si', [
+            'si' => 'Sí (Selección múltiple)',
+            'no' => 'No (Sólo uno o ninguno)'
+        ], ['id' => 'workshop_selector', 'inline' => true]) ?>
+    </div>
 
 	<?= GridView::widget([
 		'id' => 'workshop_type',
@@ -517,12 +526,63 @@ use yii\data\ActiveDataProvider;
 				'format' => ['date', 'php:d-m-Y'],
 			],
 			[
-				'attribute' => 'time',
-				'header' => 'Duración (minutos)',
-				'value' => function($model) {
-					return $model->time . ' minutos';
-				}
-			]
+				'attribute' => 'hr_inicio',
+				'header' => 'Hora Inicio',
+				'format' => ['time', 'php:H:i'],
+			],
+			[
+				'attribute' => 'hr_fin',
+				'header' => 'Hora Fin',
+				'format' => ['time', 'php:H:i'],
+			],
+			// [
+			// 	'attribute' => 'time',
+			// 	'header' => 'Duración (minutos)',
+			// 	'value' => function($model) {
+			// 		return $model->time . ' minutos';
+			// 	}
+			// ]
+		],
+		'summary'=>'',
+		'options' => ['style' => 'width:700px;'],
+	]);?>
+
+	<?= GridView::widget([
+		'id' => 'workshop_type_radio',
+		'dataProvider' => $dataProviderWork,
+		'columns' => [
+			[
+				'class' => 'kartik\grid\RadioColumn',
+				//'rowHighlight' => true,
+				'header' => '',
+				// 2. LÓGICA DE PRE-SELECCIÓN (Seleccionar uno por defecto)
+				// 'radioOptions' => function ($model, $key, $index, $column) {
+				// 	// Aquí pones tu condición. Ejemplo:
+				// 	// Si el taller es el ID 1, aparecerá seleccionado al cargar.
+				// 	if ($model->id == "2") { 
+				// 		return ['checked' => true];
+				// 	}
+				// 	return [];
+				// },
+			],
+			//'id',
+			'name',
+			'description',
+			[
+				'attribute' => 'date',
+				'header' => 'Fecha',
+				'format' => ['date', 'php:d-m-Y'],
+			],
+			[
+				'attribute' => 'hr_inicio',
+				'header' => 'Hora Inicio',
+				'format' => ['time', 'php:H:i'],
+			],
+			[
+				'attribute' => 'hr_fin',
+				'header' => 'Hora Fin',
+				'format' => ['time', 'php:H:i'],
+			],
 		],
 		'summary'=>'',
 		'options' => ['style' => 'width:700px;'],
@@ -566,7 +626,7 @@ use yii\data\ActiveDataProvider;
 		// 1 => 'Credit Card',
 		2 => 'Bank Wire Transfer (Upload your bank transfer receipt)',
 		// 3 => 'Code',
-	]) ?>
+	])->label('Tipo de Pago') ?>
 
 	<?php echo $form->field($registration, 'file_payment_receipt')->fileInput() ?>
 	
@@ -587,3 +647,5 @@ use yii\data\ActiveDataProvider;
     <?php ActiveForm::end(); ?>
 
 </div>
+
+<script src="../web/js/form.js"></script>

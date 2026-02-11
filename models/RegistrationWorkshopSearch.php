@@ -4,12 +4,12 @@ namespace app\models;
 
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use app\models\Workshops;
+use app\models\RegistrationWorkshop;
 
 /**
- * WorkshopsSearch represents the model behind the search form of `app\models\Workshops`.
+ * RegistrationWorkshopSearch represents the model behind the search form of `app\models\RegistrationWorkshop`.
  */
-class WorkshopsSearch extends Workshops
+class RegistrationWorkshopSearch extends RegistrationWorkshop
 {
     /**
      * {@inheritdoc}
@@ -17,8 +17,9 @@ class WorkshopsSearch extends Workshops
     public function rules()
     {
         return [
-            [['id'], 'integer'],
-            [['name', 'description', 'date', 'hr_inicio', 'hr_fin'], 'safe'],
+            [['id', 'registration_id', 'workshop_id'], 'integer'],
+            [['created_at'], 'safe'],
+            [['cost'], 'number'],
         ];
     }
 
@@ -41,7 +42,7 @@ class WorkshopsSearch extends Workshops
      */
     public function search($params, $formName = null)
     {
-        $query = Workshops::find();
+        $query = RegistrationWorkshop::find();
 
         // add conditions that should always apply here
 
@@ -60,13 +61,11 @@ class WorkshopsSearch extends Workshops
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'date' => $this->date,
-            'hr_inicio' => $this->hr_inicio,
-            'hr_fin' => $this->hr_fin,
+            'registration_id' => $this->registration_id,
+            'workshop_id' => $this->workshop_id,
+            'created_at' => $this->created_at,
+            'cost' => $this->cost,
         ]);
-
-        $query->andFilterWhere(['like', 'name', $this->name])
-            ->andFilterWhere(['like', 'description', $this->description]);
 
         return $dataProvider;
     }

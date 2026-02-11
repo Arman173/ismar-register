@@ -16,9 +16,19 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'description')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'date')->textInput() ?>
+    <?= $form->field($model, 'date')->input('date', [
+        'class' => 'form-control',
+        'min' => date('Y-m-d'), // Opcional: evita seleccionar fechas pasadas
+        'value' => $model->date ? date('Y-m-d', strtotime($model->date)) : null,
+    ]) ?>
 
-    <?= $form->field($model, 'time')->textInput() ?>
+    <?= $form->field($model, 'hr_inicio')->input('time', [
+        'class' => 'form-control'
+    ]) ?>
+
+    <?= $form->field($model, 'hr_fin')->input('time', [
+        'class' => 'form-control'
+    ]) ?>
 
     <div class="form-group">
         <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>

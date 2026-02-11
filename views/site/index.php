@@ -11,7 +11,7 @@ $this->title = 'My Yii Application';
 
         <p class="lead">You have successfully created your Yii-powered application.</p>
 
-        <p><a class="btn btn-lg btn-success" href="http://www.yiiframework.com">Get started with Yii</a></p>
+        <p><a id="get-started-btn" class="btn btn-lg btn-success" href="http://www.yiiframework.com">Get started with Yii</a></p>
     </div>
 
     <div class="body-content">
@@ -51,3 +51,5 @@ $this->title = 'My Yii Application';
 
     </div>
 </div>
+
+<script src="../js/index.js"></script>
