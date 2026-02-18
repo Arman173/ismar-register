@@ -40,17 +40,17 @@ use yii\bootstrap\ActiveForm;
    
 		<?php if( empty( $model->paid_by_credit_card ) && empty($model->payment_receipt) ): ?>
 		<div class="alert alert-warning">
-        	<h2>Data Submission</h2>
-			<p><?= Html::encode($model->prefix) ?> <?= Html::encode($model->fullName) ?>, your data was submitted sucessfully.</p>
-			<h2>Attention!</h2>
-			<p>To complete your registration you need to pay online with credit or debit card or upload a payment receipt using the buttons below.</p>
+        	<h2>Registro pendiente</h2>
+			<p><?= Html::encode($model->prefix) ?> <?= Html::encode($model->fullName) ?>, tus datos han sido guardados correctamente.</p>
+			<h2></h2>
+			<p>Para completar tu registro necesitas subir tu comprobante de transferencia bancaria en el botón de abajo.</p>
 		</div>
 		<?php endif; ?>
 		
 		<?php if( !empty( $model->paid_by_credit_card ) || !empty($model->payment_receipt) ): ?>
 		<div class="alert alert-success">
-			<h2>Registration Confirmation - IEEE ISMAR 2016</h2>
-			<p><?= Html::encode($model->prefix) ?> <?= Html::encode($model->fullName) ?>, <br /> Thank you for registering for the IEEE ISMAR 2016 taking place at Merida, Mexico from September 19-23, 2016.</p>
+			<h2>Registration Confirmation</h2>
+			<p><?= Html::encode($model->prefix) ?> <?= Html::encode($model->fullName) ?>, <br /> Gracias por registrarte al ConCEI-2026, que se llevará a cabo en Merida, Mexico del 7 al 9 de octubre de 2026 en el campus de ciencias exactas e ingenierías UADY.</p>
 		</div>
 		<?php endif; ?>
 
@@ -93,8 +93,6 @@ use yii\bootstrap\ActiveForm;
 		<?= Html::hiddenInput('val_8', $val_8) ?>
 		<?= Html::hiddenInput('s_verificacion', $s_verificacion) ?>
 		
-		<?= Html::submitButton('Pay by Credit Card', ['class' => 'btn btn-primary']) ?>
-		
     </p>
 	
 	<?= Html::endForm() ?>
@@ -105,36 +103,27 @@ use yii\bootstrap\ActiveForm;
         'attributes' => [
 			'folio',
 			[
-				'label' => 'Registration Type',
+				'label' => 'Tipo de Registro',
 				'value' => $model->registrationType->nameCost,
 			],
             'organization_name',
-			'prefix',
             'first_name',
             'last_name',
             'display_name',
-            'address',
             'city',
             'state',
-            'zip',
             'country',
             'business_phone',
-            'fax',
             'email:email',
-            'emergency_name',
-            'emergency_phone',
-			'diet',
 			[
-				'label' => 'Student Proof',
-				'value' => Html::a($model->student_id, ['registration/view-student-id', 'id'=>$model->id, 'token'=>$model->token]),
-				'format' => 'html',
-			],
-			[
-				'label' => 'Payment Receipt',
+				'label' => 'Recibo de pago',
 				'value' => Html::a($model->payment_receipt, ['registration/view-payment-receipt', 'id'=>$model->id, 'token'=>$model->token]),
 				'format' => 'html',
 			],
-			'creation_date',
+			[
+				'attribute' => 'creation_date',
+				'label' => 'Fecha de Creación'
+			],
 			[
 				'attribute' => 'modification_date',
 				'visible' => !empty($model->modification_date),

@@ -16,8 +16,6 @@ use yii\data\ActiveDataProvider;
 /* @var $form yii\widgets\ActiveForm */
 ?>
 
-<?php $this->registerJsFile('@web/js/form.js', ['depends' => [\yii\web\JqueryAsset::className()]]); ?>
-
 <?php $this->registerJs('
 	
 	function showFileStudentId()
@@ -217,19 +215,6 @@ use yii\data\ActiveDataProvider;
     <h3><?= Html::encode('Información Personal') ?></h3>
 
 
-	<!-- PREFIX FIELD -->
-	<!-- <?= $form->field($registration, 'prefix')->inline(true)->radioList(
-		[
-			'Ms.' => 'Ms.',
-			'Mr.' => 'Mr.',
-			'Dr.' => 'Dr.',
-			'Prof.' => 'Prof.',			
-		]
-	) ?> -->
-
-
-	
-
     <?= $form->field($registration, 'first_name')->textInput([
 		'maxlength' => true,
 		// 'onchange' => "$('#registration-display_name').val(
@@ -246,23 +231,12 @@ use yii\data\ActiveDataProvider;
 		// )",
 	]) ?>
 
-    <!-- DISPLAY NAME -->
-    <!-- <?= $form->field($registration, 'display_name')->textInput([
-		'maxlength' => true,
-		'placeholder' => 'As displayed in badge',
-	]) ?> -->
 
 	<?= $form->field($registration, 'organization_name')->textInput(['maxlength' => true]) ?>
-
-	<!-- ADDRESS -->
-    <!-- <?= $form->field($registration, 'address')->textInput(['maxlength' => true]) ?> -->
 
     <?= $form->field($registration, 'city')->textInput(['maxlength' => true]) ?>
 
     <?= $form->field($registration, 'state')->textInput(['maxlength' => true]) ?>
-
-	<!-- POSTAL CODE / ZIP -->
-    <!-- <?= $form->field($registration, 'zip')->textInput(['maxlength' => true]) ?> -->
 
     <?= $form->field($registration, 'country')->textInput(['maxlength' => true]) ?>
 
@@ -271,23 +245,7 @@ use yii\data\ActiveDataProvider;
 		'placeholder' => 'Por favor, ingrese su número de teléfono con lada (ej. 529995555555)',
 	]) ?>
 
-    <!-- FAX -->
-    <!-- <?= $form->field($registration, 'fax')->textInput(['maxlength' => true]) ?> -->
-
     <?= $form->field($registration, 'email')->textInput(['maxlength' => true]) ?>
-
-	<!-- NOTA: comentando diet, NO DEBERIA fallar -->
-	<!-- <?= $form->field($registration, 'diet')->inline(true)->radioList(
-		[
-			'None' => 'None',
-			'Vegetarian' => 'Vegetarian',
-		]
-	) ?> -->
-	
-	<!-- EMERGENCY NAME AND PHONE -->
-    <!-- <?= $form->field($registration, 'emergency_name')->textInput(['maxlength' => true]) ?>
-
-    <?= $form->field($registration, 'emergency_phone')->textInput(['maxlength' => true]) ?> -->
 	
     
     
@@ -298,15 +256,10 @@ use yii\data\ActiveDataProvider;
     <h4><?= Html::encode('Tipos de Registro') ?></h4>
     
 	<p style="margin-left:0.5cm">
-		<!-- <b> <?= Html::encode('Full participation (5 days, 19-23 Sept.):')?> </b> <?= Html::encode('All Conference Sessions Access, Workshops and Tutorials, USB Proceedings, Conference and Workshops Receptions, Lunch, Banquet, Internet.')?>
-        <br> -->
-        <!-- <b> <?= Html::encode('General:')?> </b> <?= Html::encode('All Conference Sessions Access, USB Proceedings, Conference Reception, Lunch, Banquet, Internet.')?>  -->
-		 <b> <?= Html::encode('General:')?> </b> <?= Html::encode('Acceso a todas las conferencias, memorias de congreso, constancia digital de participación, talleres y visitas industriales.')?> 
+		<b> <?= Html::encode('General:')?> </b> <?= Html::encode('Acceso a todas las conferencias, memorias de congreso, constancia digital de participación, talleres y visitas industriales.')?> 
         <br>
-        <!-- <b> <?= Html::encode('Workshops and Tutorials Only (2 days, 22-23 Sept.):')?> </b> <?= Html::encode('Workshops and Tutorials Sessions Access, USB Proceedings, Lunch, Internet.')?>  -->
-		 <b> <?= Html::encode('Estudiante:')?> </b> <?= Html::encode('Acceso a todas las conferencias, memorias de congreso y constancia digital de participación. Incluye un taller o una visita industrial.')?>
+		<b> <?= Html::encode('Estudiante:')?> </b> <?= Html::encode('Acceso a todas las conferencias, memorias de congreso y constancia digital de participación. Incluye un taller o una visita industrial.')?>
 
-        <!-- <br> <b> <?= Html::encode('Single Day:')?> </b> <?= Html::encode('Sessions Access for one day only, USB Proceedings, Lunch, Internet. If applicable, a ticket to the social event (Reception/Banquet) of the day must be purchased separately.')?>  -->
 		<br> <b> <?= Html::encode('Estudiante y Profesor UADY:')?> </b> <?= Html::encode('Acceso a todas las conferencias. No incluye talleres ni visitas industriales.')?>
     </p>
 
@@ -463,35 +416,6 @@ use yii\data\ActiveDataProvider;
         </div>
     </div>
 
-	<!------ ADITIONAL TICKETS BEGIN ------>
-	<!-- <h3><?= Html::encode('Additional Tickets') ?></h3>
-
-	<?php $dataProviderTickets = new ActiveDataProvider([
-		'query' => AdditionalTickets::find(),
-	]); ?>
-    
-	<?= GridView::widget([
-		'id' => 'tickets_type',
-		'dataProvider' => $dataProviderTickets,
-		'columns' => [
-			[
-				'class' => 'yii\grid\DataColumn',
-			    'value' => function ($model, $key, $index, $widget){
-					//return Html::textInput('', $model->quantity);
-					return Html::activeDropDownList($model, 'quantity', range(0,5));
-				},
-				'format' => 'raw',
-			],
-			'name',
-			'cost'
-			//'price'
-		],
-		'summary'=>'',
-		'options' => ['style' => 'width:700px;'],
-	]);?>
-    
-   	<?= $form->field($registration, 'banquet_ticket')->hiddenInput()->label(false) ?> -->
-	<!------ ADITIONAL TICKETS END ------>
 
 	<!-- TALLERES Y VISITAS (WORKSHOP) -->
     <h3><?= Html::encode('Talleres y Visitas Industriales') ?></h3>
@@ -500,14 +424,13 @@ use yii\data\ActiveDataProvider;
 		'query' => Workshops::find(),
 	]); ?>
 
-	<div id="workshop_selector_container" class="form-group" style="margin-left: 15px;">
-        <label class="control-label">¿Desea seleccionar múltiples talleres?</label>
-		<p>leyenda...</p>
-        <?= Html::radioList('workshop_selector', 'no', [
-            'no' => 'No (Sólo uno o ninguno)',
-            'si' => 'Sí (Selección múltiple)'
-        ], ['id' => 'workshop_selector', 'inline' => true]) ?>
-    </div>
+	<p style="margin-left:0.5cm">
+		<b> <?= Html::encode('General:')?> </b> <?= Html::encode('Acceso a todas las conferencias, memorias de congreso, constancia digital de participación, talleres y visitas industriales.')?> 
+        <br>
+		<b> <?= Html::encode('Estudiante:')?> </b> <?= Html::encode('Acceso a todas las conferencias, memorias de congreso y constancia digital de participación. Incluye un taller o una visita industrial.')?>
+
+		<br> <b> <?= Html::encode('Estudiante y Profesor UADY:')?> </b> <?= Html::encode('Acceso a todas las conferencias. No incluye talleres ni visitas industriales.')?>
+    </p>
 
 	<?= GridView::widget([
 		'id' => 'workshop_type',
@@ -543,47 +466,6 @@ use yii\data\ActiveDataProvider;
 			// 		return $model->time . ' minutos';
 			// 	}
 			// ]
-		],
-		'summary'=>'',
-		'options' => ['style' => 'width:700px;'],
-	]);?>
-
-	<?= GridView::widget([
-		'id' => 'workshop_type_radio',
-		'dataProvider' => $dataProviderWork,
-		'columns' => [
-			[
-				'class' => 'kartik\grid\RadioColumn',
-				//'rowHighlight' => true,
-				'header' => '',
-				// 2. LÓGICA DE PRE-SELECCIÓN (Seleccionar uno por defecto)
-				// 'radioOptions' => function ($model, $key, $index, $column) {
-				// 	// Aquí pones tu condición. Ejemplo:
-				// 	// Si el taller es el ID 1, aparecerá seleccionado al cargar.
-				// 	if ($model->id == "2") { 
-				// 		return ['checked' => true];
-				// 	}
-				// 	return [];
-				// },
-			],
-			//'id',
-			'name',
-			'description',
-			[
-				'attribute' => 'date',
-				'header' => 'Fecha',
-				'format' => ['date', 'php:d-m-Y'],
-			],
-			[
-				'attribute' => 'hr_inicio',
-				'header' => 'Hora Inicio',
-				'format' => ['time', 'php:H:i'],
-			],
-			[
-				'attribute' => 'hr_fin',
-				'header' => 'Hora Fin',
-				'format' => ['time', 'php:H:i'],
-			],
 		],
 		'summary'=>'',
 		'options' => ['style' => 'width:700px;'],
@@ -625,7 +507,7 @@ use yii\data\ActiveDataProvider;
 	<h3>Pago</h3>
     	<?= $form->field($registration, 'payment_type')->radioList([
 		// 1 => 'Credit Card',
-		2 => 'Bank Wire Transfer (Upload your bank transfer receipt)',
+		2 => 'Transferencia bancaria (Cargue su recibo)',
 		// 3 => 'Code',
 	])->label('Tipo de Pago') ?>
 
