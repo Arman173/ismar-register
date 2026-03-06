@@ -18,7 +18,7 @@ use yii\bootstrap\ActiveForm;
 		<p><?= Html::a(Yii::t('app', 'Complete Registration'), ['view', 'id' => $model->id], ['class' => 'btn btn-primary']) ?></p>
 	</div>
 	<?php endif; ?>
-	
+	<
 	<?php if( !empty( $model->paid_by_credit_card ) || !empty($model->payment_receipt) ): ?>
 	<div class="alert alert-success">
 		<h1>Registration completed!</h1>

@@ -43,14 +43,14 @@ use yii\bootstrap\ActiveForm;
         	<h2>Registro pendiente</h2>
 			<p><?= Html::encode($model->prefix) ?> <?= Html::encode($model->fullName) ?>, tus datos han sido guardados correctamente.</p>
 			<h2></h2>
-			<p>Para completar tu registro necesitas subir tu comprobante de transferencia bancaria en el botón de abajo.</p>
+			<p>Para completar su registro, necesitará subir su comprobante de transferencia bancaria en el botón de abajo.</p>
 		</div>
 		<?php endif; ?>
 		
 		<?php if( !empty( $model->paid_by_credit_card ) || !empty($model->payment_receipt) ): ?>
 		<div class="alert alert-success">
-			<h2>Registration Confirmation</h2>
-			<p><?= Html::encode($model->prefix) ?> <?= Html::encode($model->fullName) ?>, <br /> Gracias por registrarte al ConCEI-2026, que se llevará a cabo en Merida, Mexico del 7 al 9 de octubre de 2026 en el campus de ciencias exactas e ingenierías UADY.</p>
+			<h2>Confirmación de registro</h2>
+			<p><?= Html::encode($model->fullName) ?>, <br />Gracias por registrarse al ConCEI-3, que se llevará a cabo en Mérida, México del 7 al 9 de octubre de 2026 en el Campus de Ciencias Exactas e Ingenierías de la Universidad Autónoma de Yucatán (UADY).</p>
 		</div>
 		<?php endif; ?>
 
@@ -104,7 +104,7 @@ use yii\bootstrap\ActiveForm;
 			'folio',
 			[
 				'label' => 'Tipo de Registro',
-				'value' => $model->registrationType->nameCost,
+				'value' => $model->registrationType->name,
 			],
             'organization_name',
             'first_name',

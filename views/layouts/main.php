@@ -46,9 +46,19 @@ AppAsset::register($this);
 				'url' => ['/registration-type/index'],
 				'visible' => !Yii::$app->user->isGuest,
 			],
+            // [
+            //     'label' => 'Workshops',
+            //     'url' => ['/workshops/index'],
+            //     'visible' => !Yii::$app->user->isGuest,
+            // ],
             [
-                'label' => 'Workshops',
-                'url' => ['/workshops/index'],
+                'label' => 'Talleres',
+                'url' => ['/talleres/index'],
+                'visible' => !Yii::$app->user->isGuest,
+            ],
+            [
+                'label' => 'Visitas',
+                'url' => ['/visitas/index'],
                 'visible' => !Yii::$app->user->isGuest,
             ],
             [
@@ -56,13 +66,14 @@ AppAsset::register($this);
                 'url' => ['/registration-workshop/index'],
                 'visible' => !Yii::$app->user->isGuest,
             ],
+			// [
+			// 	'label' => 'Users',
+			// 	'url' => ['/user/index'],
+			// 	'visible' => !Yii::$app->user->isGuest,
+			// ],
 			[
-				'label' => 'Users',
-				'url' => ['/user/index'],
-				'visible' => !Yii::$app->user->isGuest,
-			],
-			[
-				'label' => Yii::$app->user->isGuest ? 'Logout' : 'Logout (' . Yii::$app->user->identity->username . ')',
+				// 'label' => Yii::$app->user->isGuest ? 'Logout' : 'Logout (' . Yii::$app->user->identity->username . ')',
+                'label' => Yii::$app->user->isGuest ? 'Logout' : 'Logout',
 				'url' => ['/site/logout'],
 				'linkOptions' => ['data-method' => 'post'],
 				'visible' => !Yii::$app->user->isGuest,

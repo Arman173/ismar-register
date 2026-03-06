@@ -8,6 +8,9 @@ use app\models\RegistrationSearch;
 use app\models\RegistrationType;
 use app\models\Invoice;
 use app\models\InvoiceSearch;
+use app\models\Taller;
+use app\models\Visita;
+use yii\data\ActiveDataProvider;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\UnauthorizedHttpException;
@@ -146,7 +149,7 @@ class RegistrationController extends Controller
     {
         // $registration = new Registration(['scenario'=>'Create']);
 		$registration = new Registration();
-		$registration->prefix = 'Ms.';
+		$registration->prefix = '';
 		$registration->invoice_required = 0;
 		$registration->registration_type_id = 1;
 		$registration->diet = 'None';
@@ -157,6 +160,9 @@ class RegistrationController extends Controller
         if ($registration->load(Yii::$app->request->post())) {
 			$registration->file_payment_receipt = UploadedFile::getInstance($registration,'file_payment_receipt');
 			
+			//Nueva línea del CV
+			$registration->file_cv = UploadedFile::getInstance($registration,'file_cv');
+
 			switch($registration->registration_type_id)
 			{
 				case 3:
@@ -194,9 +200,22 @@ class RegistrationController extends Controller
 				}
 			}
         }
+
+		$dataProviderTalleres = new ActiveDataProvider([
+            'query' => Taller::find(),
+            'pagination' => false, // O
+        ]);
+
+        $dataProviderVisitas = new ActiveDataProvider([
+            'query' => Visita::find(),
+            'pagination' => false, 
+        ]);
+
 		return $this->render('create', [
 			'registration' => $registration,
 			'invoice' => $invoice,
+			'dataProviderTalleres' => $dataProviderTalleres,
+            'dataProviderVisitas' => $dataProviderVisitas,
 		]);
     }
 	
@@ -219,6 +238,9 @@ class RegistrationController extends Controller
         if ($registration->load(Yii::$app->request->post())) {
 			$registration->file_payment_receipt = UploadedFile::getInstance($registration,'file_payment_receipt');
 			
+			//Nueva línea para el CV
+			$registration->file_cv = UploadedFile::getInstance($registration,'file_cv');
+
 			switch($registration->registration_type_id)
 			{
 				case 3:
@@ -258,7 +280,7 @@ class RegistrationController extends Controller
 							->setFrom(Yii::$app->params['adminEmail'])
 							->setTo($registration->email)
 							->setCc([Yii::$app->params['coordinatorEmail1'],Yii::$app->params['coordinatorEmail2']])
-							->setSubject('Pending Registration - IEEE ISMAR 2016')
+							->setSubject('Registro pendiente - CONCEI-3')
 							->send();
 						Yii::$app->session->setFlash('registration-submitted-successfully');
 						return $this->redirect(['submitted', 'id' => $registration->id, 'token' => $registration->token]);
@@ -266,9 +288,22 @@ class RegistrationController extends Controller
 				}
 			}
         }
+
+		$dataProviderTalleres = new ActiveDataProvider([
+            'query' => Taller::find(),
+            'pagination' => false,
+        ]);
+
+        $dataProviderVisitas = new ActiveDataProvider([
+            'query' => Visita::find(),
+            'pagination' => false, 
+        ]);
+
 		return $this->render('create', [
 			'registration' => $registration,
 			'invoice' => $invoice,
+			'dataProviderTalleres' => $dataProviderTalleres,
+            'dataProviderVisitas' => $dataProviderVisitas,
 		]);
     }
 	
@@ -292,61 +327,78 @@ class RegistrationController extends Controller
      */
     public function actionUpdate($id)
     {
-		$registration = $this->findModel($id);
-		$registration->scenario = 'Update';
-		$registration->invoice_required = 0;
-		
-		$invoice = (empty($registration->invoice))? new Invoice() : $registration->invoice ;
-		$registration->invoice_required = (empty($registration->invoice))? 0 : 1;
+        $registration = $this->findModel($id);
+        $registration->scenario = 'Update';
+        $registration->invoice_required = 0;
+        
+        $invoice = (empty($registration->invoice))? new Invoice() : $registration->invoice ;
+        $registration->invoice_required = (empty($registration->invoice))? 0 : 1;
 
         if ($registration->load(Yii::$app->request->post())) {
-			
-			if( isset( $registration->change_file_payment_receipt[0] ) && $registration->change_file_payment_receipt[0] === '1' )
-				$registration->file_payment_receipt = UploadedFile::getInstance($registration,'file_payment_receipt');
-			
-			switch($registration->registration_type_id)
-			{
-				case 3:
-				case 4:
-				case 7:
-				case 9:
-				case 12:
-				case 13:
-				case 16:
-				case 17: if( isset( $registration->change_file_student_id[0] ) && $registration->change_file_student_id[0] === '1' )
-				$registration->file_student_id = UploadedFile::getInstance($registration,'file_student_id'); break;
-			}
-			
-			$valid = true;
-			$valid = $valid && $registration->validate();
-			
-			if($registration->invoice_required)
-			{
-				if ($invoice->load(Yii::$app->request->post())) {
-					$valid = $valid && $invoice->validate();
-				}
-			}
-			
-			if($valid)
-			{
-				if($registration->save())
-				{
-					$isSaved = true;
-					if($registration->invoice_required)
-					{
-						$invoice->registration_id = $registration->id;
-						$isSaved = $isSaved && $invoice->save();
-					}
-					if($isSaved)
-						return $this->redirect(['view', 'id' => $registration->id]);
-				}
-			}
-        } else {
-            return $this->render('update', [
-                'registration' => $registration,
-				'invoice' => $invoice,
-            ]);
-        }
+            
+            if( isset( $registration->change_file_payment_receipt[0] ) && $registration->change_file_payment_receipt[0] === '1' )
+                $registration->file_payment_receipt = UploadedFile::getInstance($registration,'file_payment_receipt');
+            
+            //Nueva línea del CV
+            $registration->file_cv = UploadedFile::getInstance($registration,'file_cv');
+
+            switch($registration->registration_type_id)
+            {
+                case 3:
+                case 4:
+                case 7:
+                case 9:
+                case 12:
+                case 13:
+                case 16:
+                case 17: if( isset( $registration->change_file_student_id[0] ) && $registration->change_file_student_id[0] === '1' )
+                $registration->file_student_id = UploadedFile::getInstance($registration,'file_student_id'); break;
+            }
+            
+            $valid = true;
+            $valid = $valid && $registration->validate();
+            
+            if($registration->invoice_required)
+            {
+                if ($invoice->load(Yii::$app->request->post())) {
+                    $valid = $valid && $invoice->validate();
+                }
+            }
+            
+            if($valid)
+            {
+                if($registration->save())
+                {
+                    $isSaved = true;
+                    if($registration->invoice_required)
+                    {
+                        $invoice->registration_id = $registration->id;
+                        $isSaved = $isSaved && $invoice->save();
+                    }
+                    if($isSaved)
+                        return $this->redirect(['view', 'id' => $registration->id]);
+                }
+            }
+        } 
+        
+        // Proveedores de datos agregados fuera del if/else
+        $dataProviderTalleres = new \yii\data\ActiveDataProvider([
+            'query' => \app\models\Taller::find(),
+            'pagination' => false, 
+        ]);
+
+        $dataProviderVisitas = new \yii\data\ActiveDataProvider([
+            'query' => \app\models\Visita::find(),
+            'pagination' => false, 
+        ]);
+
+        // Este render se ejecuta si es la primera vez que se entra o si falló la validación
+        return $this->render('update', [
+            'registration' => $registration,
+            'invoice' => $invoice,
+            'dataProviderTalleres' => $dataProviderTalleres,
+            'dataProviderVisitas' => $dataProviderVisitas,
+        ]);
     }
 	
 	public function actionUploadPaymentReceipt($id, $token)
@@ -368,7 +420,7 @@ class RegistrationController extends Controller
 					->setFrom(Yii::$app->params['adminEmail'])
 					->setTo($registration->email)
 					->setCc([Yii::$app->params['coordinatorEmail1'], Yii::$app->params['coordinatorEmail2'], Yii::$app->params['accountingEmail']])
-					->setSubject('Registration Confirmation - IEEE ISMAR 2016')
+					->setSubject('Confirmación de registro - CONCEI 3')
 					->send();
 				return $this->redirect(['submitted', 'id' => $registration->id, 'token' => $registration->token]);
 			}
@@ -387,65 +439,82 @@ class RegistrationController extends Controller
      */
     public function actionUpdateSubmit($id, $token)
     {
-		$registration = $this->findModel($id);
-		$registration->scenario = 'Update';
-		
-		if( $registration->token != $token )
-		{
-			throw new UnauthorizedHttpException("You are not allowed to access this registry");
-		}
-		
-		$invoice = (empty($registration->invoice))? new Invoice() : $registration->invoice ;
-		$registration->invoice_required = (empty($registration->invoice))? 0 : 1;
+        $registration = $this->findModel($id);
+        $registration->scenario = 'Update';
+        
+        if( $registration->token != $token )
+        {
+            throw new UnauthorizedHttpException("You are not allowed to access this registry");
+        }
+        
+        $invoice = (empty($registration->invoice))? new Invoice() : $registration->invoice ;
+        $registration->invoice_required = (empty($registration->invoice))? 0 : 1;
 
         if ($registration->load(Yii::$app->request->post())) {
-			
-			if( isset( $registration->change_file_payment_receipt[0] ) && $registration->change_file_payment_receipt[0] === '1' )
-				$registration->file_payment_receipt = UploadedFile::getInstance($registration,'file_payment_receipt');
-			
-			switch($registration->registration_type_id)
-			{
-				case 3:
-				case 4:
-				case 7:
-				case 9:
-				case 12:
-				case 13:
-				case 16:
-				case 17: if( isset( $registration->change_file_student_id[0] ) && $registration->change_file_student_id[0] === '1' )
-				$registration->file_student_id = UploadedFile::getInstance($registration,'file_student_id'); break;
-			}
-			
-			$valid = true;
-			$valid = $valid && $registration->validate();
-			
-			if($registration->invoice_required)
-			{
-				if ($invoice->load(Yii::$app->request->post())) {
-					$valid = $valid && $invoice->validate();
-				}
-			}
-			
-			if($valid)
-			{
-				if($registration->save())
-				{
-					$isSaved = true;
-					if($registration->invoice_required)
-					{
-						$invoice->registration_id = $registration->id;
-						$isSaved = $isSaved && $invoice->save();
-					}
-					if($isSaved)
-						return $this->redirect(['submitted', 'id' => $registration->id, 'token' => $registration->token]);
-				}
-			}
-        } else {
-            return $this->render('update', [
-                'registration' => $registration,
-				'invoice' => $invoice,
-            ]);
-        }
+            
+            if( isset( $registration->change_file_payment_receipt[0] ) && $registration->change_file_payment_receipt[0] === '1' )
+                $registration->file_payment_receipt = UploadedFile::getInstance($registration,'file_payment_receipt');
+            
+            //Nueva línea patra el CV
+            $registration->file_cv = UploadedFile::getInstance($registration,'file_cv');
+
+            switch($registration->registration_type_id)
+            {
+                case 3:
+                case 4:
+                case 7:
+                case 9:
+                case 12:
+                case 13:
+                case 16:
+                case 17: if( isset( $registration->change_file_student_id[0] ) && $registration->change_file_student_id[0] === '1' )
+                $registration->file_student_id = UploadedFile::getInstance($registration,'file_student_id'); break;
+            }
+            
+            $valid = true;
+            $valid = $valid && $registration->validate();
+            
+            if($registration->invoice_required)
+            {
+                if ($invoice->load(Yii::$app->request->post())) {
+                    $valid = $valid && $invoice->validate();
+                }
+            }
+            
+            if($valid)
+            {
+                if($registration->save())
+                {
+                    $isSaved = true;
+                    if($registration->invoice_required)
+                    {
+                        $invoice->registration_id = $registration->id;
+                        $isSaved = $isSaved && $invoice->save();
+                    }
+                    if($isSaved)
+                        return $this->redirect(['submitted', 'id' => $registration->id, 'token' => $registration->token]);
+                }
+            }
+        } 
+        
+        // Proveedores de datos agregados fuera del if/else
+        $dataProviderTalleres = new \yii\data\ActiveDataProvider([
+            'query' => \app\models\Taller::find(),
+            'pagination' => false, 
+        ]);
+
+        $dataProviderVisitas = new \yii\data\ActiveDataProvider([
+            'query' => \app\models\Visita::find(),
+            'pagination' => false, 
+        ]);
+
+        // Renderizado por defecto si falla la validación o entra por GET
+        return $this->render('update', [
+            'registration' => $registration,
+            'invoice' => $invoice,
+            'dataProviderTalleres' => $dataProviderTalleres,
+            'dataProviderVisitas' => $dataProviderVisitas,
+        ]);
     }
 
     /**

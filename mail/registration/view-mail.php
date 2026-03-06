@@ -31,21 +31,21 @@ use yii\bootstrap\ActiveForm;
 	
 	<?php if(Yii::$app->session->hasFlash('registration-submitted-successfully-mail')): ?>
     <div class="alert alert-success">
-		<h2>Data submitted successfully!</h2>
-		<p><?= Html::encode($model->fullName) ?>, your data was submitted sucessfully.</p>
+		<h2>Datos enviados con éxito!</h2>
+
+		<p><?= Html::encode($model->fullName) ?>, sus datos han sido enviando correctamente.</p>
 	</div>
 	<?php endif; ?>
 	
     
 	<?php if( empty( $model->paid_by_credit_card ) && empty($model->payment_receipt) ): ?>
 	<div class="alert alert-warning">
-		<h2>Pending Registration - IEEE ISMAR 2016</h2>
-		<p>Dear <?= Html::encode($model->prefix) ?> <?= Html::encode($model->fullName) ?>, 
+		<h2>Registro pendiente - ConCEI 3</h2>
+		<p>Estimado/a <?= Html::encode($model->prefix) ?> <?= Html::encode($model->fullName) ?>, 
+        <br /> 
+		Gracias por registrarse al tercer congreso 2026, que se llevará a cabo en Mérida, México, del 7 al 9 de octubre de 2026 en el campus de Ciencias Exactas e ingenierías (CCEI) UADY.
         <br />
-        Thank you for registering for the IEEE ISMAR 2016 taking place at Merida, Mexico from September 19-23, 2016.
-        <br />
-        To complete your registration you need to pay online with credit or debit card, or upload your payment receipt using the link below.
-        </p>
+		Para completar su registro, es necesario que realice su pago en línea mediante transferencia bancaria, deberá subir su comprobante de pago utilizando el enlace a continuación.        </p>
 		<p><?= Html::a(Yii::t('app', 'Complete Registration'), Url::to(['submitted', 'id' => $model->id, 'token' => $model->token],true), ['class' => 'btn btn-primary']) ?></p>
 	</div>
 	<?php endif; ?>
@@ -53,15 +53,15 @@ use yii\bootstrap\ActiveForm;
     
 	<?php if( !empty( $model->paid_by_credit_card ) || !empty($model->payment_receipt) ): ?>
 	<div class="alert alert-success">
-		<h2>Registration Confirmation - IEEE ISMAR 2016</h2>
-		<p>Dear <?= Html::encode($model->prefix) ?> <?= Html::encode($model->fullName) ?>, 
+		<h2>Confirmación de registro - CONCEI-3</h2>
+		<p>Estimado/a <?= Html::encode($model->fullName) ?>, 
         <br />
-        Thank you for registering for the IEEE ISMAR 2016 taking place at Merida, Mexico from September 19-23, 2016.</p>
+			Gracias por registrarse al ConCEI 3, que se llevará a cabo en Mérida, México, del 7 al 9 de octubre de 2026 en el campus de Ciencias Exactas e ingenierías (CCEI) UADY.</p>
 	</div>
 	<?php endif; ?>
 
 		<div class="alert alert-info">
-		<p>You can update your data using the link below.
+		<p>Puede actualizar sus datos utilizando el siguiente link.
 		<br /><?= Html::a(Yii::t('app', 'Update Registration'), Url::to(['submitted', 'id' => $model->id, 'token' => $model->token],true), ['class' => 'btn btn-primary']) ?></p>
 	</div>
 
@@ -76,12 +76,9 @@ use yii\bootstrap\ActiveForm;
     <?= Html::encode($model->zip) ?>
     <br />
     <?= Html::encode($model->email) ?>
-    <br />
-    Dietary restrictions: <?= Html::encode($model->diet) ?>
-    <br />
     </p>
 
-	<h3> Registered Information </h3>
+	<h3> Informacipon registrada </h3>
 
 	<table>
 		<tr>
@@ -96,33 +93,6 @@ use yii\bootstrap\ActiveForm;
 			<td><?= Html::encode($model->registrationType->cost) ?> MXN</td>
 			<td><?= Html::encode($model->registrationType->cost) ?> MXN</td>
 		</tr>
-
-		<?php
-		$t1 = ($model->banquet_ticket);
-		?>
-
-		<?php if( ($model->banquet_ticket) > 0 ): ?>
-			<tr>
-				<td> Additional Ticket to Attend the Banquet (Tuesday, 20 Sep 2016) </td>
-				<td>  <?= Html::encode($model->banquet_ticket) ?>  </td>
-				<td>70 MXN</td>
-				<td> <?= ($t1*70) ?> MXN</td>
-			</tr>
-		<?php endif; ?>
-
-		<?php
-		$t2 = ($model->proceedings_copies);
-		?>
-
-		<?php if( ($model->proceedings_copies) > 0 ): ?>
-			<tr>
-				<td>Additional Copy of Conference Proceedings  </td>
-				<td><?= Html::encode($model->proceedings_copies) ?> </td>
-				<td>30 MXN</td>
-				<td> <?= ($t2*30) ?> MXN</td>
-			</tr>
-		<?php endif; ?>
-
 
 		<?php if( ($model->W1) == 1 ): ?>
 			<tr>
@@ -200,7 +170,7 @@ use yii\bootstrap\ActiveForm;
 			// UPDATE: implementacion de cast numerico.
 			$s1 = (int)($model->banquet_ticket);
 			$s2 = (int)($model->proceedings_copies);
-			$total = (float)($model->registrationType->cost) + $s1*70 + $s2*30;
+			$total = (float)($model->registrationType->cost)
 		?>
 			<tr>
 				<td></td>

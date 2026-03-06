@@ -58,6 +58,8 @@ class Registration extends \yii\db\ActiveRecord
 	public $type2;
     public $title2;
     public $revista_seleccionada;
+
+	public $file_cv; // <-- Para el CV
 	
     /**
      * @inheritdoc
@@ -100,9 +102,16 @@ class Registration extends \yii\db\ActiveRecord
             [['file_payment_receipt'], 'file', 'skipOnEmpty' => true, 'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx', 'on' => 'Update'],
             
             [['file_student_id'], 'file', 'skipOnEmpty' => true, 'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx'],
-            [['invoice_required'], 'boolean'],
+			// <-- CV-->
+            [['file_cv'], 'file', 'skipOnEmpty' => true, 'extensions' => 'pdf, doc, docx'], 
+            // <-- CAMPO DE LA BD (cv_file) -->
+            [['cv_file'], 'string', 'max' => 255],
+
+			[['invoice_required'], 'boolean'],
             [['change_file_payment_receipt', 'change_file_student_id'], 'each', 'rule'=>['in', 'range'=>[0,1]]],
 			[['type2', 'title2', 'revista_seleccionada'], 'safe'],
+
+			
         ];
     }
 
@@ -149,6 +158,7 @@ class Registration extends \yii\db\ActiveRecord
 			'one_day_registration' => Yii::t('app', 'One Day Registration'),
 			'banquet_ticket' => Yii::t('app', 'Additional Ticket to Attend the Banquet '),
 			'proceedings_copies' => Yii::t('app', 'Additional Copy of Conference Proceedings'),
+			'file_cv' => Yii::t('app', 'Curriculum Vitae (CV)'), // <-- Línea nueva para el CV
         ];
     }
 
@@ -221,6 +231,14 @@ class Registration extends \yii\db\ActiveRecord
 			
 			if( empty($this->student_id) )
 				$this->student_id = null;
+
+			// CV
+			if( !empty($this->file_cv) )
+			{
+				$fileNameCv = uniqid() . '.' . $this->file_cv->extension;
+				$this->file_cv->saveAs('files/cv/' . $fileNameCv);
+				$this->cv_file = $fileNameCv;
+			}
 			
 			if( empty($this->token) )
 			{

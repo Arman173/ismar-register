@@ -46,16 +46,14 @@ $pricesJsonString = json_encode($pricesJson);
     var typePrices = ' . $pricesJsonString . ';
     
     function calculateTotal() {
-        // INICIALIZAMOS EN 0 PARA EVITAR "NaN" O "UNDEFINED"
         var total = 0;
         var baseCost = 0;
-        var workshopTotal = 0;
+        var extrasTotalCost = 0; // Costo de los talleres/visitas que SÍ se cobran
         
-        // 1. Obtener ID seleccionado
+        // 1. Obtener ID del tipo de registro
         var selectedTypeId = $(\'#registration-registration_type_id\').val();
         
-        // VALIDACIÓN DE SEGURIDAD:
-        // Solo intentamos buscar el precio si hay un ID y ese ID existe en nuestro JSON
+        // Costo base según Early Bird
         if (selectedTypeId && typePrices[selectedTypeId]) {
             if (isEarlyBird) {
                 baseCost = parseFloat(typePrices[selectedTypeId].early) || 0;
@@ -63,38 +61,50 @@ $pricesJsonString = json_encode($pricesJson);
                 baseCost = parseFloat(typePrices[selectedTypeId].late) || 0;
             }
         } else {
-            // Si no hay selección, el costo base se queda en 0
             baseCost = 0;
         }
 
-        // 2. Contar Talleres seleccionados del Grid
-        var selectedWorkshopsCount = $(\'#workshop_type\').yiiGridView(\'getSelectedRows\').length;
+        // 2. Contar de AMBAS tablas
+        var selectedTalleresCount = $(\'#grid-talleres\').yiiGridView(\'getSelectedRows\').length;
+        var selectedVisitasCount = $(\'#grid-visitas\').yiiGridView(\'getSelectedRows\').length;
+        var totalExtrasCount = selectedTalleresCount + selectedVisitasCount;
         
-        // 3. Lógica de Cobro de Talleres
-        var paidWorkshops = 0;
-        var typeStr = String(selectedTypeId); // Convertir a string para comparar
+        // 3. Lógica de Cobro de Extras (Talleres + Visitas)
+        var paidExtras = 0;
+        var typeStr = String(selectedTypeId); 
         
-        if (selectedWorkshopsCount > 0) {
+        if (totalExtrasCount > 0) {
             if (typeStr === \'1\' || typeStr === \'12\') {
-                // General (1) y Estudiante (12): 1 Gratis
-                paidWorkshops = Math.max(0, selectedWorkshopsCount - 1);
+                // General (1) y Estudiante (12): 1 Gratis en total (sea taller o visita)
+                paidExtras = Math.max(0, totalExtrasCount - 1);
             } else if (typeStr === \'17\') {
                 // UADY (17): Paga todos
-                paidWorkshops = selectedWorkshopsCount;
+                paidExtras = totalExtrasCount;
             } else {
                 // Default: Paga todos
-                paidWorkshops = selectedWorkshopsCount; 
+                paidExtras = totalExtrasCount; 
             }
         }
         
-        workshopTotal = paidWorkshops * workshopCost;
-        total = baseCost + workshopTotal;
+        extrasTotalCost = paidExtras * workshopCost;
+        total = baseCost + extrasTotalCost;
 
-        // 4. Actualizar vista (Usamos toFixed solo porque ya aseguramos que son números)
+        // 4. Actualizar vista en la tabla
         $(\'#display-base-cost\').text(\'$\' + baseCost.toFixed(2));
-        $(\'#display-workshop-count\').text(selectedWorkshopsCount);
-        $(\'#display-workshop-paid\').text(paidWorkshops);
-        $(\'#display-workshop-total\').text(\'$\' + workshopTotal.toFixed(2));
+        
+        // Fila Talleres
+        $(\'#display-talleres-count\').text(selectedTalleresCount);
+        $(\'#display-talleres-total\').text(\'$\' + (selectedTalleresCount * workshopCost).toFixed(2));
+        
+        // Fila Visitas
+        $(\'#display-visitas-count\').text(selectedVisitasCount);
+        $(\'#display-visitas-total\').text(\'$\' + (selectedVisitasCount * workshopCost).toFixed(2));
+        
+        // Fila Resumen Extras a Pagar
+        $(\'#display-total-extras-paid\').text(paidExtras);
+        $(\'#display-extras-total\').text(\'$\' + extrasTotalCost.toFixed(2));
+        
+        // Total Final
         $(\'#display-grand-total\').text(\'$\' + total.toFixed(2));
     }
 
@@ -112,9 +122,9 @@ $pricesJsonString = json_encode($pricesJson);
     });
 
     // Cambio en Checkbox de Talleres
-    $(\'#workshop_type\').on(\'click\', function() {
+    $(\'#grid-talleres, #grid-visitas\').on(\'click\', function() {
         // Tu función de mapeo a inputs hidden (la integramos aquí para asegurar orden)
-        mapWorkshopsToHiddenInputs(); 
+        // mapWorkshopsToHiddenInputs(); 
         calculateTotal();
     });
 
@@ -375,7 +385,7 @@ $pricesJsonString = json_encode($pricesJson);
 
     <?= $form->field($registration, 'business_phone')->textInput([
 		'maxlength' => true,
-		'placeholder' => 'Por favor, ingrese su número de teléfono con lada (ej. 529995555555)',
+		'placeholder' => 'Por favor, ingrese su número de teléfono (ej. 529995555555)',
 	]) ?>
 
     <?= $form->field($registration, 'email')->textInput(['maxlength' => true]) ?>
@@ -565,7 +575,7 @@ $pricesJsonString = json_encode($pricesJson);
 		<br> <b> <?= Html::encode('Estudiante y Profesor UADY:')?> </b> <?= Html::encode('Acceso a todas las conferencias. No incluye talleres ni visitas industriales.')?>
     </p>
 
-	<?= GridView::widget([
+	<!-- <?= GridView::widget([
 		'id' => 'workshop_type',
 		'dataProvider' => $dataProviderWork,
 		'columns' => [
@@ -579,6 +589,91 @@ $pricesJsonString = json_encode($pricesJson);
 			'description',
 			[
 				'attribute' => 'date',
+				'header' => 'Fecha',
+				'format' => ['date', 'php:d-m-Y'],
+			],
+			[
+				'attribute' => 'hr_inicio',
+				'header' => 'Hora Inicio',
+				'format' => ['time', 'php:H:i'],
+			],
+			[
+				'attribute' => 'hr_fin',
+				'header' => 'Hora Fin',
+				'format' => ['time', 'php:H:i'],
+			],
+			// [
+			// 	'attribute' => 'time',
+			// 	'header' => 'Duración (minutos)',
+			// 	'value' => function($model) {
+			// 		return $model->time . ' minutos';
+			// 	}
+			// ]
+		],
+		'summary'=>'',
+		'options' => ['style' => 'width:700px;'],
+	]);?> -->
+
+	<?= GridView::widget([
+		'id' => 'grid-talleres',
+		'dataProvider' => $dataProviderTalleres,
+		'columns' => [
+			[
+				'class' => 'kartik\grid\CheckboxColumn',
+				//'rowHighlight' => true,
+				'header' => '',
+			],
+			//'id',
+			// 'name',
+			[
+				'attribute' => 'nombre',
+				'label' => 'Nombre del Taller',
+			],
+			'descripcion',
+			[
+				'attribute' => 'fecha',
+				'header' => 'Fecha',
+				'format' => ['date', 'php:d-m-Y'],
+			],
+			[
+				'attribute' => 'hr_inicio',
+				'header' => 'Hora Inicio',
+				'format' => ['time', 'php:H:i'],
+			],
+			[
+				'attribute' => 'hr_fin',
+				'header' => 'Hora Fin',
+				'format' => ['time', 'php:H:i'],
+			],
+			// [
+			// 	'attribute' => 'time',
+			// 	'header' => 'Duración (minutos)',
+			// 	'value' => function($model) {
+			// 		return $model->time . ' minutos';
+			// 	}
+			// ]
+		],
+		'summary'=>'',
+		'options' => ['style' => 'width:700px;'],
+	]);?>
+
+	<?= GridView::widget([
+		'id' => 'grid-visitas',
+		'dataProvider' => $dataProviderVisitas,
+		'columns' => [
+			[
+				'class' => 'kartik\grid\CheckboxColumn',
+				//'rowHighlight' => true,
+				'header' => '',
+			],
+			//'id',
+			[
+				'attribute' => 'nombre',
+				'label' => 'Nombre del Taller',
+			],
+			'descripcion',
+			[
+				'attribute' => 'fecha',
 				'header' => 'Fecha',
 				'format' => ['date', 'php:d-m-Y'],
 			],
@@ -633,15 +728,20 @@ $pricesJsonString = json_encode($pricesJson);
 
     <?= $form->field($invoice, 'email')->textInput(['maxlength' => true]) ?>
         
+    <?= $form->field($invoice, 'email')->textInput(['maxlength' => true]) ?>
+        
+    
+    <h3><?= Html::encode('Bolsa de Trabajo')?></h3>
+    <p> <?= Html::encode('Si deseas compartir tu Curriculum Vitae (CV) con las empresas patrocinadoras, puedes adjuntarlo aquí, en formato pdf.')?> </p>
+    <?= $form->field($registration, 'file_cv')->fileInput()->label('Subir CV') ?>
     
 	<h3>Política de cancelación</h3>
-	<p> <?= Html::encode('Las cuotas de inscripción, talleres y/o visitas industriales no serán rembolsables. Es importante destacar que a los autores que no se presenten se les retirará su artículo de las memorias del congreso. Para cualquier duda o aclaracion favor de contactar concei@correo.uady.mx')?> </p>
+	<p> <?= Html::encode('Las cuotas de inscripción, talleres y visitas industriales no serán rembolsables. Es importante destacar que a los autores que no se presenten se les retirará su artículo de las memorias del congreso. Para cualquier duda o aclaracion favor de contactar concei@correo.uady.mx')?> </p>
 
     
 	<h3>Resumen de Pago</h3>
 
-	<div class="panel panel-default" style="margin-top: 20px;">
-        <!-- <div class="panel-heading">Resumen de Pago Estimado</div> -->
+    <div class="panel panel-default" style="margin-top: 20px;">
         <table class="table table-bordered" style="background-color: #fff;">
             <tr>
                 <th>Concepto</th>
@@ -649,17 +749,29 @@ $pricesJsonString = json_encode($pricesJson);
                 <th style="text-align: right;">Subtotal</th>
             </tr>
             <tr>
-                <td>Couta de Registro</td>
+                <td>Cuota de Registro</td>
                 <td style="text-align: right;">Tarifa Base (<?= $isEarlyBird ? 'Pre-Registro' : 'Registro' ?>)</td>
                 <td style="text-align: right; font-weight: bold;" id="display-base-cost">$0.00</td>
             </tr>
             <tr>
-                <td>Talleres / Visitas</td>
+                <td>Talleres</td>
                 <td style="text-align: right;">
-                    Seleccionados: <span id="display-workshop-count">0</span> | 
-                    A pagar: <span id="display-workshop-paid">0</span>
+                    Seleccionados: <span id="display-talleres-count">0</span>
                 </td>
-                <td style="text-align: right; font-weight: bold;" id="display-workshop-total">$0.00</td>
+                <td style="text-align: right; font-weight: bold;" id="display-talleres-total">$0.00</td>
+            </tr>
+            <tr>
+                <td>Visitas Industriales</td>
+                <td style="text-align: right;">
+                    Seleccionados: <span id="display-visitas-count">0</span>
+                </td>
+                <td style="text-align: right; font-weight: bold;" id="display-visitas-total">$0.00</td>
+            </tr>
+            <tr>
+                <td colspan="2" style="text-align: right;">
+                    <em>A pagar: <span id="display-total-extras-paid">0</span> x $<?= $costo_taller ?></em>
+                </td>
+                <td style="text-align: right; font-weight: bold; color: #d9534f;" id="display-extras-total">$0.00</td>
             </tr>
             <tr class="success">
                 <td colspan="2" style="text-align: right; font-size: 1.2em;"><b>TOTAL A PAGAR:</b></td>
@@ -669,7 +781,7 @@ $pricesJsonString = json_encode($pricesJson);
     </div>
 
 	<h3>Instrucciones de pago</h3>
-	<p> <?= Html::encode('El total a pagar lo deberá realizar através de una transferencia bancaria a la siguiente cuenta:')?> </p>
+	<p> <?= Html::encode('El total a pagar lo deberá realizar a través de una transferencia bancaria a la siguiente cuenta:')?> </p>
 
     	<?= $form->field($registration, 'payment_type')->radioList([
 		// 1 => 'Credit Card',

@@ -15,6 +15,8 @@ $this->title = Yii::t('app', 'Registro ConCEI-2026');
     <?= $this->render('_form', [
         'registration' => $registration,
 		'invoice' => $invoice,
+        'dataProviderTalleres' => $dataProviderTalleres,
+        'dataProviderVisitas' => $dataProviderVisitas,
     ]) ?>
 
 
