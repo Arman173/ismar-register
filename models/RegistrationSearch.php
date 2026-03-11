@@ -20,7 +20,7 @@ class RegistrationSearch extends Registration
     {
         return [
             [['id', 'registration_type_id'], 'integer'],
-            [['organization_name', 'registration_type_name', 'first_name', 'last_name', 'display_name', 'business_phone', 'fax', 'email', 'email2', 'address', 'city', 'state', 'zip', 'country', 'diet','student_id', 'payment_receipt', 'emergency_name', 'emergency_phone', 'token', 'creation_date', 'modification_date', 'payment', 'invoice_required', 'a1'], 'safe'],
+            [['organization_name', 'registration_type_name', 'first_name', 'last_name', 'display_name', 'business_phone', 'email', 'email2', 'address', 'city', 'state', 'country','student_id', 'payment_receipt', 'emergency_name', 'emergency_phone', 'token', 'creation_date', 'modification_date', 'payment', 'invoice_required', 'a1'], 'safe'],
         ];
     }
 
@@ -77,21 +77,21 @@ class RegistrationSearch extends Registration
             ->andFilterWhere(['like', 'display_name', $this->display_name])
            // ->andFilterWhere(['like', 'degree', $this->degree])
             ->andFilterWhere(['like', 'business_phone', $this->business_phone])
-            ->andFilterWhere(['like', 'fax', $this->fax])
+            // ->andFilterWhere(['like', 'fax', $this->fax])
             ->andFilterWhere(['like', 'email', $this->email])
             ->andFilterWhere(['like', 'email2', $this->email2])
             ->andFilterWhere(['like', 'address', $this->address])
             ->andFilterWhere(['like', 'city', $this->city])
             ->andFilterWhere(['like', 'state', $this->state])
 //            ->andFilterWhere(['like', 'province', $this->province])
-            ->andFilterWhere(['like', 'zip', $this->zip])
+            // ->andFilterWhere(['like', 'zip', $this->zip])
             ->andFilterWhere(['like', 'country', $this->country])
             ->andFilterWhere(['like', 'student_id', $this->student_id])
             ->andFilterWhere(['like', 'payment_receipt', $this->payment_receipt])
             ->andFilterWhere(['like', 'emergency_name', $this->emergency_name])
             ->andFilterWhere(['like', 'emergency_phone', $this->emergency_phone])
 			->andFilterWhere(['like', 'token', $this->token])
-            ->andFilterWhere(['like', 'diet', $this->diet])
+            // ->andFilterWhere(['like', 'diet', $this->diet])
             ->andFilterWhere(['like', 'creation_date', $this->creation_date])
 			->andFilterWhere(['like', 'modification_date', $this->modification_date])
 			->andFilterWhere(['like', 'payment', $this->payment])

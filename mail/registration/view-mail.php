@@ -31,54 +31,48 @@ use yii\bootstrap\ActiveForm;
 	
 	<?php if(Yii::$app->session->hasFlash('registration-submitted-successfully-mail')): ?>
     <div class="alert alert-success">
-		<h2>Datos enviados con éxito!</h2>
-
-		<p><?= Html::encode($model->fullName) ?>, sus datos han sido enviando correctamente.</p>
 	</div>
 	<?php endif; ?>
-	
     
-	<?php if( empty( $model->paid_by_credit_card ) && empty($model->payment_receipt) ): ?>
+	<?php if( empty($model->payment_receipt) ): ?>
 	<div class="alert alert-warning">
-		<h2>Registro pendiente - ConCEI 3</h2>
-		<p>Estimado/a <?= Html::encode($model->prefix) ?> <?= Html::encode($model->fullName) ?>, 
+		<h2>Registro Pendiente - ConCEI 3</h2>
+		<p>Estimado/a<?= Html::encode($model->fullName) ?>, 
         <br /> 
-		Gracias por registrarse al tercer congreso 2026, que se llevará a cabo en Mérida, México, del 7 al 9 de octubre de 2026 en el campus de Ciencias Exactas e ingenierías (CCEI) UADY.
+		Gracias por registrarse al tercer Congreso de Ciencias Exactas e Ingenierías 2026, que se llevará a cabo en Mérida, México, del 7 al 9 de octubre de 2026 en el campus de Ciencias Exactas e ingenierías (CCEI) UADY.
         <br />
 		Para completar su registro, es necesario que realice su pago en línea mediante transferencia bancaria, deberá subir su comprobante de pago utilizando el enlace a continuación.        </p>
-		<p><?= Html::a(Yii::t('app', 'Complete Registration'), Url::to(['submitted', 'id' => $model->id, 'token' => $model->token],true), ['class' => 'btn btn-primary']) ?></p>
+		<p><?= Html::a(Yii::t('app', 'Completar registro'), Url::to(['submitted', 'id' => $model->id, 'token' => $model->token],true), ['class' => 'btn btn-primary']) ?></p>
 	</div>
 	<?php endif; ?>
 	
     
-	<?php if( !empty( $model->paid_by_credit_card ) || !empty($model->payment_receipt) ): ?>
+	<?php if( !empty($model->payment_receipt) ): ?>
 	<div class="alert alert-success">
-		<h2>Confirmación de registro - CONCEI-3</h2>
+		<h2>Confirmación de Registro - ConCEI-3</h2>
 		<p>Estimado/a <?= Html::encode($model->fullName) ?>, 
         <br />
-			Gracias por registrarse al ConCEI 3, que se llevará a cabo en Mérida, México, del 7 al 9 de octubre de 2026 en el campus de Ciencias Exactas e ingenierías (CCEI) UADY.</p>
+			Gracias por registrarse al Congreso de Ciencias Exactas e Ingenierías -3, que se llevará a cabo en Mérida, México, del 7 al 9 de octubre de 2026 en el Campus de Ciencias Exactas e Ingenierías (CCEI) UADY.</p>
 	</div>
 	<?php endif; ?>
 
 		<div class="alert alert-info">
-		<p>Puede actualizar sus datos utilizando el siguiente link.
-		<br /><?= Html::a(Yii::t('app', 'Update Registration'), Url::to(['submitted', 'id' => $model->id, 'token' => $model->token],true), ['class' => 'btn btn-primary']) ?></p>
+		<p>Puede actualizar sus datos utilizando el siguiente enlace.
+		<br /><?= Html::a(Yii::t('app', 'Actualizar registro'), Url::to(['submitted', 'id' => $model->id, 'token' => $model->token],true), ['class' => 'btn btn-primary']) ?></p>
 	</div>
 
 	<p> <?= date("l"), ", ", date("F"), " ", date("d"), ", ", date("Y")  ?> </p>
 
-	<p><?= Html::encode($model->prefix) ?> <?= Html::encode($model->fullName) ?>, 
+	<p><?= Html::encode($model->fullName) ?>, 
     <br />
     <?= Html::encode($model->organization_name) ?>
     <br />
     <?= Html::encode($model->city) ?>, <?= Html::encode($model->country) ?>
     <br />
-    <?= Html::encode($model->zip) ?>
-    <br />
     <?= Html::encode($model->email) ?>
     </p>
 
-	<h3> Informacipon registrada </h3>
+	<h3> Información registrada </h3>
 
 	<table>
 		<tr>
@@ -94,77 +88,6 @@ use yii\bootstrap\ActiveForm;
 			<td><?= Html::encode($model->registrationType->cost) ?> MXN</td>
 		</tr>
 
-		<?php if( ($model->W1) == 1 ): ?>
-			<tr>
-				<td>2nd International Workshop on Diminished Reality as Challenging Issue in Mixed and Augmented Reality </td>
-				<td></td>
-				<td></td>
-				<td></td>
- 			</tr>
-		<?php endif; ?>
-
-		<?php if( ($model->W2) == 1 ): ?>
-			<tr>
-				<td>Collaborative Mixed Reality Environments (CoMiRE)</td>
-				<td></td>
-				<td></td>
-				<td></td>
-			</tr>
-		<?php endif; ?>
-
-		<?php if( ($model->W3) == 1 ): ?>
-			<tr>
-				<td> Human factors in Augmented Reality </td>
-				<td></td>
-				<td></td>
-				<td></td>
-			</tr>
-		<?php endif; ?>
-
-		<?php if( ($model->W4) == 1 ): ?>
-			<tr>
-				<td> Standards for Mixed and Augmented Reality </td>
-				<td></td>
-				<td></td>
-				<td></td>
-			</tr>
-		<?php endif; ?>
-
-		<?php if( ($model->W5) == 1 ): ?>
-			<tr>
-				<td>Interaction Design Principles of Augmented Reality focusing on the Ageing Population </td>
-				<td></td>
-				<td></td>
-				<td></td>
-			</tr>
-		<?php endif; ?>
-
-		<?php if( ($model->W6) == 1 ): ?>
-			<tr>
-				<td> Workshop on Human Behavior Analysis and Visualization for Collective Visual Sensing </td>
-				<td></td>
-				<td></td>
-				<td></td>
-			</tr>
-		<?php endif; ?>
-
-		<?php if( ($model->W7) == 1 ): ?>
-			<tr>
-				<td> MASH'D </td>
-				<td></td>
-				<td></td>
-				<td></td>
-			</tr>
-		<?php endif; ?>
-
-		<?php if( ($model->T1) == 1 ): ?>
-			<tr>
-				<td> Daqri Tutorial </td>
-				<td></td>
-				<td></td>
-				<td></td>
-			</tr>
-		<?php endif; ?>
 
 		<?php
 			// UPDATE: implementacion de cast numerico.
@@ -184,6 +107,15 @@ use yii\bootstrap\ActiveForm;
 	<?php if(!empty($model->invoice)): ?>
 	
 	<h3>Datos de Facturación</h3>
+
+    <?php 
+        $razonSocial = $model->invoice->business_name;
+        if (preg_match('/uady|universidad aut[oó]noma de yucat[aá]n/i', $razonSocial)): 
+    ?>
+        <div style="background-color: #f2dede; color: #a94442; padding: 15px; margin-bottom: 20px; border: 1px solid #ebccd1; border-radius: 4px;">
+            <strong></strong> El ConCEI NO emite facturas a nombre de la Universidad Autónoma de Yucatán. Su factura no podrá ser procesada con estos datos.
+        </div>
+    <?php endif; ?>
 	
 	<?= DetailView::widget([
         'model' => $model->invoice,
@@ -199,6 +131,4 @@ use yii\bootstrap\ActiveForm;
     ]) ?>
 	
 	<?php endif; ?>
-
-
 </div>

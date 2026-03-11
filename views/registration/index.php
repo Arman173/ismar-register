@@ -53,9 +53,9 @@ $this->params['breadcrumbs'][] = $this->title;
             // 'emergency_name',
             // 'emergency_phone',
             // 'token',
-			'diet',
+			// 'diet',
 			'creation_date',
-			'modification_date',
+			// 'modification_date',
 			'payment',
 			[
 				'attribute' => 'invoice_required',

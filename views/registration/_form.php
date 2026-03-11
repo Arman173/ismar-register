@@ -129,32 +129,32 @@ $pricesJsonString = json_encode($pricesJson);
     });
 
     // Tu función de mapeo (tal cual estaba)
-    function mapWorkshopsToHiddenInputs() {
-        $(\'[name="Registration[W1]"]\').val(0);
-        $(\'[name="Registration[W2]"]\').val(0);
-        $(\'[name="Registration[W3]"]\').val(0);
-        $(\'[name="Registration[W4]"]\').val(0);
-        $(\'[name="Registration[W5]"]\').val(0);
-        $(\'[name="Registration[W6]"]\').val(0);
-        $(\'[name="Registration[W7]"]\').val(0);
-        $(\'[name="Registration[T1]"]\').val(0);
+    // function mapWorkshopsToHiddenInputs() {
+    //     $(\'[name="Registration[W1]"]\').val(0);
+    //     $(\'[name="Registration[W2]"]\').val(0);
+    //     $(\'[name="Registration[W3]"]\').val(0);
+    //     $(\'[name="Registration[W4]"]\').val(0);
+    //     $(\'[name="Registration[W5]"]\').val(0);
+    //     $(\'[name="Registration[W6]"]\').val(0);
+    //     $(\'[name="Registration[W7]"]\').val(0);
+    //     $(\'[name="Registration[T1]"]\').val(0);
         
-        var keys = $(\'#workshop_type\').yiiGridView(\'getSelectedRows\');
-        // Iteramos con cuidado
-        if (keys) {
-            for (var i = 0; i < keys.length; i++) { 
-                var k = parseInt(keys[i]);
-                if(k==1) $(\'[name="Registration[W1]"]\').val(1);
-                if(k==2) $(\'[name="Registration[W2]"]\').val(1);
-                if(k==3) $(\'[name="Registration[W3]"]\').val(1);
-                if(k==4) $(\'[name="Registration[W4]"]\').val(1);
-                if(k==5) $(\'[name="Registration[W5]"]\').val(1);
-                if(k==6) $(\'[name="Registration[W6]"]\').val(1);
-                if(k==7) $(\'[name="Registration[W7]"]\').val(1);
-                if(k==8) $(\'[name="Registration[T1]"]\').val(1);
-            }
-        }
-    }
+    //     var keys = $(\'#workshop_type\').yiiGridView(\'getSelectedRows\');
+    //     // Iteramos con cuidado
+    //     if (keys) {
+    //         for (var i = 0; i < keys.length; i++) { 
+    //             var k = parseInt(keys[i]);
+    //             if(k==1) $(\'[name="Registration[W1]"]\').val(1);
+    //             if(k==2) $(\'[name="Registration[W2]"]\').val(1);
+    //             if(k==3) $(\'[name="Registration[W3]"]\').val(1);
+    //             if(k==4) $(\'[name="Registration[W4]"]\').val(1);
+    //             if(k==5) $(\'[name="Registration[W5]"]\').val(1);
+    //             if(k==6) $(\'[name="Registration[W6]"]\').val(1);
+    //             if(k==7) $(\'[name="Registration[W7]"]\').val(1);
+    //             if(k==8) $(\'[name="Registration[T1]"]\').val(1);
+    //         }
+    //     }
+    // }
 
     // Inicializar
     $(document).ready(function() {
@@ -317,32 +317,32 @@ $pricesJsonString = json_encode($pricesJson);
 
 	//$("#workshop_type input[type=checkbox]").click(function(){
 	
-	var $workgrid = $(\'#workshop_type\');
-	$workgrid.on(\'click\',function(){
-		$("[name=\'Registration[W1]\']").val(0);
-		$("[name=\'Registration[W2]\']").val(0);
-		$("[name=\'Registration[W3]\']").val(0);
-		$("[name=\'Registration[W4]\']").val(0);
-		$("[name=\'Registration[W5]\']").val(0);
-		$("[name=\'Registration[W6]\']").val(0);
-		$("[name=\'Registration[W7]\']").val(0);
-		$("[name=\'Registration[T1]\']").val(0);
+	// var $workgrid = $(\'#workshop_type\');
+	// $workgrid.on(\'click\',function(){
+	// 	$("[name=\'Registration[W1]\']").val(0);
+	// 	$("[name=\'Registration[W2]\']").val(0);
+	// 	$("[name=\'Registration[W3]\']").val(0);
+	// 	$("[name=\'Registration[W4]\']").val(0);
+	// 	$("[name=\'Registration[W5]\']").val(0);
+	// 	$("[name=\'Registration[W6]\']").val(0);
+	// 	$("[name=\'Registration[W7]\']").val(0);
+	// 	$("[name=\'Registration[T1]\']").val(0);
 		
-		var keys = $workgrid.yiiGridView(\'getSelectedRows\');
-		//if (typeof keys[0] !== \'undefined\') {
-		for (i = 0; i < keys.length; i++) { 	
-			switch(keys[i]){
-				case 1: $("[name=\'Registration[W1]\']").val(1); break;
-				case 2: $("[name=\'Registration[W2]\']").val(1); break;
-				case 3: $("[name=\'Registration[W3]\']").val(1); break;
-				case 4: $("[name=\'Registration[W4]\']").val(1); break;
-				case 5: $("[name=\'Registration[W5]\']").val(1); break;
-				case 6: $("[name=\'Registration[W6]\']").val(1); break;
-				case 7: $("[name=\'Registration[W7]\']").val(1); break;
-				case 8: $("[name=\'Registration[T1]\']").val(1); break;
-			}
-		}
-	});
+	// 	var keys = $workgrid.yiiGridView(\'getSelectedRows\');
+	// 	//if (typeof keys[0] !== \'undefined\') {
+	// 	for (i = 0; i < keys.length; i++) { 	
+	// 		switch(keys[i]){
+	// 			case 1: $("[name=\'Registration[W1]\']").val(1); break;
+	// 			case 2: $("[name=\'Registration[W2]\']").val(1); break;
+	// 			case 3: $("[name=\'Registration[W3]\']").val(1); break;
+	// 			case 4: $("[name=\'Registration[W4]\']").val(1); break;
+	// 			case 5: $("[name=\'Registration[W5]\']").val(1); break;
+	// 			case 6: $("[name=\'Registration[W6]\']").val(1); break;
+	// 			case 7: $("[name=\'Registration[W7]\']").val(1); break;
+	// 			case 8: $("[name=\'Registration[T1]\']").val(1); break;
+	// 		}
+	// 	}
+	// });
 	
 '); ?>
 
@@ -399,7 +399,7 @@ $pricesJsonString = json_encode($pricesJson);
     <h4><?= Html::encode('Tipos de Registro') ?></h4>
     
 	<p style="margin-left:0.5cm">
-		<b> <?= Html::encode('General:')?> </b> <?= Html::encode('Acceso a todas las conferencias, memorias de congreso, constancia digital de participación, talleres y visitas industriales.')?> 
+		<b> <?= Html::encode('General:')?> </b> <?= Html::encode('Acceso a todas las conferencias, memorias de congreso y constancia digital de participación. Incluye un taller o una visita industrial.')?> 
         <br>
 		<b> <?= Html::encode('Estudiante:')?> </b> <?= Html::encode('Acceso a todas las conferencias, memorias de congreso y constancia digital de participación. Incluye un taller o una visita industrial.')?>
 
@@ -568,7 +568,7 @@ $pricesJsonString = json_encode($pricesJson);
 	]); ?>
 
 	<p style="margin-left:0.5cm">
-		<b> <?= Html::encode('General:')?> </b> <?= Html::encode('Acceso a todas las conferencias, memorias de congreso, constancia digital de participación, talleres y visitas industriales.')?> 
+		<b> <?= Html::encode('General:')?> </b> <?= Html::encode('Acceso a todas las conferencias, memorias de congreso y constancia digital de participación. Incluye un taller o una visita industrial.')?> 
         <br>
 		<b> <?= Html::encode('Estudiante:')?> </b> <?= Html::encode('Acceso a todas las conferencias, memorias de congreso y constancia digital de participación. Incluye un taller o una visita industrial.')?>
 
@@ -669,22 +669,22 @@ $pricesJsonString = json_encode($pricesJson);
 			//'id',
 			[
 				'attribute' => 'nombre',
-				'label' => 'Nombre del Taller',
+				'label' => 'Nombre de la Empresa',
 			],
 			'descripcion',
 			[
 				'attribute' => 'fecha',
-				'header' => 'Fecha',
+				'label' => 'Fecha',
 				'format' => ['date', 'php:d-m-Y'],
 			],
 			[
 				'attribute' => 'hr_inicio',
-				'header' => 'Hora Inicio',
+				'label' => 'Hora Inicio',
 				'format' => ['time', 'php:H:i'],
 			],
 			[
 				'attribute' => 'hr_fin',
-				'header' => 'Hora Fin',
+				'label' => 'Hora Fin',
 				'format' => ['time', 'php:H:i'],
 			],
 			// [
@@ -704,7 +704,12 @@ $pricesJsonString = json_encode($pricesJson);
 	<!-- TALLERES Y VISITAS (WORKSHOP) END -->
 
 
+
 	<h3><?= Html::encode('Solo para Mexicanos (Documento oficial deducible de impuestos)')?></h3>
+
+    <div>
+        <strong> </strong> El ConCEI NO emite facturas a nombre de la Universidad Autónoma de Yucatán.
+    </div>
 
 	<?= $form->field($registration, 'invoice_required')->radioList(
 		[
@@ -714,7 +719,8 @@ $pricesJsonString = json_encode($pricesJson);
 	)->label('¿Requiere Factura? (Solo México)') ?>
 
 	
-    <?= $form->field($invoice, 'business_name')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($invoice, 'business_name')->textInput(['maxlength' => true])->hint('<span style="color:red;">Recuerda: El ConCEI NO emite facturas a nombre de la Universidad Autónoma de Yucatán.</span>') ?>
+
 
     <?= $form->field($invoice, 'rfc')->textInput(['maxlength' => true]) ?>
 
@@ -795,15 +801,6 @@ $pricesJsonString = json_encode($pricesJson);
     <div class="form-group">
         <?= Html::submitButton($registration->isNewRecord ? Yii::t('app', 'Submit') : Yii::t('app', 'Update data'), ['class' => $registration->isNewRecord ? 'btn btn-success' : 'btn btn-primary']) ?>
     </div>
-
-	<?= $form->field($registration, 'W1')->hiddenInput()->label(false) ?>
-	<?= $form->field($registration, 'W2')->hiddenInput()->label(false) ?>
-	<?= $form->field($registration, 'W3')->hiddenInput()->label(false) ?>
-	<?= $form->field($registration, 'W4')->hiddenInput()->label(false) ?>
-	<?= $form->field($registration, 'W5')->hiddenInput()->label(false) ?>
-	<?= $form->field($registration, 'W6')->hiddenInput()->label(false) ?>
-	<?= $form->field($registration, 'W7')->hiddenInput()->label(false) ?>
-	<?= $form->field($registration, 'T1')->hiddenInput()->label(false) ?>
 
     <?php ActiveForm::end(); ?>
 

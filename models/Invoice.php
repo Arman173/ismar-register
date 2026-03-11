@@ -11,7 +11,6 @@ use Yii;
  * @property string $business_name
  * @property string $rfc
  * @property string $address
- * @property string $zip_code
  * @property string $city
  * @property string $state
  * @property string $email
@@ -34,12 +33,11 @@ class Invoice extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['business_name', 'rfc', 'address', 'zip_code', 'city', 'state', 'email'], 'required', 'whenClient' => 'function (attribute, value){
+            [['business_name', 'rfc', 'address', 'city', 'state', 'email'], 'required', 'whenClient' => 'function (attribute, value){
 				return $("[name=\'Registration[invoice_required]\']:checked").val() == "1";
 			}'],
             [['business_name', 'address', 'city', 'state', 'email'], 'string', 'max' => 175],
             [['rfc'], 'string', 'max' => 20],
-            [['zip_code'], 'string', 'max' => 10],
 			[['email'], 'email']
         ];
     }
@@ -54,7 +52,7 @@ class Invoice extends \yii\db\ActiveRecord
             'business_name' => Yii::t('app', 'Razón Social'),
             'rfc' => Yii::t('app', 'RFC'),
             'address' => Yii::t('app', 'Dirección'),
-            'zip_code' => Yii::t('app', 'Código Postal'),
+            // 'zip_code' => Yii::t('app', 'Código Postal'),
             'city' => Yii::t('app', 'Ciudad'),
             'state' => Yii::t('app', 'Estado'),
             'email' => Yii::t('app', 'Correo'),

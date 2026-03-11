@@ -45,14 +45,14 @@ use yii\bootstrap\ActiveForm;
 		</div>
 		<?php endif; ?>
 		
-		<?php if( empty( $model->paid_by_credit_card ) && empty($model->payment_receipt) ): ?>
+		<?php if( empty($model->payment_receipt) ): ?>
 		<div class="alert alert-warning">
 			<h1>Attention!</h1>
 			<p>To complet your registration you need to pay online with credit or debit card or upload a payment receipt using the buttons below.</p>
 		</div>
 		<?php endif; ?>
 		
-		<?php if( !empty( $model->paid_by_credit_card ) || !empty($model->payment_receipt) ): ?>
+		<?php if( !empty($model->payment_receipt) ): ?>
 		<div class="alert alert-success">
 			<h1>Registration completed!</h1>
 			<p><?= Html::encode($model->fullName) ?>, your registration was completed sucessfully.</p>
@@ -168,23 +168,23 @@ use yii\bootstrap\ActiveForm;
 				'attribute' => 'modification_date',
 				'visible' => !empty($model->modification_date),
 			],
-			[
-				'attribute' => 'paid_by_credit_card',
-				'visible' => $model->paid_by_credit_card == true,
-				'value' => ($model->paid_by_credit_card)? 'Yes': 'No',
-			],
-			[
-				'attribute' => 'credit_card_import',
-				'visible' => $model->paid_by_credit_card == true,
-			],
-			[
-				'attribute' => 'credit_card_autorization',
-				'visible' => $model->paid_by_credit_card == true,
-			],
-			[
-				'attribute' => 'credit_card_date_paid',
-				'visible' => $model->paid_by_credit_card == true,
-			],
+			// [
+			// 	'attribute' => 'paid_by_credit_card',
+			// 	'visible' => $model->paid_by_credit_card == true,
+			// 	'value' => ($model->paid_by_credit_card)? 'Yes': 'No',
+			// ],
+			// [
+			// 	'attribute' => 'credit_card_import',
+			// 	'visible' => $model->paid_by_credit_card == true,
+			// ],
+			// [
+			// 	'attribute' => 'credit_card_autorization',
+			// 	'visible' => $model->paid_by_credit_card == true,
+			// ],
+			// [
+			// 	'attribute' => 'credit_card_date_paid',
+			// 	'visible' => $model->paid_by_credit_card == true,
+			// ],
         ],
     ]) ?>
 	

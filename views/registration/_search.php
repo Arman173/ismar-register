@@ -31,8 +31,6 @@ use yii\widgets\ActiveForm;
 
     <?php // echo $form->field($model, 'business_phone') ?>
 
-    <?php // echo $form->field($model, 'fax') ?>
-
     <?php // echo $form->field($model, 'email') ?>
 
     <?php // echo $form->field($model, 'email2') ?>
@@ -44,8 +42,6 @@ use yii\widgets\ActiveForm;
     <?php // echo $form->field($model, 'state') ?>
 
     <?php // echo $form->field($model, 'province') ?>
-
-    <?php // echo $form->field($model, 'zip') ?>
 
     <?php // echo $form->field($model, 'country') ?>
 

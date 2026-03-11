@@ -38,16 +38,16 @@ use yii\bootstrap\ActiveForm;
 ?>
 <div class="registration-view">
    
-		<?php if( empty( $model->paid_by_credit_card ) && empty($model->payment_receipt) ): ?>
+		<?php if( empty($model->payment_receipt) ): ?>
 		<div class="alert alert-warning">
         	<h2>Registro pendiente</h2>
-			<p><?= Html::encode($model->prefix) ?> <?= Html::encode($model->fullName) ?>, tus datos han sido guardados correctamente.</p>
+			<p><?= Html::encode($model->fullName) ?>, sus datos han sido guardados correctamente.</p>
 			<h2></h2>
 			<p>Para completar su registro, necesitará subir su comprobante de transferencia bancaria en el botón de abajo.</p>
 		</div>
 		<?php endif; ?>
 		
-		<?php if( !empty( $model->paid_by_credit_card ) || !empty($model->payment_receipt) ): ?>
+		<?php if( !empty($model->payment_receipt) ): ?>
 		<div class="alert alert-success">
 			<h2>Confirmación de registro</h2>
 			<p><?= Html::encode($model->fullName) ?>, <br />Gracias por registrarse al ConCEI-3, que se llevará a cabo en Mérida, México del 7 al 9 de octubre de 2026 en el Campus de Ciencias Exactas e Ingenierías de la Universidad Autónoma de Yucatán (UADY).</p>
@@ -109,7 +109,20 @@ use yii\bootstrap\ActiveForm;
             'organization_name',
             'first_name',
             'last_name',
-            'display_name',
+            [
+                'attribute' => 'display_name',
+                'format' => 'raw',
+                'value' => function ($model) {
+                    // Creamos un pequeño formulario en línea que apunta a una nueva acción en el controlador
+                    return Html::beginForm(['update-display-name', 'id' => $model->id], 'post', ['class' => 'form-inline'])
+                        . Html::textInput('display_name', $model->display_name, [
+                            'class' => 'form-control input-sm', 
+                            'style' => 'display: inline-block; width: auto; margin-right: 5px;'
+                        ])
+                        . Html::submitButton('Actualizar', ['class' => 'btn btn-sm btn-success'])
+                        . Html::endForm();
+                },
+            ],
             'city',
             'state',
             'country',
@@ -128,30 +141,22 @@ use yii\bootstrap\ActiveForm;
 				'attribute' => 'modification_date',
 				'visible' => !empty($model->modification_date),
 			],
-			[
-				'attribute' => 'paid_by_credit_card',
-				'visible' => $model->paid_by_credit_card == true,
-				'value' => ($model->paid_by_credit_card)? 'Yes': 'No',
-			],
-			[
-				'attribute' => 'credit_card_import',
-				'visible' => $model->paid_by_credit_card == true,
-			],
-			[
-				'attribute' => 'credit_card_autorization',
-				'visible' => $model->paid_by_credit_card == true,
-			],
-			[
-				'attribute' => 'credit_card_date_paid',
-				'visible' => $model->paid_by_credit_card == true,
-			],
         ],
     ]) ?>
 	
 	<?php if(!empty($model->invoice)): ?>
 	
-	<h2>Datos de Facturación</h2>
+		<h2>Datos de Facturación</h2>
 	
+    <?php 
+        $razonSocial = $model->invoice->business_name;
+        if (preg_match('/uady|universidad aut[oó]noma de yucat[aá]n/i', $razonSocial)): 
+    ?>
+        <div class="alert alert-danger">
+            <strong>Atención:</strong> El ConCEI NO emite facturas a nombre de la Universidad Autónoma de Yucatán. Por favor actualice su información de facturación.
+        </div>
+    <?php endif; ?>
+
 	<?= DetailView::widget([
         'model' => $model->invoice,
         'attributes' => [
@@ -168,10 +173,3 @@ use yii\bootstrap\ActiveForm;
 	<?php endif; ?>
 
 </div>
-
-
-
-
-
-
-

@@ -11,35 +11,23 @@ use app\models\RegistrationType;
  * @property string $id
  * @property string $registration_type_id
  * @property string $organization_name
- * @property string $prefix
  * @property string $first_name
  * @property string $last_name
  * @property string $display_name
  * @property string $business_phone
- * @property string $fax
  * @property string $email
  * @property string $email2
  * @property string $address
  * @property string $city
  * @property string $state
- * @property string $zip
  * @property string $country
  * @property string $student_id
  * @property string $payment_receipt
  * @property string $emergency_name
  * @property string $emergency_phone
- * @property string $diet
  * @property string $token
  * @property int $banquet_ticket
  * @property int $proceedings_copies
- * @property int $W1
- * @property int $W2
- * @property int $W3
- * @property int $W4
- * @property int $W5
- * @property int $W6
- * @property int $W7
- * @property int $T1
  * @property string $one_day_registration
  * @property Invoice $invoice
  * @property RegistrationType $registrationType
@@ -60,6 +48,11 @@ class Registration extends \yii\db\ActiveRecord
     public $revista_seleccionada;
 
 	public $file_cv; // <-- Para el CV
+
+	// --- VARIABLES PARA TALLERES, VISITAS Y COSTO TOTAL ---
+    public $talleres_seleccionados = [];
+    public $visitas_seleccionadas = [];
+    public $total_amount = 0.00;
 	
     /**
      * @inheritdoc
@@ -78,8 +71,7 @@ class Registration extends \yii\db\ActiveRecord
             // 1. ELIMINADO 'zip' de la lista de required
             [['registration_type_id', 'organization_name', 'first_name', 'last_name', 'email', 'invoice_required', 'city', 'country',], 'required'],
             
-            [['registration_type_id', 'W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'T1', 'banquet_ticket', 'proceedings_copies'], 'integer'],
-            [['diet', 'type1'], 'string', 'max' => 20],
+            [['registration_type_id', 'banquet_ticket', 'proceedings_copies'], 'integer'],
             
             // 2. ELIMINADOS 'display_name', 'address', 'emergency_name' de max 150
             [['organization_name', 'email', 'email2'], 'string', 'max' => 150],
@@ -90,10 +82,6 @@ class Registration extends \yii\db\ActiveRecord
             [['business_phone', 'student_id', 'payment_receipt', 'one_day_registration',], 'string', 'max' => 45],
             
             [['registration_type_id'], 'exist', 'targetClass' => 'app\models\RegistrationType', 'targetAttribute' => 'id'],
-            
-            // 4. ELIMINADOS 'zip' y 'prefix' de max 10 (esta línea casi desaparece si no hay otros campos cortos)
-            // Si no tienes otro campo de max 10, puedes borrar esta línea o dejarla vacía, o dejar zip solo como opcional:
-            [['zip'], 'string', 'max' => 10], 
 
             [['email'], 'unique'],
             [['email'], 'email'],
@@ -103,15 +91,16 @@ class Registration extends \yii\db\ActiveRecord
             
             [['file_student_id'], 'file', 'skipOnEmpty' => true, 'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx'],
 			// <-- CV-->
-            [['file_cv'], 'file', 'skipOnEmpty' => true, 'extensions' => 'pdf, doc, docx'], 
+            [['file_cv'], 'file', 'skipOnEmpty' => true, 'extensions' => 'pdf'], 
             // <-- CAMPO DE LA BD (cv_file) -->
             [['cv_file'], 'string', 'max' => 255],
 
 			[['invoice_required'], 'boolean'],
             [['change_file_payment_receipt', 'change_file_student_id'], 'each', 'rule'=>['in', 'range'=>[0,1]]],
 			[['type2', 'title2', 'revista_seleccionada'], 'safe'],
-
 			
+			[['talleres_seleccionados', 'visitas_seleccionadas'], 'safe'],
+            [['total_amount'], 'number'], // Valida que sea numérico
         ];
     }
 
@@ -125,18 +114,15 @@ class Registration extends \yii\db\ActiveRecord
 			'folio' => Yii::t('app', 'Registration Number'),
             'registration_type_id' => Yii::t('app', 'Registration Fee'),
             'organization_name' => Yii::t('app', 'Organization / Company'),
-			'prefix' => Yii::t('app', 'Prefix'),
             'first_name' => Yii::t('app', 'First Name'),
             'last_name' => Yii::t('app', 'Last name / Family name'),
             'display_name' => Yii::t('app', 'Display Name'),
 //          'degree' => Yii::t('app', 'Degree'),
             'business_phone' => Yii::t('app', 'Phone (incl. country code)'),
-            'fax' => Yii::t('app', 'Fax'),
             'email' => Yii::t('app', 'Email'),
             'address' => Yii::t('app', 'Address'),
             'city' => Yii::t('app', 'City'),
             'state' => Yii::t('app', 'Province / State'),
-            'zip' => Yii::t('app', 'Postal Code / Zip'),
             'country' => Yii::t('app', 'Country'),
             'student_id' => Yii::t('app', 'Student Proof'),
 			'payment_receipt' => Yii::t('app', 'Payment Receipt'),
@@ -146,7 +132,6 @@ class Registration extends \yii\db\ActiveRecord
 			'change_file_payment_receipt' => Yii::t('app', 'Payment Receipt'),
             'emergency_name' => Yii::t('app', 'Emergency Name'),
             'emergency_phone' => Yii::t('app', 'Emergency Phone'),
-			'diet' => Yii::t('app', 'Dietary Restrictions'),
             'token' => Yii::t('app', 'Token'),
 			'creation_date' => Yii::t('app', 'Creation Date'),
 			'modification_date' => Yii::t('app', 'Modification Date'),
@@ -185,6 +170,48 @@ class Registration extends \yii\db\ActiveRecord
     {
         return $this->hasOne(RegistrationType::className(), ['id' => 'registration_type_id']);
     }
+
+	/**
+     * Calcula y asigna el costo total del registro incluyendo talleres/visitas extra.
+     * Réplica exacta de la lógica del frontend.
+     */
+    public function calculateTotalCost()
+    {
+        $costoTaller = 100.00; 
+        $fechaCambioPrecio = '2026-02-17';
+        $isEarlyBird = (date('Y-m-d') <= $fechaCambioPrecio);
+
+        // 1. Obtener costo base usando la relación (si está cargada) o buscando el tipo
+        $baseCost = 0;
+        $tipoRegistro = RegistrationType::findOne($this->registration_type_id);
+        if ($tipoRegistro) {
+            $baseCost = $isEarlyBird ? $tipoRegistro->cost_early_bird : $tipoRegistro->cost_late;
+        }
+
+        // 2. Contar extras (Asegurándonos de que no sean vacíos/null)
+        $countTalleres = is_array($this->talleres_seleccionados) ? count($this->talleres_seleccionados) : 0;
+        $countVisitas = is_array($this->visitas_seleccionadas) ? count($this->visitas_seleccionadas) : 0;
+        $totalExtrasCount = $countTalleres + $countVisitas;
+
+        // 3. Lógica de cobro (1 gratis para General(1) y Estudiante(12))
+        $paidExtras = 0;
+        $typeIdStr = (string)$this->registration_type_id;
+
+        if ($totalExtrasCount > 0) {
+            if ($typeIdStr === '1' || $typeIdStr === '12') {
+                $paidExtras = max(0, $totalExtrasCount - 1);
+            } elseif ($typeIdStr === '17') {
+                $paidExtras = $totalExtrasCount;
+            } else {
+                $paidExtras = $totalExtrasCount;
+            }
+        }
+
+        $extrasTotalCost = $paidExtras * $costoTaller;
+        
+        // Asignar a la variable (y columna de BD) total_amount
+        $this->total_amount = $baseCost + $extrasTotalCost; 
+    }
 	
 	public function beforeSave($insert)
 	{
@@ -197,25 +224,22 @@ class Registration extends \yii\db\ActiveRecord
             // Si tu base de datos NO permite nulos en estos campos, 
             // ponemos cadenas vacías para que no truene el sistema:
             if(empty($this->address)) $this->address = ''; 
-            if(empty($this->zip)) $this->zip = '';
-            if(empty($this->fax)) $this->fax = '';
-            if(empty($this->prefix)) $this->prefix = '';
+            // if(empty($this->zip)) $this->zip = '';
+            // if(empty($this->fax)) $this->fax = '';
+            // if(empty($this->prefix)) $this->prefix = '';
             if(empty($this->emergency_name)) $this->emergency_name = '';
             if(empty($this->emergency_phone)) $this->emergency_phone = '';
             // ---------------------------------------------
 			
-			if($this->paid_by_credit_card == true)
-				$this->payment = 'Credit Card';
+			// if($this->paid_by_credit_card == true)
+			// 	$this->payment = 'Credit Card';
 			// PAYMENT_RECEIPT
 			if( !empty($this->file_payment_receipt) )
 			{
 				$fileNamePaymentReceipt = uniqid() . '.' . $this->file_payment_receipt->extension;
 				$this->file_payment_receipt->saveAs('files/payment/' . $fileNamePaymentReceipt);
 				$this->payment_receipt = $fileNamePaymentReceipt;
-				if($this->paid_by_credit_card == true)
-					$this->payment = 'both';
-				else
-					$this->payment = 'Bank Transfer';
+				$this->payment = 'Bank Transfer';
 			}
 			
 			if(empty($this->payment))

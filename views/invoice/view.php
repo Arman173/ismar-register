@@ -32,7 +32,7 @@ $this->params['breadcrumbs'][] = $this->title;
             'business_name',
             'rfc',
             'address',
-            'zip_code',
+            // 'zip_code',
             'city',
             'state',
             'email:email',

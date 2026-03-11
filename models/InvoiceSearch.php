@@ -19,7 +19,7 @@ class InvoiceSearch extends Invoice
     {
         return [
             [['registration_id'], 'integer'],
-            [['business_name', 'rfc', 'address', 'zip_code', 'city', 'state', 'email'], 'safe'],
+            [['business_name', 'rfc', 'address', 'city', 'state', 'email'], 'safe'],
         ];
     }
 
@@ -62,7 +62,7 @@ class InvoiceSearch extends Invoice
         $query->andFilterWhere(['like', 'business_name', $this->business_name])
             ->andFilterWhere(['like', 'rfc', $this->rfc])
             ->andFilterWhere(['like', 'address', $this->address])
-            ->andFilterWhere(['like', 'zip_code', $this->zip_code])
+            // ->andFilterWhere(['like', 'zip_code', $this->zip_code])
             ->andFilterWhere(['like', 'city', $this->city])
             ->andFilterWhere(['like', 'state', $this->state])
             ->andFilterWhere(['like', 'email', $this->email]);

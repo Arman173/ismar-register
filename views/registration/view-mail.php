@@ -11,23 +11,22 @@ use yii\bootstrap\ActiveForm;
 ?>
 <div class="registration-view">
 	
-	<?php if( empty( $model->paid_by_credit_card ) && empty($model->payment_receipt) ): ?>
+	<?php if( empty($model->payment_receipt) ): ?>
 	<div class="alert alert-warning">
-		<h1>Attention!</h1>
-		<p>To complet your registration you need to pay online with credit or debit card or upload a payment receipt using the link below.</p>
+		<p>Para completar su registro deberá subir su comprobante de transferencia bancaria en el siguiente link.</p>
 		<p><?= Html::a(Yii::t('app', 'Complete Registration'), ['view', 'id' => $model->id], ['class' => 'btn btn-primary']) ?></p>
 	</div>
 	<?php endif; ?>
 	<
-	<?php if( !empty( $model->paid_by_credit_card ) || !empty($model->payment_receipt) ): ?>
+	<?php if( !empty($model->payment_receipt) ): ?>
 	<div class="alert alert-success">
-		<h1>Registration completed!</h1>
-		<p><?= Html::encode($model->fullName) ?>, your registration was completed sucessfully.</p>
+		<h1>Registro Completo!</h1>
+		<p><?= Html::encode($model->fullName) ?>, su registro fue guardado correctamente, se le notificará cuando su comprobante de pago haya sido revisado y aceptado para que su registro esté completo.</p>
 	</div>
 	<?php endif; ?>
 	
 	<div class="alert alert-info">
-		<p>You can view your data using the link below!</p>
+		<p>Puede ver sus datos registrados en el siguiente enlace!</p>
 		<p><?= Html::a(Yii::t('app', 'Registration Data'), ['view', 'id' => $model->id], ['class' => 'btn btn-primary']) ?></p>
 	</div>
 	
@@ -66,33 +65,42 @@ use yii\bootstrap\ActiveForm;
             'emergency_name',
             'emergency_phone',
 			'creation_date',
-			[
-				'attribute' => 'modification_date',
-				'visible' => !empty($model->modification_date),
-			],
-			[
-				'attribute' => 'paid_by_credit_card',
-				'visible' => $model->paid_by_credit_card == true,
-				'value' => ($model->paid_by_credit_card)? 'Yes': 'No',
-			],
-			[
-				'attribute' => 'credit_card_import',
-				'visible' => $model->paid_by_credit_card == true,
-			],
-			[
-				'attribute' => 'credit_card_autorization',
-				'visible' => $model->paid_by_credit_card == true,
-			],
-			[
-				'attribute' => 'credit_card_date_paid',
-				'visible' => $model->paid_by_credit_card == true,
-			],
+			// [
+			// 	'attribute' => 'modification_date',
+			// 	'visible' => !empty($model->modification_date),
+			// ],
+			// [
+			// 	'attribute' => 'paid_by_credit_card',
+			// 	'visible' => $model->paid_by_credit_card == true,
+			// 	'value' => ($model->paid_by_credit_card)? 'Yes': 'No',
+			// ],
+			// [
+			// 	'attribute' => 'credit_card_import',
+			// 	'visible' => $model->paid_by_credit_card == true,
+			// ],
+			// [
+			// 	'attribute' => 'credit_card_autorization',
+			// 	'visible' => $model->paid_by_credit_card == true,
+			// ],
+			// [
+			// 	'attribute' => 'credit_card_date_paid',
+			// 	'visible' => $model->paid_by_credit_card == true,
+			// ],
         ],
     ]) ?>
 	
 	<?php if(!empty($model->invoice)): ?>
 	
-	<h2>Datos de Facturación</h2>
+<h3>Datos de Facturación</h3>
+
+    <?php 
+        $razonSocial = $model->invoice->business_name;
+        if (preg_match('/uady|universidad aut[oó]noma de yucat[aá]n/i', $razonSocial)): 
+    ?>
+        <div style="background-color: #f2dede; color: #a94442; padding: 15px; margin-bottom: 20px; border: 1px solid #ebccd1; border-radius: 4px;">
+            <strong>Atención:</strong> El ConCEI NO emite facturas a nombre de la Universidad Autónoma de Yucatán. Su factura no podrá ser procesada con estos datos.
+        </div>
+    <?php endif; ?>
 	
 	<?= DetailView::widget([
         'model' => $model->invoice,

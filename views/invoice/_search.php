@@ -23,8 +23,6 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'address') ?>
 
-    <?= $form->field($model, 'zip_code') ?>
-
     <?php // echo $form->field($model, 'city') ?>
 
     <?php // echo $form->field($model, 'state') ?>
