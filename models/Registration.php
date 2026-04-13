@@ -87,7 +87,10 @@ class Registration extends \yii\db\ActiveRecord
             [['email'], 'unique'],
             [['email'], 'email'],
             
-            [['file_payment_receipt'], 'file', 'skipOnEmpty' => false, 'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx', 'on' => 'UploadPaymentReceipt'],
+			[['invoice_required'], 'required', 'except' => ['Update']],
+			[['payment_type'], 'required', 'except' => ['Update']],
+			[['payment_type'], 'in', 'range' => [2,3], 'except' => ['Update']],
+            // [['file_payment_receipt'], 'file', 'skipOnEmpty' => false, 'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx', 'on' => 'UploadPaymentReceipt'],
             // [['file_payment_receipt'], 'file', 'skipOnEmpty' => true, 'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx', 'on' => 'Update'],
 			[
 				['file_payment_receipt'], 

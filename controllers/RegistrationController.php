@@ -6,6 +6,7 @@ use Yii;
 use app\models\Registration;
 use app\models\RegistrationSearch;
 use app\models\RegistrationType;
+use app\models\RegistrationCode;
 use app\models\Invoice;
 use app\models\InvoiceSearch;
 use app\models\Taller;
@@ -333,6 +334,12 @@ class RegistrationController extends Controller
 				if($registration->save())
 				{
 					$isSaved = true;
+                    if($registration->payment_type == 3)
+					{
+						$registrationCode = RegistrationCode::find()->where(['code'=>$registration->registration_code])->one();
+						$registrationCode->registration_id = $registration->id;
+						$isSaved = $isSaved && $registrationCode->save();
+					}
 					if($registration->invoice_required)
 					{
 						$invoice->registration_id = $registration->id;

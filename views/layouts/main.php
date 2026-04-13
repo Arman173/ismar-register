@@ -66,6 +66,11 @@ AppAsset::register($this);
                 'url' => ['/registration-workshop/index'],
                 'visible' => !Yii::$app->user->isGuest,
             ],
+            [
+				'label' => 'Registration Code',
+				'url' => ['/registration-code/index'],
+				'visible' => !Yii::$app->user->isGuest,
+			],
 			// [
 			// 	'label' => 'Users',
 			// 	'url' => ['/user/index'],
