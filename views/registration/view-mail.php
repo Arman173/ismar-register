@@ -11,14 +11,14 @@ use yii\bootstrap\ActiveForm;
 ?>
 <div class="registration-view">
 	
-	<?php if( empty($model->payment_receipt) ): ?>
+	<?php if( !$model->confirmado ): ?>
 	<div class="alert alert-warning">
 		<p>Para completar su registro deberá subir su comprobante de transferencia bancaria en el siguiente link.</p>
 		<p><?= Html::a(Yii::t('app', 'Complete Registration'), ['view', 'id' => $model->id], ['class' => 'btn btn-primary']) ?></p>
 	</div>
 	<?php endif; ?>
 	<
-	<?php if( !empty($model->payment_receipt) ): ?>
+	<?php if( $model->confirmado ): ?>
 	<div class="alert alert-success">
 		<h1>Registro Completo!</h1>
 		<p><?= Html::encode($model->fullName) ?>, su registro fue guardado correctamente, se le notificará cuando su comprobante de pago haya sido revisado y aceptado para que su registro esté completo.</p>

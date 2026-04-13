@@ -38,7 +38,7 @@ use yii\bootstrap\ActiveForm;
 ?>
 <div class="registration-view">
    
-		<?php if( empty($model->payment_receipt) ): ?>
+		<?php if( !$model->confirmado ): ?>
 		<div class="alert alert-warning">
         	<h2>Registro pendiente</h2>
 			<p><?= Html::encode($model->fullName) ?>, sus datos han sido guardados correctamente.</p>
@@ -47,7 +47,7 @@ use yii\bootstrap\ActiveForm;
 		</div>
 		<?php endif; ?>
 		
-		<?php if( !empty($model->payment_receipt) ): ?>
+		<?php if( $model->confirmado ): ?>
 		<div class="alert alert-success">
 			<h2>Confirmación de registro</h2>
 			<p><?= Html::encode($model->fullName) ?>, <br />Gracias por registrarse al ConCEI-3, que se llevará a cabo en Mérida, México del 7 al 9 de octubre de 2026 en el Campus de Ciencias Exactas e Ingenierías de la Universidad Autónoma de Yucatán (UADY).</p>
@@ -109,20 +109,24 @@ use yii\bootstrap\ActiveForm;
             'organization_name',
             'first_name',
             'last_name',
-            [
-                'attribute' => 'display_name',
-                'format' => 'raw',
-                'value' => function ($model) {
-                    // Creamos un pequeño formulario en línea que apunta a una nueva acción en el controlador
-                    return Html::beginForm(['update-display-name', 'id' => $model->id], 'post', ['class' => 'form-inline'])
-                        . Html::textInput('display_name', $model->display_name, [
-                            'class' => 'form-control input-sm', 
-                            'style' => 'display: inline-block; width: auto; margin-right: 5px;'
-                        ])
-                        . Html::submitButton('Actualizar', ['class' => 'btn btn-sm btn-success'])
-                        . Html::endForm();
-                },
-            ],
+			[
+				'attribute' => 'display_name',
+				'label' => 'Nombre Completo'
+			],
+            // [
+            //     'attribute' => 'display_name',
+            //     'format' => 'raw',
+            //     'value' => function ($model) {
+            //         // Creamos un pequeño formulario en línea que apunta a una nueva acción en el controlador
+            //         return Html::beginForm(['update-display-name', 'id' => $model->id], 'post', ['class' => 'form-inline'])
+            //             . Html::textInput('display_name', $model->display_name, [
+            //                 'class' => 'form-control input-sm', 
+            //                 'style' => 'display: inline-block; width: auto; margin-right: 5px;'
+            //             ])
+            //             . Html::submitButton('Actualizar', ['class' => 'btn btn-sm btn-success'])
+            //             . Html::endForm();
+            //     },
+            // ],
             'city',
             'state',
             'country',

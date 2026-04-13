@@ -41,6 +41,7 @@ class Registration extends \yii\db\ActiveRecord
 	// public $invoice_required = 0;
 	public $registration_type_name;
 	public $payment_type;
+	public $registration_code;
 
 	//Se agregaron estas 3 líneas para lo de los autores:
 	public $type2;
@@ -69,7 +70,7 @@ class Registration extends \yii\db\ActiveRecord
     {
         return [
             // 1. ELIMINADO 'zip' de la lista de required
-            [['registration_type_id', 'organization_name', 'first_name', 'last_name', 'email', 'invoice_required', 'city', 'country',], 'required'],
+            [['registration_type_id', 'organization_name', 'first_name', 'last_name', 'email', 'invoice_required', 'city', 'country'], 'required'],
             
             [['registration_type_id', 'banquet_ticket', 'proceedings_copies'], 'integer'],
             
@@ -87,7 +88,60 @@ class Registration extends \yii\db\ActiveRecord
             [['email'], 'email'],
             
             [['file_payment_receipt'], 'file', 'skipOnEmpty' => false, 'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx', 'on' => 'UploadPaymentReceipt'],
-            [['file_payment_receipt'], 'file', 'skipOnEmpty' => true, 'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx', 'on' => 'Update'],
+            // [['file_payment_receipt'], 'file', 'skipOnEmpty' => true, 'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx', 'on' => 'Update'],
+			[
+				['file_payment_receipt'], 
+				'file', 
+				'skipOnEmpty' => false, 
+				'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx, zip',
+				'when' => function ($model){
+					if($model->payment_type == 2){
+						return true;
+					}
+					return false;
+				},
+				'whenClient' => 'function (attribute,value){
+					if( $("[name=\'Registration[payment_type]\']:checked").val() == 2 )
+						return true;
+					return false;
+				}',
+				'except' => ['Update'],
+			],
+			[
+				['file_payment_receipt'],
+				'required',
+				'when' => function ($model){
+					if($model->payment_type == 2 && empty($model->payment_receipt))
+						return true;
+					return false;
+				},
+				'whenClient' => 'function (attribute,value){
+					if( $("[name=\'Registration[payment_type]\']:checked").val() == 2 )
+						return true;
+					return false;
+				}',
+				'except' => ['Update'],
+			],
+			[
+				['registration_code'],
+				'required',
+				'when' => function ($model){
+					if($model->payment_type == 3)
+						return true;
+					return false;
+				},
+				'whenClient' => 'function (attribute,value){
+					if( $("[name=\'Registration[payment_type]\']:checked").val() == 3 )
+						return true;
+					return false;
+				}',
+				'except' => ['Update'],
+			],
+			[['registration_code'], 'validateRegistrationCode','when' => function ($model){
+				if($model->payment_type == 3)
+					return true;
+				return false;
+			}, 'except' => ['Update']],
             
             [['file_student_id'], 'file', 'skipOnEmpty' => true, 'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx'],
 			// <-- CV-->
@@ -101,6 +155,13 @@ class Registration extends \yii\db\ActiveRecord
 			
 			[['talleres_seleccionados', 'visitas_seleccionadas'], 'safe'],
             [['total_amount'], 'number'], // Valida que sea numérico
+
+			[['area_trabajo'], 'string', 'max' => 255],
+            [['modalidad_presentacion'], 'string', 'max' => 50],
+
+			// campo para confirmar validacion del comprobante de pago
+			[['confirmado'], 'boolean'],
+            [['confirmado'], 'default', 'value' => false],
         ];
     }
 
@@ -144,6 +205,10 @@ class Registration extends \yii\db\ActiveRecord
 			'banquet_ticket' => Yii::t('app', 'Additional Ticket to Attend the Banquet '),
 			'proceedings_copies' => Yii::t('app', 'Additional Copy of Conference Proceedings'),
 			'file_cv' => Yii::t('app', 'Curriculum Vitae (CV)'), // <-- Línea nueva para el CV
+			'area_trabajo' => Yii::t('app', 'Área a la que pertenece su trabajo'),
+            'modalidad_presentacion' => Yii::t('app', 'Modalidad de presentación deseada'),
+
+			'confirmado' => Yii::t('app', 'Confirmado'),
         ];
     }
 
@@ -353,4 +418,37 @@ class Registration extends \yii\db\ActiveRecord
 	{
 		return $this->validateLeftToken($leftToken) && $this->validateRightToken($rightToken);
 	}
+
+	public function validateRegistrationCode($attribute, $params)
+	{
+		// var_dump($attribute); var_dump($this->$attribute); die();
+		$registrationCode = RegistrationCode::find()->where(['code'=>$this->$attribute])->one();
+		if( !empty($registrationCode) && empty($registrationCode->registration_id) )
+			return;
+		else
+			$this->addError($attribute, 'Invalid registration code.');
+	}
+
+// **************Función para el concepto de pago*************
+	public function getConceptoPago()
+    {
+        // Revisamos si las variables tienen texto, si no, usamos un string vacío
+        $apellido = $this->last_name ? (string)$this->last_name : '';
+        $nombre = $this->first_name ? (string)$this->first_name : '';
+
+        // 1 y 2. Nombres y apellidos seguros
+        $apellidoStr = str_pad(substr(strtoupper(trim($apellido)), 0, 3), 3, '0', STR_PAD_LEFT);
+        $nombreStr = str_pad(substr(strtoupper(trim($nombre)), 0, 3), 3, '0', STR_PAD_LEFT);
+        
+        // 3. Tipo de registro
+        $tipoRegistro = 'RU'; // Por defecto (UADY)
+        if ($this->registration_type_id == 1) { 
+            $tipoRegistro = 'RG';
+        } elseif ($this->registration_type_id == 12) {
+            $tipoRegistro = 'RE';
+        }
+        
+        return $apellidoStr . $nombreStr . $tipoRegistro;
+    }
+
 }

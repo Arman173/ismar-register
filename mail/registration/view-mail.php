@@ -28,40 +28,46 @@ use yii\bootstrap\ActiveForm;
 </style>
 
 <div class="registration-view">
-	
-	<?php if(Yii::$app->session->hasFlash('registration-submitted-successfully-mail')): ?>
+
+    <div style="text-align: center; margin-bottom: 20px;">
+        <img src="<?= Url::to('@web/img/logo_concei.jpeg', true) ?>" alt="Logo ConCEI" style="max-width: 250px; height: auto;">
+    </div>
+    
+    <?php if(Yii::$app->session->hasFlash('registration-submitted-successfully-mail')): ?>
     <div class="alert alert-success">
-	</div>
-	<?php endif; ?>
+    </div>
+    <?php endif; ?>
     
-	<?php if( empty($model->payment_receipt) ): ?>
-	<div class="alert alert-warning">
-		<h2>Registro Pendiente - ConCEI 3</h2>
-		<p>Estimado/a<?= Html::encode($model->fullName) ?>, 
-        <br /> 
-		Gracias por registrarse al tercer Congreso de Ciencias Exactas e Ingenierías 2026, que se llevará a cabo en Mérida, México, del 7 al 9 de octubre de 2026 en el campus de Ciencias Exactas e ingenierías (CCEI) UADY.
-        <br />
-		Para completar su registro, es necesario que realice su pago en línea mediante transferencia bancaria, deberá subir su comprobante de pago utilizando el enlace a continuación.        </p>
-		<p><?= Html::a(Yii::t('app', 'Completar registro'), Url::to(['submitted', 'id' => $model->id, 'token' => $model->token],true), ['class' => 'btn btn-primary']) ?></p>
-	</div>
-	<?php endif; ?>
-	
+    <?php if( !$model->confirmado ): ?>
+    <div class="alert alert-warning">
+        <h2>Registro Pendiente - ConCEI 3</h2>
+        <p>Estimado/a <?= Html::encode($model->fullName) ?>,</p> 
+        <p>Gracias por registrarse al tercer Congreso de Ciencias Exactas e Ingenierías 3, que se llevará a cabo en Mérida, México, del 7 al 9 de octubre de 2026 en el Campus de Ciencias Exactas e Ingenierías (CCEI) de la Universidad Autónoma de Yucatán. </p>
+        <p>Le informamos que en este momento su estatus es Pendiente de verificación. Nuestro equipo administrativo se encuentra revisando la transacción y validando su transferencia bancaria.</p>
+        <p>Una vez que su pago sea verificado, su estatus se actualizará a Confirmado y recibirá un nuevo correo electrónico notificándole que su registro al evento es oficial.  </p>
+    </div>
+    <?php endif; ?>
     
-	<?php if( !empty($model->payment_receipt) ): ?>
-	<div class="alert alert-success">
-		<h2>Confirmación de Registro - ConCEI-3</h2>
-		<p>Estimado/a <?= Html::encode($model->fullName) ?>, 
-        <br />
-			Gracias por registrarse al Congreso de Ciencias Exactas e Ingenierías -3, que se llevará a cabo en Mérida, México, del 7 al 9 de octubre de 2026 en el Campus de Ciencias Exactas e Ingenierías (CCEI) UADY.</p>
-	</div>
-	<?php endif; ?>
+    <?php if( $model->confirmado ): ?>
+    <div class="alert alert-success">
+        <h2>Confirmación de Registro - ConCEI 3</h2>
+        <p>Estimado/a <?= Html::encode($model->fullName) ?>,</p> 
+        <p>Nos complace informarle que su comprobante de pago ha sido <strong>verificado y aceptado exitosamente</strong>.</p>
+        <p>Su registro para el tercer Congreso de Ciencias Exactas e Ingenierías (ConCEI 3) está ahora <strong>completo y confirmado</strong>.</p>
+    </div> <?php endif; ?>
 
-		<div class="alert alert-info">
-		<p>Puede actualizar sus datos utilizando el siguiente enlace.
-		<br /><?= Html::a(Yii::t('app', 'Actualizar registro'), Url::to(['submitted', 'id' => $model->id, 'token' => $model->token],true), ['class' => 'btn btn-primary']) ?></p>
-	</div>
+    <div class="alert alert-info">
+        <p>Puede actualizar sus datos utilizando el siguiente enlace.
+        <br /><?= Html::a(Yii::t('app', 'Actualizar registro'), Url::to(['submitted', 'id' => $model->id, 'token' => $model->token],true), ['class' => 'btn btn-primary']) ?></p>
+    </div>
 
-	<p> <?= date("l"), ", ", date("F"), " ", date("d"), ", ", date("Y")  ?> </p>
+    <p style="color: #555; font-size: 0.9em;"> 
+    <?php 
+    $dias = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+    $meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    echo $dias[date('w')] . ", " . date('d') . " de " . $meses[date('n')-1] . " de " . date('Y');
+    ?> 
+    </p>
 
 	<p><?= Html::encode($model->fullName) ?>, 
     <br />
@@ -76,10 +82,10 @@ use yii\bootstrap\ActiveForm;
 
 	<table>
 		<tr>
-			<th>Details</th>
+			<th>Concepto</th>
 			<th>#</th>
-			<th>Fee</th>
-			<th>Total</th>
+			<th>Cuota</th>
+			<th>Subtotal</th>
 		</tr>
 		<tr>
 			<td><?= Html::encode($model->registrationType->name) ?></td>

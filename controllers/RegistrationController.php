@@ -192,68 +192,79 @@ class RegistrationController extends Controller
 			
 			if($valid)
             {
-                // --- NUEVO: 1. Calcular el costo y asignarlo al modelo ANTES de guardar ---
-                $registration->calculateTotalCost();
+                // // --- NUEVO: 1. Calcular el costo y asignarlo al modelo ANTES de guardar ---
+                // $registration->calculateTotalCost();
 
-                // --- NUEVO: 2. Iniciar Transacción de Base de Datos ---
-                $transaction = Yii::$app->db->beginTransaction();
-                try {
-                    if($registration->save())
-                    {
-                        $isSaved = true;
+                // // --- NUEVO: 2. Iniciar Transacción de Base de Datos ---
+                // $transaction = Yii::$app->db->beginTransaction();
+                // try {
+                //     if($registration->save())
+                //     {
+                //         $isSaved = true;
 
-                        // Guardar la factura si aplica
-                        if($registration->invoice_required)
-                        {
-                            $invoice->registration_id = $registration->id;
-                            $isSaved = $isSaved && $invoice->save();
-                        }
+                //         // Guardar la factura si aplica
+                //         if($registration->invoice_required)
+                //         {
+                //             $invoice->registration_id = $registration->id;
+                //             $isSaved = $isSaved && $invoice->save();
+                //         }
 
-                        // --- NUEVO: 3. Guardar Talleres Seleccionados ---
-                        if ($isSaved && !empty($registration->talleres_seleccionados) && is_array($registration->talleres_seleccionados)) {
-                            foreach ($registration->talleres_seleccionados as $taller_id) {
-                                $rw = new \app\models\RegistrationWorkshop();
-                                $rw->registration_id = $registration->id;
-                                $rw->workshop_id = $taller_id; // Asegúrate de que los IDs no choquen con las visitas
-                                $rw->cost = 100.00; // O la lógica que defina el costo individual
-                                $rw->created_at = date('Y-m-d H:i:s');
-                                if (!$rw->save()) {
-                                    throw new \Exception('Error al guardar Taller.');
-                                }
-                            }
-                        }
+                //         // --- NUEVO: 3. Guardar Talleres Seleccionados ---
+                //         if ($isSaved && !empty($registration->talleres_seleccionados) && is_array($registration->talleres_seleccionados)) {
+                //             foreach ($registration->talleres_seleccionados as $taller_id) {
+                //                 $rw = new \app\models\RegistrationWorkshop();
+                //                 $rw->registration_id = $registration->id;
+                //                 $rw->workshop_id = $taller_id; // Asegúrate de que los IDs no choquen con las visitas
+                //                 $rw->cost = 100.00; // O la lógica que defina el costo individual
+                //                 $rw->created_at = date('Y-m-d H:i:s');
+                //                 if (!$rw->save()) {
+                //                     throw new \Exception('Error al guardar Taller.');
+                //                 }
+                //             }
+                //         }
 
-                        // --- NUEVO: 4. Guardar Visitas Seleccionadas ---
-                        if ($isSaved && !empty($registration->visitas_seleccionadas) && is_array($registration->visitas_seleccionadas)) {
-                            foreach ($registration->visitas_seleccionadas as $visita_id) {
-                                $rw = new \app\models\RegistrationWorkshop();
-                                $rw->registration_id = $registration->id;
-                                $rw->workshop_id = $visita_id; 
-                                $rw->cost = 100.00;
-                                $rw->created_at = date('Y-m-d H:i:s');
-                                if (!$rw->save()) {
-                                    throw new \Exception('Error al guardar Visita.');
-                                }
-                            }
-                        }
+                //         // --- NUEVO: 4. Guardar Visitas Seleccionadas ---
+                //         if ($isSaved && !empty($registration->visitas_seleccionadas) && is_array($registration->visitas_seleccionadas)) {
+                //             foreach ($registration->visitas_seleccionadas as $visita_id) {
+                //                 $rw = new \app\models\RegistrationWorkshop();
+                //                 $rw->registration_id = $registration->id;
+                //                 $rw->workshop_id = $visita_id; 
+                //                 $rw->cost = 100.00;
+                //                 $rw->created_at = date('Y-m-d H:i:s');
+                //                 if (!$rw->save()) {
+                //                     throw new \Exception('Error al guardar Visita.');
+                //                 }
+                //             }
+                //         }
 
-                        if($isSaved)
-                        {
-                            // Si todo salió perfecto, commitear la transacción
-                            $transaction->commit();
+                //         if($isSaved)
+                //         {
+                //             // Si todo salió perfecto, commitear la transacción
+                //             $transaction->commit();
                             
-                            // Si es actionSubmit, envías los correos aquí como lo tenías.
-                            // Si es actionCreate, rediriges a 'view'
-                            return $this->redirect(['view', 'id' => $registration->id]); 
-                        } else {
-                             throw new \Exception('Error general al guardar (Factura o Registro).');
-                        }
-                    }
-                } catch (\Exception $e) {
-                    // Si hubo cualquier error, cancelar TODO (Rollback)
-                    $transaction->rollBack();
-                    Yii::$app->session->setFlash('error', $e->getMessage());
-                }
+                //             // Si es actionSubmit, envías los correos aquí como lo tenías.
+                //             // Si es actionCreate, rediriges a 'view'
+                //             return $this->redirect(['view', 'id' => $registration->id]); 
+                //         } else {
+                //              throw new \Exception('Error general al guardar (Factura o Registro).');
+                //         }
+                //     }
+                // } catch (\Exception $e) {
+                //     // Si hubo cualquier error, cancelar TODO (Rollback)
+                //     $transaction->rollBack();
+                //     Yii::$app->session->setFlash('error', $e->getMessage());
+                // }
+                if($registration->save())
+				{
+					$isSaved = true;
+					if($registration->invoice_required)
+					{
+						$invoice->registration_id = $registration->id;
+						$isSaved = $isSaved && $invoice->save();
+					}
+					if($isSaved)
+						return $this->redirect(['view', 'id' => $registration->id]);
+				}
             }
         }
 
@@ -334,7 +345,7 @@ class RegistrationController extends Controller
 							->setFrom(Yii::$app->params['adminEmail'])
 							->setTo($registration->email)
 							->setCc([Yii::$app->params['coordinatorEmail1'],Yii::$app->params['coordinatorEmail2']])
-							->setSubject('Registro pendiente - CONCEI-3')
+							->setSubject('Notificación de Registro - ConCEI-3')
 							->send();
 						Yii::$app->session->setFlash('registration-submitted-successfully');
 						return $this->redirect(['submitted', 'id' => $registration->id, 'token' => $registration->token]);
@@ -474,7 +485,7 @@ class RegistrationController extends Controller
 					->setFrom(Yii::$app->params['adminEmail'])
 					->setTo($registration->email)
 					->setCc([Yii::$app->params['coordinatorEmail1'], Yii::$app->params['coordinatorEmail2'], Yii::$app->params['accountingEmail']])
-					->setSubject('Confirmación de registro - CONCEI 3')
+					->setSubject('Notificación de registro - ConCEI-3')
 					->send();
 				return $this->redirect(['submitted', 'id' => $registration->id, 'token' => $registration->token]);
 			}

@@ -44,6 +44,33 @@ $pricesJsonString = json_encode($pricesJson);
     var workshopCost = ' . $costo_taller . ';
     var isEarlyBird = ' . ($isEarlyBird ? 'true' : 'false') . ';
     var typePrices = ' . $pricesJsonString . ';
+
+	// --- NUEVO CODIGO: FUNCION DEL CONCEPTO ---
+    function calculateConceptoPago() {
+        var lastName = $(\'#registration-last_name\').val() ? $(\'#registration-last_name\').val().trim().toUpperCase() : \'\';
+        var firstName = $(\'#registration-first_name\').val() ? $(\'#registration-first_name\').val().trim().toUpperCase() : \'\';
+
+        var lastNameCode = lastName.substring(0, 3).padStart(3, \'0\');
+        var firstNameCode = firstName.substring(0, 3).padStart(3, \'0\');
+
+        var typeId = $(\'#registration-registration_type_id\').val();
+        var typeCode = \'RU\'; 
+        if (typeId === \'1\') {
+            typeCode = \'RG\';
+        } else if (typeId === \'12\') {
+            typeCode = \'RE\';
+        }
+
+        var finalCode = lastNameCode + firstNameCode + typeCode;
+        $(\'#display-concepto-pago\').text(finalCode);
+    }
+
+	calculateConceptoPago();
+
+    $(\'#registration-first_name, #registration-last_name\').on(\'keyup change\', function() {
+        calculateConceptoPago();
+    });
+    // ------------------------------------------
     
     function calculateTotal() {
         var total = 0;
@@ -111,6 +138,7 @@ $pricesJsonString = json_encode($pricesJson);
     // -- LISTENERS --
 
     // Cambio en Tipo de Registro (Grid Radio de Kartik)
+
     $(\'#fee_type\').on(\'grid.radiochecked\', function(ev, key, val) {
         $(\'#registration-registration_type_id\').val(val);
         
@@ -119,6 +147,7 @@ $pricesJsonString = json_encode($pricesJson);
         if(typeof toggleChangeFileStudentId === \'function\') toggleChangeFileStudentId();
         
         calculateTotal();
+		calculateConceptoPago();
     });
 
     // Cambio en Checkbox de Talleres
@@ -185,6 +214,18 @@ $pricesJsonString = json_encode($pricesJson);
 		$(".field-registration-file_payment_receipt").hide();
 	}
 
+	function showRegistrationCode()
+	{
+		$("[name=\'Registration[registration_code]\']").removeAttr("disabled");
+		$(".field-registration-registration_code").show();
+	}
+	
+	function hideRegistrationCode()
+	{
+		$("[name=\'Registration[registration_code]\']").attr("disabled","disabled");
+		$(".field-registration-registration_code").hide();
+	}
+
 	// New code. Rodrigo
 	function toggleFilePaymentReceipt()
 	{
@@ -194,6 +235,15 @@ $pricesJsonString = json_encode($pricesJson);
 		else
 			hideFilePaymentReceipt();
 		
+	}
+
+	function toggleRegistrationCode()
+	{
+		if( $("[name=\'Registration[payment_type]\']:checked").val() == 3 ){
+			showRegistrationCode();
+		}else{
+			hideRegistrationCode();
+		}
 	}
 		
 	function toggleStudentId()
@@ -225,7 +275,18 @@ $pricesJsonString = json_encode($pricesJson);
 			// case "17": showFileStudentId(); break;
 		}
 	}
-	
+
+	function toggleModalidadPresentacion() {
+		var registrationType = $("[name=\'Registration[registration_type_id]\']").val();
+		// El ID 17 corresponde a "Estudiantes y Profesores UADY"
+		if (registrationType == "17") {
+			$("#div-modalidad-presentacion").hide();
+			$("#registration-modalidad_presentacion").val("");
+		} else { 
+			$("#div-modalidad-presentacion").show();
+		}
+	}
+
 	function toggleInvoice()
 	{
 		if( $("[name=\'Registration[invoice_required]\']:checked").val() == "0" )
@@ -276,12 +337,15 @@ $pricesJsonString = json_encode($pricesJson);
 	
 	$("[name=\'Registration[payment_type]\']").change(function(){
 		toggleFilePaymentReceipt();
+		toggleRegistrationCode();
 	});
 	
 		
 	toggleStudentId();
 	toggleFilePaymentReceipt();
 	toggleInvoice();
+	toggleModalidadPresentacion();
+	toggleRegistrationCode();
 
 
 	var $grid = $(\'#fee_type\'); // your registration grid identifier
@@ -290,6 +354,8 @@ $pricesJsonString = json_encode($pricesJson);
 
 	$grid.on( \'grid.radiochecked\', function(ev, key, val){
 		$("#registration-registration_type_id").val(val);
+
+	calculateConceptoPago();
 			switch( val )
 			{
 				case "12": showFileStudentId(); break;
@@ -312,6 +378,7 @@ $pricesJsonString = json_encode($pricesJson);
 				// case "16": 
 				// case "17": showFileStudentId(); break;
 			}
+		toggleModalidadPresentacion();
 		}
 	);
 
@@ -541,6 +608,38 @@ $pricesJsonString = json_encode($pricesJson);
     </tr>
     </table>
 
+	<?php
+    $areasTrabajo = [
+        'Energías renovables' => 'Energías renovables',
+        'Ingeniería ambiental' => 'Ingeniería ambiental',
+        'Inteligencia artificial' => 'Inteligencia artificial',
+        'Alimentación y salud' => 'Alimentación y salud',
+        'Ingeniería de las estructuras y la construcción' => 'Ingeniería de las estructuras y la construcción',
+        'Procesamiento de imágenes' => 'Procesamiento de imágenes',
+        'Robótica y visión computacional' => 'Robótica y visión computacional',
+        'Moléculas y materiales funcionales' => 'Moléculas y materiales funcionales',
+        'Ingeniería física' => 'Ingeniería física',
+        'Cómputo científico/cuántico' => 'Cómputo científico/cuántico',
+        'Ciencia y tecnología de la información' => 'Ciencia y tecnología de la información',
+        'Biotecnología y Bioprocesos' => 'Biotecnología y Bioprocesos',
+        'Ingeniería de procesos e innovación industrial' => 'Ingeniería de procesos e innovación industrial',
+        'Matemáticas básicas y aplicadas' => 'Matemáticas básicas y aplicadas',
+        'Ingeniería de software' => 'Ingeniería de software',
+        'Tecnologías emergentes en computación' => 'Tecnologías emergentes en computación',
+        'Educación, sociedad y formación humanista en ciencias' => 'Educación, sociedad y formación humanista en ciencias',
+    ];
+    ?>
+
+    <?= $form->field($registration, 'area_trabajo')->dropDownList($areasTrabajo, ['prompt' => 'Seleccione el área de su trabajo...']) ?>
+
+    <div id="div-modalidad-presentacion">
+        <?= $form->field($registration, 'modalidad_presentacion')->dropDownList([
+            'Presencial' => 'Presencial',
+            'Virtual' => 'Virtual',
+            'Cualquiera' => 'Cualquiera',
+        ], ['prompt' => 'Seleccione una modalidad...']) ?>
+    </div>
+
     <div class="panel panel-default" style="margin-top: 20px; border: 1px solid #ddd;">
         <div class="panel-heading" style="background-color: #f5f5f5; font-weight: bold;">
             Selección de Revista (Número Especial)
@@ -704,10 +803,9 @@ $pricesJsonString = json_encode($pricesJson);
 	<!-- TALLERES Y VISITAS (WORKSHOP) END -->
 
 
-
 	<h3><?= Html::encode('Solo para Mexicanos (Documento oficial deducible de impuestos)')?></h3>
 
-    <div>
+    <div style= "color: red; font-size: 1.1em; margin-bottom: 15px;">
         <strong> </strong> El ConCEI NO emite facturas a nombre de la Universidad Autónoma de Yucatán.
     </div>
 
@@ -787,16 +885,47 @@ $pricesJsonString = json_encode($pricesJson);
     </div>
 
 	<h3>Instrucciones de pago</h3>
-	<p> <?= Html::encode('El total a pagar lo deberá realizar a través de una transferencia bancaria a la siguiente cuenta:')?> </p>
+	
+	<div class="well" style="background-color: #f8f9fa; border-left: 5px solid #0055A5;">
+		<p style="font-size: 1.1em; margin-bottom: 10px;">El pago podrá ser realizado por transferencia bancaria con los siguientes datos:</p>
+		<ul style="list-style-type: none; padding-left: 0; font-size: 1.1em;">
+			<li><b>Banco:</b> HSBC</li>
+			<li><b>Cuenta:</b> 4100561613</li>
+			<li><b>CLABE:</b> 021910041005616132</li>
+			<li><b>Sucursal:</b> 00902</li>
+			<li><b>A nombre de:</b> UADY Facultad de Matemáticas</li>
+		</ul>
+
+        <hr style="border-top: 2px dashed #bdc3c7; margin: 20px 0;">
+
+        <h4 style="margin-top:0; color: #2c3e50;">Concepto de Pago Obligatorio</h4>
+        <p style="font-size: 1.05em;">Al hacer su transferencia en la app de su banco, ingrese <b>exactamente</b> la siguiente clave en el apartado de "Concepto" o "Motivo de pago":</p>
+        
+        <div style="text-align: center; font-size: 2.2em; font-weight: bold; letter-spacing: 2px; color: #d9534f; margin: 15px 0;" id="display-concepto-pago">
+            000000RU
+        </div>
+        
+        <p style="font-size: 0.85em; color: #7f8c8d; text-align: center; margin-bottom: 0;"><i>*Esta clave se actualiza automáticamente al escribir su nombre, apellido, elegir su tipo de registro, talleres y visitas.</i></p>
+	</div>
+
 
     	<?= $form->field($registration, 'payment_type')->radioList([
 		// 1 => 'Credit Card',
 		2 => 'Transferencia bancaria (Cargue su recibo)',
-		// 3 => 'Code',
+		3 => 'Codigo de Registro',
+	], [
+		'itemOptions' => [
+			'disabled' => ($registration->scenario == 'Update')? true: false
+		],
+		'unselect' => null,
 	])->label('Tipo de Pago') ?>
 
 	<?php echo $form->field($registration, 'file_payment_receipt')->fileInput() ?>
 	
+	<?php echo $form->field($registration, 'registration_code')->textInput(['maxlength' => true])->label(null,[
+		'class'=>'control-label col-sm-3 required',
+		'disabled' => ($registration->scenario == 'Update')? true: false,
+	]) ?>
     
     <div class="form-group">
         <?= Html::submitButton($registration->isNewRecord ? Yii::t('app', 'Submit') : Yii::t('app', 'Update data'), ['class' => $registration->isNewRecord ? 'btn btn-success' : 'btn btn-primary']) ?>
