@@ -34,7 +34,7 @@ class Visita extends \yii\db\ActiveRecord
         return [
             [['nombre', 'descripcion', 'fecha', 'horario', 'modalidad'], 'required'],
             [['nombre'], 'string', 'max' => 150],
-            [['descripcion'], 'string', 'max' => 200],
+            [['descripcion'], 'string', 'max' => 1024],
             [['fecha', 'horario'], 'string', 'max' => 255],
             [['modalidad'], 'string', 'max' => 64],
         ];

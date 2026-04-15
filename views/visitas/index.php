@@ -31,7 +31,24 @@ $this->params['breadcrumbs'][] = $this->title;
 
             'id',
             'nombre',
-            'descripcion',
+            // --- COLUMNA DE DESCRIPCIÓN CON MODAL (AMIGABLE PARA CELULARES) ---
+            [
+                'attribute' => 'descripcion',
+                'label' => 'Detalles',
+                'format' => 'raw',
+                'value' => function ($model) {
+                    if (empty($model->description)) {
+                        return '';
+                    }
+                    // Ahora es un botón normal que guarda el título y la descripción en "data"
+                    return Html::button('<span class="glyphicon glyphicon-info-sign"></span> Leer más', [
+                        'class' => 'btn btn-info btn-xs btn-ver-detalles',
+                        'data-title' => Html::encode($model->name),
+                        'data-details' => Html::encode($model->description),
+                    ]);
+                },
+            ],
+            // ------------------------------------------------------------------
             'fecha',
             'horario',
             //'modalidad',

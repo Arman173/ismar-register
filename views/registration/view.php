@@ -61,13 +61,18 @@ use yii\bootstrap\ActiveForm;
         <?php if( Yii::$app->user->isGuest ): ?>
 		
 		
-		<?= Html::a(Yii::t('app', 'Upload Payment Receipt'), ['upload-payment-receipt', 'id' => $model->id, 'token' => $model->token ], ['class' => 'btn btn-primary']) ?>
+		<!-- <?= Html::a(Yii::t('app', 'Upload Payment Receipt'), ['upload-payment-receipt', 'id' => $model->id, 'token' => $model->token ], ['class' => 'btn btn-primary']) ?> -->
+		 <?php if( Yii::$app->user->isGuest ): ?>
+			<?= Html::a(Yii::t('app', 'Actualizar'), ['update-submit', 'id' => $model->id, 'token'=>$model->token], ['class' => 'btn btn-primary']) ?>
+		<?php else: ?>
+			<?= Html::a(Yii::t('app', 'Actualizar'), ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
+		<?php endif; ?>
 		
 		
 		<?php else: ?>
 		
-		<?= Html::a(Yii::t('app', 'Update'), ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
-        <?= Html::a(Yii::t('app', 'Delete'), ['delete', 'id' => $model->id], [
+		<?= Html::a(Yii::t('app', 'Actualizar'), ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
+        <?= Html::a(Yii::t('app', 'Eliminar'), ['delete', 'id' => $model->id], [
             'class' => 'btn btn-danger',
             'data' => [
                 'confirm' => Yii::t('app', 'Are you sure you want to delete this item?'),

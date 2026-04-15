@@ -1,24 +1,24 @@
 <?php
 
-use app\models\Taller;
+use app\models\RegistroTaller;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\grid\ActionColumn;
 use yii\grid\GridView;
 
 /** @var yii\web\View $this */
-/** @var app\models\TallerSearch $searchModel */
+/** @var app\models\RegistroTallerSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Talleres';
+$this->title = 'Registro Talleres';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<div class="taller-index">
+<div class="registro-taller-index">
 
     <h1><?= Html::encode($this->title) ?></h1>
 
     <p>
-        <?= Html::a('Create Taller', ['create'], ['class' => 'btn btn-success']) ?>
+        <?= Html::a('Create Registro Taller', ['create'], ['class' => 'btn btn-success']) ?>
     </p>
 
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
@@ -30,14 +30,12 @@ $this->params['breadcrumbs'][] = $this->title;
             ['class' => 'yii\grid\SerialColumn'],
 
             'id',
-            'nombre',
-            'descripcion',
-            'fecha',
-            'horario',
-            //'modalidad',
+            'registration_id',
+            'taller_id',
+            'created_at',
             [
                 'class' => ActionColumn::className(),
-                'urlCreator' => function ($action, Taller $model, $key, $index, $column) {
+                'urlCreator' => function ($action, RegistroTaller $model, $key, $index, $column) {
                     return Url::toRoute([$action, 'id' => $model->id]);
                  }
             ],

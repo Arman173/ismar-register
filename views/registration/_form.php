@@ -279,12 +279,14 @@ $pricesJsonString = json_encode($pricesJson);
 	function toggleModalidadPresentacion() {
 		var registrationType = $("[name=\'Registration[registration_type_id]\']").val();
 		// El ID 17 corresponde a "Estudiantes y Profesores UADY"
-		if (registrationType == "17") {
+		 if (registrationType == "17") {
 			$("#div-modalidad-presentacion").hide();
 			$("#registration-modalidad_presentacion").val("");
+			$("#leyenda-modalidad-uady").show(); // <--- MUESTRA LA LEYENDA
 		} else { 
 			$("#div-modalidad-presentacion").show();
-		}
+			$("#leyenda-modalidad-uady").hide(); // <--- OCULTA LA LEYENDA
+		 }
 	}
 
 	function toggleInvoice()
@@ -410,6 +412,24 @@ $pricesJsonString = json_encode($pricesJson);
 	// 		}
 	// 	}
 	// });
+
+
+		// Al hacer clic en cualquier botón de "Leer más"
+  		$(".btn-ver-detalles").on("click", function(e) {
+        e.preventDefault();
+        
+        // Obtenemos la info guardada en el botón
+        var titulo = $(this).data("title");
+        var detalles = $(this).data("details");
+        
+        // La ponemos dentro del Modal
+        $("#modal-title-text").html(titulo);
+        $("#modal-body-text").html(detalles);
+        
+        // Mostramos el Modal
+        $("#modal-detalles").modal("show");
+    });
+
 	
 '); ?>
 
@@ -584,7 +604,6 @@ $pricesJsonString = json_encode($pricesJson);
 		'query' => Registration::find(),
 	]); ?>
     
-
 	<h3><?= Html::encode('Información para Autores') ?></h3>
     <p> <?= Html::encode('Se requiere que los autores se registren. Al menos un registro no reembolsable debe estar asociado a cada artículo aceptado.')?> </p>
     <p> <?= Html::encode('Por cada contribución, por favor indique:')?>
@@ -632,7 +651,8 @@ $pricesJsonString = json_encode($pricesJson);
 
     <?= $form->field($registration, 'area_trabajo')->dropDownList($areasTrabajo, ['prompt' => 'Seleccione el área de su trabajo...']) ?>
 
-    <div id="div-modalidad-presentacion">
+
+	<div id="div-modalidad-presentacion">
         <?= $form->field($registration, 'modalidad_presentacion')->dropDownList([
             'Presencial' => 'Presencial',
             'Virtual' => 'Virtual',
@@ -640,7 +660,11 @@ $pricesJsonString = json_encode($pricesJson);
         ], ['prompt' => 'Seleccione una modalidad...']) ?>
     </div>
 
+    <div id="leyenda-modalidad-uady" style="display: none; color: #7f8c8d; font-size: 0.9em; margin-bottom: 15px; margin-left: 200px;">
+        <em>* Nota: Para Estudiantes y Profesores UADY, la modalidad de presentación es Presencial.</em>
+    </div>
     <div class="panel panel-default" style="margin-top: 20px; border: 1px solid #ddd;">
+
         <div class="panel-heading" style="background-color: #f5f5f5; font-weight: bold;">
             Selección de Revista (Número Especial)
         </div>
@@ -658,8 +682,6 @@ $pricesJsonString = json_encode($pricesJson);
         </div>
     </div>
 
-
-	<!-- TALLERES Y VISITAS (WORKSHOP) -->
     <h3><?= Html::encode('Talleres y Visitas Industriales') ?></h3>
 	
 	<?php $dataProviderWork = new ActiveDataProvider([
@@ -684,13 +706,28 @@ $pricesJsonString = json_encode($pricesJson);
 				//'rowHighlight' => true,
 				'header' => '',
 			],
-			//'id',
-			// 'name',
+
 			[
 				'attribute' => 'nombre',
 				'label' => 'Nombre del Taller',
 			],
-			'descripcion',
+			// Ventana emergente para descripción de talleres
+            [
+                'attribute' => 'descripcion',
+                'label' => 'Detalles',
+                'format' => 'raw',
+                'value' => function ($model) {
+                    if (empty($model->descripcion)) {
+                        return '';
+                    }
+                    return Html::button('<span class="glyphicon glyphicon-info-sign"></span> Leer más', [
+                        'class' => 'btn btn-info btn-xs btn-ver-detalles',
+                        'data-title' => Html::encode($model->nombre),
+                        'data-details' => Html::encode($model->descripcion),
+                    ]);
+                },
+            ],
+
 			[
 				'attribute' => 'fecha',
 				'header' => 'Fecha',
@@ -704,12 +741,20 @@ $pricesJsonString = json_encode($pricesJson);
 		'options' => ['style' => 'width:700px;'],
 	]);?>
 
+<div class="alert alert-warning" style="margin-top: 30px; border-left: 5px solid #ffcc84;">
+        <p style="font-size: 1.1em; margin-bottom: 0;">
+            <strong style="color: #d58512;"><span class="glyphicon glyphicon-exclamation-sign"></span> Requisitos de acceso en las visitas:</strong> 
+            Zapatos cerrados, pantalón largo (sin roturas), cabello recogido, sin aretes, anillos, pulseras y similares. Prohibido el uso del celular y de la toma de fotografías.
+        </p>
+    </div>
+
 	<?= GridView::widget([
 		'id' => 'grid-visitas',
 		'dataProvider' => $dataProviderVisitas,
 		'columns' => [
 			[
 				'class' => 'kartik\grid\CheckboxColumn',
+				'name' => 'visitas_seleccionadas',
 				//'rowHighlight' => true,
 				'header' => '',
 			],
@@ -718,11 +763,28 @@ $pricesJsonString = json_encode($pricesJson);
 				'attribute' => 'nombre',
 				'label' => 'Nombre de la Empresa',
 			],
-			'descripcion',
+
 			[
 				'attribute' => 'fecha',
 				'label' => 'Fecha',
 			],
+			// Ventana emergente para visitas...
+            [
+                'attribute' => 'descripcion',
+                'label' => 'Detalles',
+                'format' => 'raw',
+                'value' => function ($model) {
+                    if (empty($model->descripcion)) {
+                        return '';
+                    }
+                    return Html::button('<span class="glyphicon glyphicon-info-sign"></span> Leer más', [
+                        'class' => 'btn btn-info btn-xs btn-ver-detalles',
+                        'data-title' => Html::encode($model->nombre),
+                        'data-details' => Html::encode($model->descripcion),
+                    ]);
+                },
+            ],
+
 			[
 				'attribute' => 'horario',
 				'label' => 'Horario',
@@ -736,7 +798,6 @@ $pricesJsonString = json_encode($pricesJson);
 	<?= $form->field($registration, 'proceedings_copies')->hiddenInput()->label(false) ?>
 	
 	<!-- TALLERES Y VISITAS (WORKSHOP) END -->
-
 
 	<h3><?= Html::encode('Solo para Mexicanos (Documento oficial deducible de impuestos)')?></h3>
 
@@ -776,10 +837,8 @@ $pricesJsonString = json_encode($pricesJson);
     
 	<h3>Política de cancelación</h3>
 	<p> <?= Html::encode('Las cuotas de inscripción, talleres y visitas industriales no serán rembolsables. Es importante destacar que a los autores que no se presenten se les retirará su artículo de las memorias del congreso. Para cualquier duda o aclaracion favor de contactar concei@correo.uady.mx')?> </p>
-
     
 	<h3>Resumen de Pago</h3>
-
     <div class="panel panel-default" style="margin-top: 20px;">
         <table class="table table-bordered" style="background-color: #fff;">
             <tr>
@@ -843,7 +902,6 @@ $pricesJsonString = json_encode($pricesJson);
         <p style="font-size: 0.85em; color: #7f8c8d; text-align: center; margin-bottom: 0;"><i>*Esta clave se actualiza automáticamente al escribir su nombre, apellido, elegir su tipo de registro, talleres y visitas.</i></p>
 	</div>
 
-
     	<?= $form->field($registration, 'payment_type')->radioList([
 		// 1 => 'Credit Card',
 		2 => 'Transferencia bancaria (Cargue su recibo)',
@@ -869,5 +927,47 @@ $pricesJsonString = json_encode($pricesJson);
     <?php ActiveForm::end(); ?>
 
 </div>
+<div class="modal fade" id="modal-detalles" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="modal-title-text">Detalles</h4>
+      </div>
+      <div class="modal-body" id="modal-body-text" style="word-wrap: break-word;">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+    #modal-detalles {
+        text-align: center;
+    }
+    #modal-detalles::before {
+        content: '';
+        display: inline-block;
+        height: 100%;
+        vertical-align: middle;
+        margin-right: -4px;
+    }
+    #modal-detalles .modal-dialog {
+        display: inline-block;
+        text-align: left;
+        vertical-align: middle;
+        margin: 0 auto;
+        width: 90%; 
+        max-width: 600px; 
+    }
+	#modal-detalles .modal-body {
+        max-height: 60vh; /* El cuerpo medirá como máximo el 60% de la pantalla */
+        overflow-y: auto; /* Si el texto es más largo, crea una barra de scroll */
+        padding: 20px;
+    }
+
+</style>
 
 <!-- <script src="../web/js/form.js"></script> -->

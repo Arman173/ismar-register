@@ -8,6 +8,8 @@ use app\models\RegistrationSearch;
 use app\models\RegistrationType;
 use app\models\RegistrationCode;
 use app\models\RegistrationWorkshop;
+use app\models\RegistroTaller;
+use app\models\RegistroVisita;
 use app\models\Invoice;
 use app\models\InvoiceSearch;
 use app\models\Taller;
@@ -204,63 +206,17 @@ class RegistrationController extends Controller
 			
 			if($valid)
             {
-                // if($registration->save())
-				// {
-				// 	$isSaved = true;
-				// 	if($registration->invoice_required)
-				// 	{
-				// 		$invoice->registration_id = $registration->id;
-				// 		$isSaved = $isSaved && $invoice->save();
-				// 	}
-				// 	if($isSaved)
-				// 		return $this->redirect(['view', 'id' => $registration->id]);
-				// }
-                // ---------------------------------------------------------------------------------------------------------
-
-                $transaction = Yii::$app->db->beginTransaction();
-                try {
-                    // primero guardamos el registro principal para obtener su ID
-                    if (!$registration->save(false)) {
-                        throw new \Exception('No se pudo guardar el registro principal.');
-                    }
-                    
-                    if ($registration->invoice_required) {
-                        $invoice->registration_id = $registration->id;
-                        if (!$invoice->save(false)) {
-                            throw new \Exception('No se pudo guardar la información de la factura.');
-                        }
-                    }
-
-                    $talleresSeleccionados = Yii::$app->request->post('talleres_seleccionados', []);
-
-                    foreach ($talleresSeleccionados as $taller_id) {
-                        $record = new RegistrationWorkshop();
-                        $record->registration_id = $registration->id;
-                        $record->workshop_id = $taller_id;
-
-                        if (!$record->save(false)) {
-                            throw new \Exception('No se pudo guardar el taller seleccionado con ID: ' . $taller_id);
-                        }
-                    }
-
-                    // Si llegamos hasta aquí, todo fue un éxito
-                    $transaction->commit();
-                    Yii::$app->session->setFlash('success', 'Registration completed successfully.');
-                    
-                    return $this->redirect(['view', 'id' => $registration->id]);
-                    
-                } catch (\Throwable $e) {
-                    // Catch Throwable for PHP 7+ compatibility
-                    // Revertimos todos los cambios
-                    $transaction->rollBack();
-
-                    // guardamos los errores en runtime/logs/app.log
-                    Yii::error("Error al crear Registration/Invoice: " . $e->getMessage() . "\n" . $e->getTraceAsString(), __METHOD__);
-                    
-                    // MENSAJE PARA EL USUARIO: Amigable y sin exponer datos críticos
-                    Yii::$app->session->setFlash('error', 'An unexpected error occurred while processing your registration. Please try again later or contact support.');
-                }
-
+                if($registration->save())
+				{
+					$isSaved = true;
+					if($registration->invoice_required)
+					{
+						$invoice->registration_id = $registration->id;
+						$isSaved = $isSaved && $invoice->save();
+					}
+					if($isSaved)
+						return $this->redirect(['view', 'id' => $registration->id]);
+				}
                 // ---------------------------------------------------------------------------------------------------------
                 // // --- NUEVO: 1. Calcular el costo y asignarlo al modelo ANTES de guardar ---
                 // $registration->calculateTotalCost();
@@ -431,14 +387,26 @@ class RegistrationController extends Controller
 
                     $talleresSeleccionados = Yii::$app->request->post('talleres_seleccionados', []);
 
-                    // agregando registro de taller a registro
+                    // agregando registro de talleres seleccionados al registro
                     foreach ($talleresSeleccionados as $taller_id) {
-                        $record = new RegistrationWorkshop();
+                        $record = new RegistroTaller();
                         $record->registration_id = $registration->id;
-                        $record->workshop_id = $taller_id;
+                        $record->taller_id = $taller_id;
 
                         if (!$record->save(false)) {
                             throw new \Exception('No se pudo guardar el taller seleccionado con ID: ' . $taller_id);
+                        }
+                    }
+
+                    // agregando registro de visitas seleccionadas al registro
+                    $visitasSeleccionadas = Yii::$app->request->post('visitas_seleccionadas', []);
+                    foreach ($visitasSeleccionadas as $visita_id) {
+                        $record = new RegistroVisita();
+                        $record->registration_id = $registration->id;
+                        $record->visita_id = $visita_id;
+
+                        if (!$record->save(false)) {
+                            throw new \Exception('No se pudo guardar la visita seleccionada con ID: ' . $visita_id);
                         }
                     }
 

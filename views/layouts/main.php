@@ -37,7 +37,7 @@ AppAsset::register($this);
         'options' => ['class' => 'navbar-nav navbar-right'],
         'items' => [
 			[
-				'label' => 'Registrations',
+				'label' => 'Registros',
 				'url' => ['/registration/index'],
 				'visible' => !Yii::$app->user->isGuest,
 			],
@@ -62,8 +62,13 @@ AppAsset::register($this);
                 'visible' => !Yii::$app->user->isGuest,
             ],
             [
-                'label' => 'Registration Workshops',
-                'url' => ['/registration-workshop/index'],
+                'label' => 'Registros Talleres',
+                'url' => ['/registros-talleres/index'],
+                'visible' => !Yii::$app->user->isGuest,
+            ],
+            [
+                'label' => 'Registros Visitas',
+                'url' => ['/registros-visitas/index'],
                 'visible' => !Yii::$app->user->isGuest,
             ],
             [
