@@ -11,8 +11,8 @@ use Yii;
  * @property string $nombre
  * @property string $descripcion
  * @property string $fecha
- * @property string $hr_inicio
- * @property string $hr_fin
+ * @property string $horario
+ * @property string $modalidad
  */
 class Visita extends \yii\db\ActiveRecord
 {
@@ -32,10 +32,11 @@ class Visita extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['nombre', 'descripcion', 'fecha', 'hr_inicio', 'hr_fin'], 'required'],
-            [['fecha', 'hr_inicio', 'hr_fin'], 'safe'],
+            [['nombre', 'descripcion', 'fecha', 'horario', 'modalidad'], 'required'],
             [['nombre'], 'string', 'max' => 150],
             [['descripcion'], 'string', 'max' => 200],
+            [['fecha', 'horario'], 'string', 'max' => 255],
+            [['modalidad'], 'string', 'max' => 64],
         ];
     }
 
@@ -49,8 +50,8 @@ class Visita extends \yii\db\ActiveRecord
             'nombre' => 'Nombre',
             'descripcion' => 'Descripcion',
             'fecha' => 'Fecha',
-            'hr_inicio' => 'Hr Inicio',
-            'hr_fin' => 'Hr Fin',
+            'horario' => 'Horario',
+            'modalidad' => 'Modalidad',
         ];
     }
 

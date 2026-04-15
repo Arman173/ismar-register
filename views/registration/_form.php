@@ -674,51 +674,13 @@ $pricesJsonString = json_encode($pricesJson);
 		<br> <b> <?= Html::encode('Estudiante y Profesor UADY:')?> </b> <?= Html::encode('Acceso a todas las conferencias. No incluye talleres ni visitas industriales.')?>
     </p>
 
-	<!-- <?= GridView::widget([
-		'id' => 'workshop_type',
-		'dataProvider' => $dataProviderWork,
-		'columns' => [
-			[
-				'class' => 'kartik\grid\CheckboxColumn',
-				//'rowHighlight' => true,
-				'header' => '',
-			],
-			//'id',
-			'name',
-			'description',
-			[
-				'attribute' => 'date',
-				'header' => 'Fecha',
-				'format' => ['date', 'php:d-m-Y'],
-			],
-			[
-				'attribute' => 'hr_inicio',
-				'header' => 'Hora Inicio',
-				'format' => ['time', 'php:H:i'],
-			],
-			[
-				'attribute' => 'hr_fin',
-				'header' => 'Hora Fin',
-				'format' => ['time', 'php:H:i'],
-			],
-			// [
-			// 	'attribute' => 'time',
-			// 	'header' => 'Duración (minutos)',
-			// 	'value' => function($model) {
-			// 		return $model->time . ' minutos';
-			// 	}
-			// ]
-		],
-		'summary'=>'',
-		'options' => ['style' => 'width:700px;'],
-	]);?> -->
-
 	<?= GridView::widget([
 		'id' => 'grid-talleres',
 		'dataProvider' => $dataProviderTalleres,
 		'columns' => [
 			[
 				'class' => 'kartik\grid\CheckboxColumn',
+				'name' => 'talleres_seleccionados',
 				//'rowHighlight' => true,
 				'header' => '',
 			],
@@ -732,25 +694,11 @@ $pricesJsonString = json_encode($pricesJson);
 			[
 				'attribute' => 'fecha',
 				'header' => 'Fecha',
-				'format' => ['date', 'php:d-m-Y'],
 			],
 			[
-				'attribute' => 'hr_inicio',
-				'header' => 'Hora Inicio',
-				'format' => ['time', 'php:H:i'],
-			],
-			[
-				'attribute' => 'hr_fin',
-				'header' => 'Hora Fin',
-				'format' => ['time', 'php:H:i'],
-			],
-			// [
-			// 	'attribute' => 'time',
-			// 	'header' => 'Duración (minutos)',
-			// 	'value' => function($model) {
-			// 		return $model->time . ' minutos';
-			// 	}
-			// ]
+				'attribute' => 'horario',
+				'header' => 'Horario',
+			]
 		],
 		'summary'=>'',
 		'options' => ['style' => 'width:700px;'],
@@ -774,25 +722,12 @@ $pricesJsonString = json_encode($pricesJson);
 			[
 				'attribute' => 'fecha',
 				'label' => 'Fecha',
-				'format' => ['date', 'php:d-m-Y'],
 			],
 			[
-				'attribute' => 'hr_inicio',
-				'label' => 'Hora Inicio',
-				'format' => ['time', 'php:H:i'],
-			],
-			[
-				'attribute' => 'hr_fin',
-				'label' => 'Hora Fin',
-				'format' => ['time', 'php:H:i'],
-			],
-			// [
-			// 	'attribute' => 'time',
-			// 	'header' => 'Duración (minutos)',
-			// 	'value' => function($model) {
-			// 		return $model->time . ' minutos';
-			// 	}
-			// ]
+				'attribute' => 'horario',
+				'label' => 'Horario',
+				// 'format' => ['time', 'php:H:i'],
+			]
 		],
 		'summary'=>'',
 		'options' => ['style' => 'width:700px;'],

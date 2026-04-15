@@ -23,9 +23,9 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'fecha') ?>
 
-    <?= $form->field($model, 'hr_inicio') ?>
+    <?= $form->field($model, 'horario') ?>
 
-    <?php // echo $form->field($model, 'hr_fin') ?>
+    <?php // echo $form->field($model, 'modalidad') ?>
 
     <div class="form-group">
         <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?>

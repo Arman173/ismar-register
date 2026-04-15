@@ -32,12 +32,9 @@ $this->params['breadcrumbs'][] = $this->title;
             'id',
             'nombre',
             'descripcion',
-            [
-                'attribute' => 'fecha',
-                'format' => ['date', 'php:Y-m-d'],
-            ],
-            'hr_inicio',
-            'hr_fin',
+            'fecha',
+            'horario',
+            //'modalidad',
             [
                 'class' => ActionColumn::className(),
                 'urlCreator' => function ($action, Visita $model, $key, $index, $column) {

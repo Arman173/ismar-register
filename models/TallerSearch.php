@@ -18,7 +18,7 @@ class TallerSearch extends Taller
     {
         return [
             [['id'], 'integer'],
-            [['nombre', 'descripcion', 'fecha', 'hr_inicio', 'hr_fin'], 'safe'],
+            [['nombre', 'descripcion', 'fecha', 'horario', 'modalidad'], 'safe'],
         ];
     }
 
@@ -60,13 +60,13 @@ class TallerSearch extends Taller
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'fecha' => $this->fecha,
-            'hr_inicio' => $this->hr_inicio,
-            'hr_fin' => $this->hr_fin,
         ]);
 
         $query->andFilterWhere(['like', 'nombre', $this->nombre])
-            ->andFilterWhere(['like', 'descripcion', $this->descripcion]);
+            ->andFilterWhere(['like', 'descripcion', $this->descripcion])
+            ->andFilterWhere(['like', 'fecha', $this->fecha])
+            ->andFilterWhere(['like', 'horario', $this->horario])
+            ->andFilterWhere(['like', 'modalidad', $this->modalidad]);
 
         return $dataProvider;
     }
