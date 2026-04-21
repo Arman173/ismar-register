@@ -1,0 +1,122 @@
+/* --- Variables y Contenedor Principal --- */
+.rcg-table {
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #fff;
+    font-family: inherit;
+}
+
+/* --- Layout de Escritorio (Tabla) --- */
+.rcg-header-row, .rcg-row {
+    display: grid;
+    /* Ajusta las proporciones de las columnas aquí. 
+       50px para el checkbox, 2fr para nombre, 1fr para el resto */
+    grid-template-columns: 50px 2fr 1fr 1fr 1fr; 
+    border-bottom: 1px solid #ddd;
+    align-items: center;
+}
+
+.rcg-header-row {
+    background-color: #f9f9f9;
+    font-weight: bold;
+}
+
+.rcg-cell, .rcg-header-cell {
+    padding: 10px 15px;
+}
+
+.rcg-checkbox-cell {
+    text-align: center;
+}
+
+.rcg-row:hover { background-color: #f5f5f5; }
+.rcg-row.is-selected { background-color: #e8f4f8; }
+
+/* Ocultar etiquetas en escritorio */
+.rcg-cell::before { display: none; }
+
+/* --- Layout de Móviles (Tarjetas) --- */
+@media (max-width: 768px) {
+    .rcg-header-row {
+        display: none !important;
+    }
+
+    .rcg-row {
+        display: flex;
+        flex-direction: column;
+        position: relative !important;
+        /* Cambiamos el padding: el espacio grande (45px) ahora va a la DERECHA */
+        padding: 15px 45px 15px 15px !important; 
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        background-color: #fff;
+    }
+
+    /* 1. El contenedor del checkbox: Lo anclamos a la derecha */
+    .rcg-checkbox-cell {
+        position: absolute !important;
+        top: 20px !important;
+        right: 15px !important; /* Se pega al borde derecho */
+        left: auto !important;  /* Limpiamos el valor izquierdo anterior */
+        padding: 0 !important;
+        width: auto !important;
+        display: block !important;
+        border: none !important;
+    }
+    
+    /* 2. El Checkbox en sí: Anulando a Bootstrap 3 */
+    .rcg-checkbox-cell input[type="checkbox"] {
+        position: relative !important; /* Evita heredar absolute de bootstrap */
+        margin: 0 !important; /* ESTO ES CLAVE: Mata el margin-left negativo de Bootstrap */
+        left: 0 !important;
+        float: none !important;
+        transform: scale(1.4); /* Tamaño táctil */
+        cursor: pointer;
+    }
+
+    .rcg-cell {
+        padding: 6px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100% !important;
+        border-bottom: 1px solid #f9f9f9;
+        text-align: right; /* Alinea los valores a la derecha */
+    }
+    
+    .rcg-cell:last-child {
+        border-bottom: none;
+    }
+
+    /* 2. Etiquetas del lado izquierdo */
+    .rcg-cell::before {
+        content: attr(data-label) ": ";
+        font-weight: bold;
+        color: #555;
+        margin-right: 10px;
+        text-align: left;
+        flex-shrink: 0; /* Evita que Bootstrap apachurre el texto de la etiqueta */
+    }
+
+    /* 3. El Título (Segunda celda) - Arreglo del ":" fantasma */
+    .rcg-row .rcg-cell:nth-child(2) {
+        font-size: 1.1em;
+        font-weight: bold;
+        color: #2c3e50;
+        display: block !important; 
+        margin-bottom: 8px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+        text-align: left; /* El título siempre a la izquierda */
+        line-height: 1.3;
+    }
+    
+    /* Destruir el ::before del título para evitar el ":" huérfano */
+    .rcg-row .rcg-cell:nth-child(2)::before {
+        display: none !important;
+        content: none !important;
+    }
+}

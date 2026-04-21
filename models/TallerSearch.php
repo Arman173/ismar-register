@@ -18,7 +18,7 @@ class TallerSearch extends Taller
     {
         return [
             [['id'], 'integer'],
-            [['nombre', 'descripcion', 'fecha', 'horario', 'modalidad'], 'safe'],
+            [['nombre', 'descripcion', 'fecha', 'horario', 'modalidad', 'tallerista'], 'safe'],
         ];
     }
 
@@ -66,7 +66,8 @@ class TallerSearch extends Taller
             ->andFilterWhere(['like', 'descripcion', $this->descripcion])
             ->andFilterWhere(['like', 'fecha', $this->fecha])
             ->andFilterWhere(['like', 'horario', $this->horario])
-            ->andFilterWhere(['like', 'modalidad', $this->modalidad]);
+            ->andFilterWhere(['like', 'modalidad', $this->modalidad])
+            ->andFilterWhere(['like', 'tallerista', $this->tallerista]);
 
         return $dataProvider;
     }

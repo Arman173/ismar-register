@@ -1,6 +1,7 @@
 <?php
 
 use yii\helpers\Html;
+use yii\helpers\Json;
 use yii\helpers\ArrayHelper;
 use yii\bootstrap\ActiveForm;
 use app\models\Registration; // I did this
@@ -34,6 +35,17 @@ foreach ($registrationTypes as $type) {
     ];
 }
 $pricesJsonString = json_encode($pricesJson);
+$isEarlyBirdStr = $isEarlyBird ? 'true' : 'false';
+
+// --- CÓDIGO FALTANTE: INYECCIÓN AL WINDOW ---
+$jsVariables = <<<JS
+    window.workshopCost = {$costo_taller};
+    window.isEarlyBird = {$isEarlyBirdStr};
+    window.typePrices = {$pricesJsonString};
+JS;
+
+// Registramos las variables en el HEAD para que estén disponibles antes de que cargue tu JS externo
+$this->registerJs($jsVariables, \yii\web\View::POS_HEAD);
 // ------------------------------------------
 
 ?>
@@ -92,8 +104,11 @@ $pricesJsonString = json_encode($pricesJson);
         }
 
         // 2. Contar de AMBAS tablas
-        var selectedTalleresCount = $(\'#grid-talleres\').yiiGridView(\'getSelectedRows\').length;
-        var selectedVisitasCount = $(\'#grid-visitas\').yiiGridView(\'getSelectedRows\').length;
+        const talleresContainer = document.getElementById(\'checkbox-talleres-container\');
+		const visitasContainer = document.getElementById(\'checkbox-visitas-container\');
+
+		const selectedTalleresCount = talleresContainer ? talleresContainer.querySelectorAll(\'.rcg-checkbox:checked\').length : 0;
+		const selectedVisitasCount = visitasContainer ? visitasContainer.querySelectorAll(\'.rcg-checkbox:checked\').length : 0;
         var totalExtrasCount = selectedTalleresCount + selectedVisitasCount;
         
         // 3. Lógica de Cobro de Extras (Talleres + Visitas)
@@ -185,7 +200,7 @@ $pricesJsonString = json_encode($pricesJson);
     //     }
     // }
 
-    // Inicializar
+	// Inicializar
     $(document).ready(function() {
         calculateTotal();
     });
@@ -412,24 +427,6 @@ $pricesJsonString = json_encode($pricesJson);
 	// 		}
 	// 	}
 	// });
-
-
-		// Al hacer clic en cualquier botón de "Leer más"
-  		$(".btn-ver-detalles").on("click", function(e) {
-        e.preventDefault();
-        
-        // Obtenemos la info guardada en el botón
-        var titulo = $(this).data("title");
-        var detalles = $(this).data("details");
-        
-        // La ponemos dentro del Modal
-        $("#modal-title-text").html(titulo);
-        $("#modal-body-text").html(detalles);
-        
-        // Mostramos el Modal
-        $("#modal-detalles").modal("show");
-    });
-
 	
 '); ?>
 
@@ -651,7 +648,6 @@ $pricesJsonString = json_encode($pricesJson);
 
     <?= $form->field($registration, 'area_trabajo')->dropDownList($areasTrabajo, ['prompt' => 'Seleccione el área de su trabajo...']) ?>
 
-
 	<div id="div-modalidad-presentacion">
         <?= $form->field($registration, 'modalidad_presentacion')->dropDownList([
             'Presencial' => 'Presencial',
@@ -683,10 +679,62 @@ $pricesJsonString = json_encode($pricesJson);
     </div>
 
     <h3><?= Html::encode('Talleres y Visitas Industriales') ?></h3>
+
+	<?php
+	// Obtenemos los modelos actuales del proveedor de datos
+	$modelosTalleres = $dataProviderTalleres->getModels();
+	$modelosVisitas = $dataProviderVisitas->getModels();
+
+	$talleresJs = [];
+	foreach ($modelosTalleres as $taller) {
+		// Usamos el ID del taller como llave (key) del arreglo para buscarlo fácil en JS
+		$talleresJs[] = [
+			'id'     => $taller->id,
+			'nombre'   => $taller->nombre,
+			'descripcion' => $taller->descripcion,
+			'fecha'   => $taller->fecha,
+			'horario'  => $taller->horario,
+			'modalidad'=> $taller->modalidad,
+			'tallerista' => $taller->tallerista
+		];
+	}
+	$visitasJs = [];
+	foreach ($modelosVisitas as $visita) {
+		$visitasJs[] = [
+			'id'     => $visita->id,
+			'nombre'   => $visita->nombre,
+			'descripcion' => $visita->descripcion,
+			'fecha'   => $visita->fecha,
+			'horario'  => $visita->horario,
+			'modalidad'=> $visita->modalidad
+		];
+	}
+
+	$jsonTalleres = Json::encode($talleresJs);
+	$jsonVisitas = Json::encode($visitasJs);
+
+	$this->registerJs("
+		window.datosTalleres = {$jsonTalleres};
+		window.datosVisitas = {$jsonVisitas};
+	", \yii\web\View::POS_HEAD); // POS_HEAD asegura que cargue antes que nuestro JS externo
+	?>
 	
-	<?php $dataProviderWork = new ActiveDataProvider([
-		'query' => Workshops::find(),
-	]); ?>
+	<?php
+		# Importamos nuestros js y css para los talleres y visitas
+		$this->registerCssFile('@web/css/ResponsiveInputs.css');
+		$this->registerJsFile('@web/js/libs/ResponsiveInputs.js',);
+		$this->registerJsFile(
+			'@web/js/talleres_visitas.js',
+			['depends' => [\yii\web\JqueryAsset::class]]
+		);
+	?>
+	
+	<!-- PENDIENTE INVESTIGAR SI SE PUEDE ELIMINAR -->
+	<?php
+		$dataProviderWork = new ActiveDataProvider([
+			'query' => Workshops::find(),
+		]);
+	?>
 
 	<p style="margin-left:0.5cm">
 		<b> <?= Html::encode('General:')?> </b> <?= Html::encode('Acceso a todas las conferencias, memorias de congreso y constancia digital de participación. Incluye un taller o una visita industrial.')?> 
@@ -696,104 +744,24 @@ $pricesJsonString = json_encode($pricesJson);
 		<br> <b> <?= Html::encode('Estudiante y Profesor UADY:')?> </b> <?= Html::encode('Acceso a todas las conferencias. No incluye talleres ni visitas industriales.')?>
     </p>
 
-	<?= GridView::widget([
-		'id' => 'grid-talleres',
-		'dataProvider' => $dataProviderTalleres,
-		'columns' => [
-			[
-				'class' => 'kartik\grid\CheckboxColumn',
-				'name' => 'talleres_seleccionados',
-				//'rowHighlight' => true,
-				'header' => '',
-			],
+	<div class="alert alert-warning" style="margin-top: 30px; border-left: 5px solid #fff79e;">
+        <p style="font-size: 1.1em; margin-bottom: 0;">
+            <strong style="color: #128dd5;"><span class="glyphicon glyphicon-exclamation-sign"></span> </strong> 
+            Todos los talleres se realizarán el día martes 6 de octubre de 2026.
+        </p>
+    </div>
 
-			[
-				'attribute' => 'nombre',
-				'label' => 'Nombre del Taller',
-			],
-			// Ventana emergente para descripción de talleres
-            [
-                'attribute' => 'descripcion',
-                'label' => 'Detalles',
-                'format' => 'raw',
-                'value' => function ($model) {
-                    if (empty($model->descripcion)) {
-                        return '';
-                    }
-                    return Html::button('<span class="glyphicon glyphicon-info-sign"></span> Leer más', [
-                        'class' => 'btn btn-info btn-xs btn-ver-detalles',
-                        'data-title' => Html::encode($model->nombre),
-                        'data-details' => Html::encode($model->descripcion),
-                    ]);
-                },
-            ],
+	<div id="checkbox-talleres-container"></div>
+	
 
-			[
-				'attribute' => 'fecha',
-				'header' => 'Fecha',
-			],
-			[
-				'attribute' => 'horario',
-				'header' => 'Horario',
-			]
-		],
-		'summary'=>'',
-		'options' => ['style' => 'width:700px;'],
-	]);?>
-
-<div class="alert alert-warning" style="margin-top: 30px; border-left: 5px solid #ffcc84;">
+	<div class="alert alert-warning" style="margin-top: 30px; border-left: 5px solid #ffcc84;">
         <p style="font-size: 1.1em; margin-bottom: 0;">
             <strong style="color: #d58512;"><span class="glyphicon glyphicon-exclamation-sign"></span> Requisitos de acceso en las visitas:</strong> 
             Zapatos cerrados, pantalón largo (sin roturas), cabello recogido, sin aretes, anillos, pulseras y similares. Prohibido el uso del celular y de la toma de fotografías.
         </p>
     </div>
 
-	<?= GridView::widget([
-		'id' => 'grid-visitas',
-		'dataProvider' => $dataProviderVisitas,
-		'columns' => [
-			[
-				'class' => 'kartik\grid\CheckboxColumn',
-				'name' => 'visitas_seleccionadas',
-				//'rowHighlight' => true,
-				'header' => '',
-			],
-			//'id',
-			[
-				'attribute' => 'nombre',
-				'label' => 'Nombre de la Empresa',
-			],
-
-			[
-				'attribute' => 'fecha',
-				'label' => 'Fecha',
-			],
-			// Ventana emergente para visitas...
-            [
-                'attribute' => 'descripcion',
-                'label' => 'Detalles',
-                'format' => 'raw',
-                'value' => function ($model) {
-                    if (empty($model->descripcion)) {
-                        return '';
-                    }
-                    return Html::button('<span class="glyphicon glyphicon-info-sign"></span> Leer más', [
-                        'class' => 'btn btn-info btn-xs btn-ver-detalles',
-                        'data-title' => Html::encode($model->nombre),
-                        'data-details' => Html::encode($model->descripcion),
-                    ]);
-                },
-            ],
-
-			[
-				'attribute' => 'horario',
-				'label' => 'Horario',
-				// 'format' => ['time', 'php:H:i'],
-			]
-		],
-		'summary'=>'',
-		'options' => ['style' => 'width:700px;'],
-	]);?>
+	<div id="checkbox-visitas-container"></div>
 
 	<?= $form->field($registration, 'proceedings_copies')->hiddenInput()->label(false) ?>
 	
@@ -879,6 +847,11 @@ $pricesJsonString = json_encode($pricesJson);
     </div>
 
 	<h3>Instrucciones de pago</h3>
+
+	<?php
+		# cargamos scripts que generen los previews y concepto de pago
+		// $this->registerJsFile('@web/js/vista_pago.js', ['depends' => [\yii\web\JqueryAsset::class]]);
+	?>
 	
 	<div class="well" style="background-color: #f8f9fa; border-left: 5px solid #0055A5;">
 		<p style="font-size: 1.1em; margin-bottom: 10px;">El pago podrá ser realizado por transferencia bancaria con los siguientes datos:</p>
@@ -967,7 +940,6 @@ $pricesJsonString = json_encode($pricesJson);
         overflow-y: auto; /* Si el texto es más largo, crea una barra de scroll */
         padding: 20px;
     }
-
 </style>
 
 <!-- <script src="../web/js/form.js"></script> -->

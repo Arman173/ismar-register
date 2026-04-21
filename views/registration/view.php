@@ -38,7 +38,7 @@ use yii\bootstrap\ActiveForm;
 ?>
 <div class="registration-view">
    
-		<?php if( !$model->confirmado ): ?>
+		<?php if( $model->confirmado ): ?>
 		<div class="alert alert-warning">
         	<h2>Registro pendiente</h2>
 			<p><?= Html::encode($model->fullName) ?>, sus datos han sido guardados correctamente.</p>
@@ -47,7 +47,7 @@ use yii\bootstrap\ActiveForm;
 		</div>
 		<?php endif; ?>
 		
-		<?php if( $model->confirmado ): ?>
+		<?php if( !$model->confirmado ): ?>
 		<div class="alert alert-success">
 			<h2>Confirmación de registro</h2>
 			<p><?= Html::encode($model->fullName) ?>, <br />Gracias por registrarse al ConCEI-3, que se llevará a cabo en Mérida, México del 7 al 9 de octubre de 2026 en el Campus de Ciencias Exactas e Ingenierías de la Universidad Autónoma de Yucatán (UADY).</p>

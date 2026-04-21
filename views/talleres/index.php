@@ -10,7 +10,7 @@ use yii\grid\GridView;
 /** @var app\models\TallerSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Talleres';
+$this->title = 'Tallers';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="taller-index">
@@ -35,6 +35,7 @@ $this->params['breadcrumbs'][] = $this->title;
             'fecha',
             'horario',
             //'modalidad',
+            //'tallerista',
             [
                 'class' => ActionColumn::className(),
                 'urlCreator' => function ($action, Taller $model, $key, $index, $column) {
