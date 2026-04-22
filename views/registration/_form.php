@@ -37,7 +37,7 @@ foreach ($registrationTypes as $type) {
 $pricesJsonString = json_encode($pricesJson);
 $isEarlyBirdStr = $isEarlyBird ? 'true' : 'false';
 
-// --- CÓDIGO FALTANTE: INYECCIÓN AL WINDOW ---
+// INYECCIÓN AL WINDOW ---
 $jsVariables = <<<JS
     window.workshopCost = {$costo_taller};
     window.isEarlyBird = {$isEarlyBirdStr};
@@ -52,158 +52,7 @@ $this->registerJs($jsVariables, \yii\web\View::POS_HEAD);
 
 <?php $this->registerJs('
 
-	// Variables PHP inyectadas
-    var workshopCost = ' . $costo_taller . ';
-    var isEarlyBird = ' . ($isEarlyBird ? 'true' : 'false') . ';
-    var typePrices = ' . $pricesJsonString . ';
-
-	// --- NUEVO CODIGO: FUNCION DEL CONCEPTO ---
-    function calculateConceptoPago() {
-        var lastName = $(\'#registration-last_name\').val() ? $(\'#registration-last_name\').val().trim().toUpperCase() : \'\';
-        var firstName = $(\'#registration-first_name\').val() ? $(\'#registration-first_name\').val().trim().toUpperCase() : \'\';
-
-        var lastNameCode = lastName.substring(0, 3).padStart(3, \'0\');
-        var firstNameCode = firstName.substring(0, 3).padStart(3, \'0\');
-
-        var typeId = $(\'#registration-registration_type_id\').val();
-        var typeCode = \'RU\'; 
-        if (typeId === \'1\') {
-            typeCode = \'RG\';
-        } else if (typeId === \'12\') {
-            typeCode = \'RE\';
-        }
-
-        var finalCode = lastNameCode + firstNameCode + typeCode;
-        $(\'#display-concepto-pago\').text(finalCode);
-    }
-
-	calculateConceptoPago();
-
-    $(\'#registration-first_name, #registration-last_name\').on(\'keyup change\', function() {
-        calculateConceptoPago();
-    });
-    // ------------------------------------------
-    
-    function calculateTotal() {
-        var total = 0;
-        var baseCost = 0;
-        var extrasTotalCost = 0; // Costo de los talleres/visitas que SÍ se cobran
-        
-        // 1. Obtener ID del tipo de registro
-        var selectedTypeId = $(\'#registration-registration_type_id\').val();
-        
-        // Costo base según Early Bird
-        if (selectedTypeId && typePrices[selectedTypeId]) {
-            if (isEarlyBird) {
-                baseCost = parseFloat(typePrices[selectedTypeId].early) || 0;
-            } else {
-                baseCost = parseFloat(typePrices[selectedTypeId].late) || 0;
-            }
-        } else {
-            baseCost = 0;
-        }
-
-        // 2. Contar de AMBAS tablas
-        const talleresContainer = document.getElementById(\'checkbox-talleres-container\');
-		const visitasContainer = document.getElementById(\'checkbox-visitas-container\');
-
-		const selectedTalleresCount = talleresContainer ? talleresContainer.querySelectorAll(\'.rcg-checkbox:checked\').length : 0;
-		const selectedVisitasCount = visitasContainer ? visitasContainer.querySelectorAll(\'.rcg-checkbox:checked\').length : 0;
-        var totalExtrasCount = selectedTalleresCount + selectedVisitasCount;
-        
-        // 3. Lógica de Cobro de Extras (Talleres + Visitas)
-        var paidExtras = 0;
-        var typeStr = String(selectedTypeId); 
-        
-        if (totalExtrasCount > 0) {
-            if (typeStr === \'1\' || typeStr === \'12\') {
-                // General (1) y Estudiante (12): 1 Gratis en total (sea taller o visita)
-                paidExtras = Math.max(0, totalExtrasCount - 1);
-            } else if (typeStr === \'17\') {
-                // UADY (17): Paga todos
-                paidExtras = totalExtrasCount;
-            } else {
-                // Default: Paga todos
-                paidExtras = totalExtrasCount; 
-            }
-        }
-        
-        extrasTotalCost = paidExtras * workshopCost;
-        total = baseCost + extrasTotalCost;
-
-        // 4. Actualizar vista en la tabla
-        $(\'#display-base-cost\').text(\'$\' + baseCost.toFixed(2));
-        
-        // Fila Talleres
-        $(\'#display-talleres-count\').text(selectedTalleresCount);
-        $(\'#display-talleres-total\').text(\'$\' + (selectedTalleresCount * workshopCost).toFixed(2));
-        
-        // Fila Visitas
-        $(\'#display-visitas-count\').text(selectedVisitasCount);
-        $(\'#display-visitas-total\').text(\'$\' + (selectedVisitasCount * workshopCost).toFixed(2));
-        
-        // Fila Resumen Extras a Pagar
-        $(\'#display-total-extras-paid\').text(paidExtras);
-        $(\'#display-extras-total\').text(\'$\' + extrasTotalCost.toFixed(2));
-        
-        // Total Final
-        $(\'#display-grand-total\').text(\'$\' + total.toFixed(2));
-    }
-
-    // -- LISTENERS --
-
-    // Cambio en Tipo de Registro (Grid Radio de Kartik)
-
-    $(\'#fee_type\').on(\'grid.radiochecked\', function(ev, key, val) {
-        $(\'#registration-registration_type_id\').val(val);
-        
-        // Funciones visuales existentes (si existen)
-        if(typeof toggleStudentId === \'function\') toggleStudentId();
-        if(typeof toggleChangeFileStudentId === \'function\') toggleChangeFileStudentId();
-        
-        calculateTotal();
-		calculateConceptoPago();
-    });
-
-    // Cambio en Checkbox de Talleres
-    $(\'#grid-talleres, #grid-visitas\').on(\'click\', function() {
-        // Tu función de mapeo a inputs hidden (la integramos aquí para asegurar orden)
-        // mapWorkshopsToHiddenInputs(); 
-        calculateTotal();
-    });
-
-    // Tu función de mapeo (tal cual estaba)
-    // function mapWorkshopsToHiddenInputs() {
-    //     $(\'[name="Registration[W1]"]\').val(0);
-    //     $(\'[name="Registration[W2]"]\').val(0);
-    //     $(\'[name="Registration[W3]"]\').val(0);
-    //     $(\'[name="Registration[W4]"]\').val(0);
-    //     $(\'[name="Registration[W5]"]\').val(0);
-    //     $(\'[name="Registration[W6]"]\').val(0);
-    //     $(\'[name="Registration[W7]"]\').val(0);
-    //     $(\'[name="Registration[T1]"]\').val(0);
-        
-    //     var keys = $(\'#workshop_type\').yiiGridView(\'getSelectedRows\');
-    //     // Iteramos con cuidado
-    //     if (keys) {
-    //         for (var i = 0; i < keys.length; i++) { 
-    //             var k = parseInt(keys[i]);
-    //             if(k==1) $(\'[name="Registration[W1]"]\').val(1);
-    //             if(k==2) $(\'[name="Registration[W2]"]\').val(1);
-    //             if(k==3) $(\'[name="Registration[W3]"]\').val(1);
-    //             if(k==4) $(\'[name="Registration[W4]"]\').val(1);
-    //             if(k==5) $(\'[name="Registration[W5]"]\').val(1);
-    //             if(k==6) $(\'[name="Registration[W6]"]\').val(1);
-    //             if(k==7) $(\'[name="Registration[W7]"]\').val(1);
-    //             if(k==8) $(\'[name="Registration[T1]"]\').val(1);
-    //         }
-    //     }
-    // }
-
-	// Inicializar
-    $(document).ready(function() {
-        calculateTotal();
-    });
+	
 	
 	function showFileStudentId()
 	{
@@ -372,7 +221,8 @@ $this->registerJs($jsVariables, \yii\web\View::POS_HEAD);
 	$grid.on( \'grid.radiochecked\', function(ev, key, val){
 		$("#registration-registration_type_id").val(val);
 
-	calculateConceptoPago();
+	// calculateConceptoPago();
+	actualizarConceptoPago();
 			switch( val )
 			{
 				case "12": showFileStudentId(); break;
@@ -531,7 +381,7 @@ $this->registerJs($jsVariables, \yii\web\View::POS_HEAD);
 			//'costOnSite',
 		],
 		'summary'=>'',
-		'options' => ['style' => 'width:700px;'],
+		'options' => ['style' => 'max-width: 700px; width: 100%; margin: 0;'],
 	]);?>
 
 
@@ -802,6 +652,12 @@ $this->registerJs($jsVariables, \yii\web\View::POS_HEAD);
     <h3><?= Html::encode('Bolsa de Trabajo')?></h3>
     <p> <?= Html::encode('Si deseas compartir tu Curriculum Vitae (CV) con las empresas patrocinadoras, puedes adjuntarlo aquí, en formato pdf.')?> </p>
     <?= $form->field($registration, 'file_cv')->fileInput()->label('Subir CV') ?>
+
+	<?php
+		# Cargamos el script para todo lo dinamico relacionado con el pago y precio del registro
+		# Resumen de pago y concepto de pago
+		$this->registerJsFile('@web/js/vista_pago.js', ['depends' => [\yii\web\JqueryAsset::class]]);
+	?>
     
 	<h3>Política de cancelación</h3>
 	<p> <?= Html::encode('Las cuotas de inscripción, talleres y visitas industriales no serán rembolsables. Es importante destacar que a los autores que no se presenten se les retirará su artículo de las memorias del congreso. Para cualquier duda o aclaracion favor de contactar concei@correo.uady.mx')?> </p>
@@ -936,10 +792,93 @@ $this->registerJs($jsVariables, \yii\web\View::POS_HEAD);
         max-width: 600px; 
     }
 	#modal-detalles .modal-body {
-        max-height: 60vh; /* El cuerpo medirá como máximo el 60% de la pantalla */
-        overflow-y: auto; /* Si el texto es más largo, crea una barra de scroll */
+        max-height: 60vh; 			/* El cuerpo medirá como máximo el 60% de la pantalla */
+        overflow-y: auto; 			/* Si el texto es más largo, crea una barra de scroll */
         padding: 20px;
     }
+
+	/* =======================================================
+	Estilos Responsivos para la Tabla de Registros (para moviles)
+	======================================================= */
+	@media screen and (max-width: 767px) {
+		/* Ajustes para la barra de navegación en móviles */
+		.navbar-brand {
+			white-space: normal; 	/* Permite el salto de línea */
+			font-size: 16px; 		/* Reduce el tamaño de letra */
+			line-height: 1.2;
+			height: auto; 			/* Permite que la barra crezca a lo alto */
+			max-width: 75%; 		/* Evita que el texto pise el botón de sándwich */
+			padding: 10px 15px;
+		}
+		
+		/* Forzamos a la tabla a comportarse como bloques en lugar de una cuadrícula */
+		#fee_type table, 
+		#fee_type thead, 
+		#fee_type tbody, 
+		#fee_type th, 
+		#fee_type td, 
+		#fee_type tr { 
+			display: block; 
+			width: 100% !important;
+		}
+		
+		/* Ocultamos el encabezado visualmente (pero lo dejamos para lectores de pantalla) */
+		#fee_type thead tr { 
+			position: absolute;
+			top: -9999px;
+			left: -9999px;
+		}
+		
+		/* Estilizamos cada fila (<tr>) para que parezca una tarjeta */
+		#fee_type tbody tr { 
+			border: 1px solid #ddd;
+			border-radius: 8px; /* Bordes redondeados */
+			margin-bottom: 15px; /* Separación entre tarjetas */
+			box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* Pequeña sombra elegante */
+			background-color: #fff;
+			overflow: hidden;
+		}
+		
+		/* Estilizamos las celdas (<td>) */
+		#fee_type td { 
+			border: none !important;
+			border-bottom: 1px solid #eee !important; 
+			position: relative;
+			padding: 12px 15px 12px 50% !important; /* Espacio izquierdo para la etiqueta */
+			text-align: right !important; /* El valor se va a la derecha */
+			min-height: 45px;
+		}
+		#fee_type td:last-child { border-bottom: none !important; }
+		
+		/* Inyectamos los títulos de las columnas usando pseudo-elementos ::before */
+		#fee_type td::before { 
+			position: absolute;
+			top: 12px;
+			left: 15px;
+			width: 45%; 
+			padding-right: 10px; 
+			white-space: nowrap;
+			text-align: left;
+			font-weight: 600;
+			color: #555;
+		}
+		
+		/* Definimos el texto para cada columna basada en su posición */
+		#fee_type td:nth-of-type(1)::before { content: "Seleccionar:"; }
+		#fee_type td:nth-of-type(2)::before { content: "Tipo de Registro:"; }
+		#fee_type td:nth-of-type(3)::before { content: "Pre-Registro:"; }
+		#fee_type td:nth-of-type(4)::before { content: "Registro Regular:"; }
+
+		/* Mejoramos la usabilidad del Radio Button en móviles */
+		#fee_type td:nth-of-type(1) {
+			background-color: #f9f9f9; /* Destacar la zona de selección */
+		}
+		#fee_type td:nth-of-type(1) input[type="radio"] {
+			transform: scale(1.5); /* Hacemos el botón más grande */
+			margin-top: 0;
+			cursor: pointer;
+		}
+	}
 </style>
 
 <!-- <script src="../web/js/form.js"></script> -->

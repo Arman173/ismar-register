@@ -1,5 +1,5 @@
-
 function mostrarModalDetalles(titulo, detalles, tallerista = null){
+
     detalles = detalles || "";
     // tallerista = tallerista || "";
 
@@ -15,6 +15,7 @@ function mostrarModalDetalles(titulo, detalles, tallerista = null){
     let htmlFinal = "<div style=\"text-align: justify; font-size: 1.05em; line-height: 1.6; color: #444;\">";
 
    if (tallerista != null) {
+
         htmlFinal += "<strong class=\"text-primary\" style=\"font-size: 1.1em;\">Tallerista:</strong><br>";
         htmlFinal += tallerista + "<br><br>";
     }
@@ -22,17 +23,21 @@ function mostrarModalDetalles(titulo, detalles, tallerista = null){
     htmlFinal +=textoLimpio + "</div>";
 
   if (urlEncontrada) {
+
         htmlFinal += "<hr style=\"margin-top: 15px; margin-bottom: 15px; border-top: 1px solid #ddd;\">";
         htmlFinal += "<div>";
         htmlFinal += "  <p style=\"margin-bottom: 5px; color: #555; font-size: 1.05em;\">Para más información visita la página del <strong>CONCEI 2026</strong>:</p>";
         htmlFinal += "  <a href=\"" + urlEncontrada + "\" target=\"_blank\" style=\"word-break: break-all; font-weight: bold; font-size: 1.05em;\">" + urlEncontrada + "</a>";
         htmlFinal += "</div>";
+
     }
 
     $("#modal-title-text").html(titulo);
+
     $("#modal-body-text").html(htmlFinal);
+
     $("#modal-detalles").modal("show");
-    
+
 }
 
 window.onload = function() {
@@ -77,7 +82,6 @@ window.onload = function() {
             ],
             onSelectionChange: function(estado) {
                 console.log('Seleccionados:', estado.todosLosSeleccionados);
-                // Aquí puedes validar si el usuario ya excedió el límite de talleres, etc.
             }
         });
     
@@ -106,7 +110,6 @@ window.onload = function() {
             ],
             onSelectionChange: function(estado) {
                 console.log('Seleccionados:', estado.todosLosSeleccionados);
-                // Aquí puedes validar si el usuario ya excedió el límite de visitas (si aplica), etc.
             }
         });
 

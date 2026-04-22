@@ -433,7 +433,7 @@ class Registration extends \yii\db\ActiveRecord
 	}
 
 // **************Función para el concepto de pago*************
-	public function getConceptoPago()
+	/*public function getConceptoPago()
     {
         // Revisamos si las variables tienen texto, si no, usamos un string vacío
         $apellido = $this->last_name ? (string)$this->last_name : '';
@@ -452,6 +452,57 @@ class Registration extends \yii\db\ActiveRecord
         }
         
         return $apellidoStr . $nombreStr . $tipoRegistro;
+    }*/
+
+	// **************Función para el concepto de pago*************
+    public function getConceptoPago()
+    {
+        // Apellidos y Nombres
+        $apellido = $this->last_name ? (string)$this->last_name : '';
+        $nombre = $this->first_name ? (string)$this->first_name : '';
+
+        $apellidoStr = str_pad(substr(strtoupper(trim($apellido)), 0, 3), 3, '0', STR_PAD_LEFT);
+        $nombreStr = str_pad(substr(strtoupper(trim($nombre)), 0, 3), 3, '0', STR_PAD_LEFT);
+        
+        // Tipo de registro
+        $tipoRegistro = 'RU'; // Por defecto (UADY)
+        if ($this->registration_type_id == 1) { 
+            $tipoRegistro = 'RG';
+        } elseif ($this->registration_type_id == 12) {
+            $tipoRegistro = 'RE';
+        }
+        
+        $concepto = $apellidoStr . $nombreStr . $tipoRegistro;
+
+        // Obtener e integrar Talleres seleccionados
+        $talleres = $this->talleres_seleccionados;
+        if (empty($talleres) && !$this->isNewRecord) {
+            $talleresBD = \app\models\RegistroTaller::find()->where(['registration_id' => $this->id])->all();
+            $talleres = array_map(function($t) { return $t->taller_id; }, $talleresBD);
+        }
+
+        if (!empty($talleres) && is_array($talleres)) {
+            sort($talleres); 
+            foreach ($talleres as $tallerId) {
+                $concepto .= 'T' . str_pad($tallerId, 2, '0', STR_PAD_LEFT);
+            }
+        }
+
+        // Obtener e integrar Visitas seleccionadas
+        $visitas = $this->visitas_seleccionadas;
+        if (empty($visitas) && !$this->isNewRecord) {
+            $visitasBD = \app\models\RegistroVisita::find()->where(['registration_id' => $this->id])->all();
+            $visitas = array_map(function($v) { return $v->visita_id; }, $visitasBD);
+        }
+
+        if (!empty($visitas) && is_array($visitas)) {
+            sort($visitas); 
+            foreach ($visitas as $visitaId) {
+                $concepto .= 'V' . str_pad($visitaId, 2, '0', STR_PAD_LEFT);
+            }
+        }
+        
+        return $concepto;
     }
 
 }

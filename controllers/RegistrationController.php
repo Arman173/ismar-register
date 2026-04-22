@@ -52,9 +52,8 @@ class RegistrationController extends Controller
 					],
                     [
                         // Esta regla permite el acceso a todos los usuarios (invitados incluidos)
-                        'actions' => ['create', 'view', 'update-display-name'], // <-- ¡Agrega tu acción aquí!
+                        'actions' => ['create', 'view', 'update-display-name'],
                         'allow' => true,
-                        // 'roles' => ['?'], // El '?' significa invitados. A veces se omite para que sea totalmente público.
                     ],
 				],
 			],
@@ -169,12 +168,12 @@ class RegistrationController extends Controller
         if ($registration->load(Yii::$app->request->post())) {
 
             // ==========================================
-            // MODO DEPURACIÓN: Congelamos la pantalla
-            echo "<h2 style='color:red;'>DATOS RECIBIDOS EN EL POST:</h2>";
-            echo "<pre>"; 
-            print_r(Yii::$app->request->post()); 
-            echo "</pre>"; 
-            exit; 
+            // PARA DEPURACIÓN: Congelamos la pantalla
+            // echo "<h2 style='color:red;'>DATOS RECIBIDOS EN EL POST:</h2>";
+            // echo "<pre>"; 
+            // print_r(Yii::$app->request->post()); 
+            // echo "</pre>"; 
+            // exit;
             // ==========================================
 
 			$registration->file_payment_receipt = UploadedFile::getInstance($registration,'file_payment_receipt');
@@ -217,69 +216,6 @@ class RegistrationController extends Controller
 					if($isSaved)
 						return $this->redirect(['view', 'id' => $registration->id]);
 				}
-                // ---------------------------------------------------------------------------------------------------------
-                // // --- NUEVO: 1. Calcular el costo y asignarlo al modelo ANTES de guardar ---
-                // $registration->calculateTotalCost();
-
-                // // --- NUEVO: 2. Iniciar Transacción de Base de Datos ---
-                // $transaction = Yii::$app->db->beginTransaction();
-                // try {
-                //     if($registration->save())
-                //     {
-                //         $isSaved = true;
-
-                //         // Guardar la factura si aplica
-                //         if($registration->invoice_required)
-                //         {
-                //             $invoice->registration_id = $registration->id;
-                //             $isSaved = $isSaved && $invoice->save();
-                //         }
-
-                //         // --- NUEVO: 3. Guardar Talleres Seleccionados ---
-                //         if ($isSaved && !empty($registration->talleres_seleccionados) && is_array($registration->talleres_seleccionados)) {
-                //             foreach ($registration->talleres_seleccionados as $taller_id) {
-                //                 $rw = new \app\models\RegistrationWorkshop();
-                //                 $rw->registration_id = $registration->id;
-                //                 $rw->workshop_id = $taller_id; // Asegúrate de que los IDs no choquen con las visitas
-                //                 $rw->cost = 100.00; // O la lógica que defina el costo individual
-                //                 $rw->created_at = date('Y-m-d H:i:s');
-                //                 if (!$rw->save()) {
-                //                     throw new \Exception('Error al guardar Taller.');
-                //                 }
-                //             }
-                //         }
-
-                //         // --- NUEVO: 4. Guardar Visitas Seleccionadas ---
-                //         if ($isSaved && !empty($registration->visitas_seleccionadas) && is_array($registration->visitas_seleccionadas)) {
-                //             foreach ($registration->visitas_seleccionadas as $visita_id) {
-                //                 $rw = new \app\models\RegistrationWorkshop();
-                //                 $rw->registration_id = $registration->id;
-                //                 $rw->workshop_id = $visita_id; 
-                //                 $rw->cost = 100.00;
-                //                 $rw->created_at = date('Y-m-d H:i:s');
-                //                 if (!$rw->save()) {
-                //                     throw new \Exception('Error al guardar Visita.');
-                //                 }
-                //             }
-                //         }
-
-                //         if($isSaved)
-                //         {
-                //             // Si todo salió perfecto, commitear la transacción
-                //             $transaction->commit();
-                            
-                //             // Si es actionSubmit, envías los correos aquí como lo tenías.
-                //             // Si es actionCreate, rediriges a 'view'
-                //             return $this->redirect(['view', 'id' => $registration->id]); 
-                //         } else {
-                //              throw new \Exception('Error general al guardar (Factura o Registro).');
-                //         }
-                //     }
-                // } catch (\Exception $e) {
-                //     // Si hubo cualquier error, cancelar TODO (Rollback)
-                //     $transaction->rollBack();
-                //     Yii::$app->session->setFlash('error', $e->getMessage());
-                // }
             }
         }
 
@@ -318,7 +254,7 @@ class RegistrationController extends Controller
         if ($registration->load(Yii::$app->request->post())) {
 
             // ==========================================
-            // MODO DEPURACIÓN: Congelamos la pantalla
+            // PARA DEPURACIÓN: Congelamos la pantalla
             // echo "<h2 style='color:red;'>DATOS RECIBIDOS EN EL POST:</h2>";
             // echo "<pre>"; 
             // print_r(Yii::$app->request->post()); 
