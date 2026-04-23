@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
         }
     };
 
-	/*// --- NUEVO CODIGO: FUNCION DEL CONCEPTO ---
+	// --- NUEVO CODIGO: FUNCION DEL CONCEPTO ---
     function calculateConceptoPago() {
         var lastName = $('#registration-last_name').val() ? $('#registration-last_name').val().trim().toUpperCase() : '';
         var firstName = $('#registration-first_name').val() ? $('#registration-first_name').val().trim().toUpperCase() : '';
@@ -48,7 +48,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
         calculateConceptoPago();
     });
     // ------------------------------------------
-    */
 
     // NUEVA LÓGICA PARA ACTUALIZAR CONCEPTO
 function actualizarConceptoPago() {
@@ -225,4 +224,227 @@ $(document).ready(function() {
     $(document).ready(function() {
         calculateTotal();
     });
+
+    function showFileStudentId()
+	{
+		$("[name='Registration[file_student_id]']").removeAttr("disabled");
+		$(".field-registration-file_student_id").show();
+	}
+	
+	function hideFileStudentId()
+	{
+		$("[name='Registration[file_student_id]']").attr("disabled","disabled");
+		$(".field-registration-file_student_id").hide();
+	}
+	
+	function showFilePaymentReceipt()
+	{
+		$("[name='Registration[file_payment_receipt]']").removeAttr("disabled");
+		$(".field-registration-file_payment_receipt").show();
+	}
+	
+	function hideFilePaymentReceipt()
+	{
+		$("[name='Registration[file_payment_receipt]']").attr("disabled","disabled");
+		$(".field-registration-file_payment_receipt").hide();
+	}
+
+	function showRegistrationCode()
+	{
+		$("[name='Registration[registration_code]']").removeAttr("disabled");
+		$(".field-registration-registration_code").show();
+	}
+	
+	function hideRegistrationCode()
+	{
+		$("[name='Registration[registration_code]']").attr("disabled","disabled");
+		$(".field-registration-registration_code").hide();
+	}
+
+	// New code. Rodrigo
+	function toggleFilePaymentReceipt()
+	{
+		var paymentType = $("[name='Registration[payment_type]']:checked").val();
+		if( paymentType == "2" )
+			showFilePaymentReceipt();
+		else
+			hideFilePaymentReceipt();
+		
+	}
+
+	function toggleRegistrationCode()
+	{
+		if( $("[name='Registration[payment_type]']:checked").val() == 3 ){
+			showRegistrationCode();
+		}else{
+			hideRegistrationCode();
+		}
+	}
+		
+	function toggleStudentId()
+	{
+		//alert("Hola");
+		//var registrationType = $("[name=\'Registration[registration_type_id]\']:checked").val();
+		var registrationType2 = $("[name='Registration[registration_type_id]']").val();
+		//alert(registrationType2);
+		switch( registrationType2 )
+		{
+			case "12": showFileStudentId(); break;
+			case "17": showFileStudentId(); break;
+			default: hideFileStudentId(); break;
+			// case "1":
+			// case "2": 
+			// case "5":
+			// case "6":
+			// case "10":
+			// case "11":
+			// case "14":
+			// case "15": hideFileStudentId(); break;
+			// case "3": 
+			// case "4": 
+			// case "7": 
+			// case "9": 
+			// case "12": 
+			// case "13": 
+			// case "16": 
+			// case "17": showFileStudentId(); break;
+		}
+	}
+
+	function toggleModalidadPresentacion() {
+		var registrationType = $("[name='Registration[registration_type_id]']").val();
+		// El ID 17 corresponde a "Estudiantes y Profesores UADY"
+		 if (registrationType == "17") {
+			$("#div-modalidad-presentacion").hide();
+			$("#registration-modalidad_presentacion").val("");
+			$("#leyenda-modalidad-uady").show(); // <--- MUESTRA LA LEYENDA
+		} else { 
+			$("#div-modalidad-presentacion").show();
+			$("#leyenda-modalidad-uady").hide(); // <--- OCULTA LA LEYENDA
+		 }
+	}
+
+	function toggleInvoice()
+	{
+		if( $("[name='Registration[invoice_required]']:checked").val() == "0" )
+		{
+			$("[name='Invoice[business_name]']").attr("disabled","disabled");
+			$(".field-invoice-business_name").hide();
+			$("[name='Invoice[rfc]']").attr("disabled","disabled");
+			$(".field-invoice-rfc").hide();
+			$("[name='Invoice[address]']").attr("disabled","disabled");
+			$(".field-invoice-address").hide();
+			$("[name='Invoice[zip_code]']").attr("disabled","disabled");
+			$(".field-invoice-zip_code").hide();
+			$("[name='Invoice[city]']").attr("disabled","disabled");
+			$(".field-invoice-city").hide();
+			$("[name='Invoice[state]']").attr("disabled","disabled");
+			$(".field-invoice-state").hide();
+			$("[name='Invoice[email]']").attr("disabled","disabled");
+			$(".field-invoice-email").hide();
+		}
+		else
+		{
+			$("[name='Invoice[business_name]']").removeAttr("disabled");
+			$(".field-invoice-business_name").show();
+			$("[name='Invoice[rfc]']").removeAttr("disabled");
+			$(".field-invoice-rfc").show();
+			$("[name='Invoice[address]']").removeAttr("disabled");
+			$(".field-invoice-address").show();
+			$("[name='Invoice[zip_code]']").removeAttr("disabled");
+			$(".field-invoice-zip_code").show();
+			$("[name='Invoice[city]']").removeAttr("disabled");
+			$(".field-invoice-city").show();
+			$("[name='Invoice[state]']").removeAttr("disabled");
+			$(".field-invoice-state").show();
+			$("[name='Invoice[email]']").removeAttr("disabled");
+			$(".field-invoice-email").show();
+		}
+	} // end of toogleInvoice()
+	
+	
+	$("[name='Registration[registration_type_id]']").change(function(){
+		toggleStudentId();
+	});
+	
+	
+	$("[name='Registration[invoice_required]']").change(function (){
+		toggleInvoice();
+	});
+	
+	$("[name='Registration[payment_type]']").change(function(){
+		toggleFilePaymentReceipt();
+		toggleRegistrationCode();
+	});
+	
+		
+	toggleStudentId();
+	toggleFilePaymentReceipt();
+	toggleInvoice();
+	toggleModalidadPresentacion();
+	toggleRegistrationCode();
+
+
+	var $grid = $('#fee_type'); // your registration grid identifier
+
+	$("input[name=kvradio][value='1']").prop("checked",true);
+
+	$grid.on( 'grid.radiochecked', function(ev, key, val){
+		$("#registration-registration_type_id").val(val);
+
+	actualizarConceptoPago();
+			switch( val )
+			{
+				case "12": showFileStudentId(); break;
+				case "17": showFileStudentId(); break;
+				default: hideFileStudentId(); break;
+				// case "1":
+				// case "2": 
+				// case "5":
+				// case "6":
+				// case "10":
+				// case "11":
+				// case "14":
+				// case "15": hideFileStudentId(); break;
+				// case "3": 
+				// case "4": 
+				// case "7": 
+				// case "9": 
+				// case "12": 
+				// case "13": 
+				// case "16": 
+				// case "17": showFileStudentId(); break;
+			}
+		toggleModalidadPresentacion();
+		}
+	);
+
+	//$("#workshop_type input[type=checkbox]").click(function(){
+	
+	// var $workgrid = $(\'#workshop_type\');
+	// $workgrid.on(\'click\',function(){
+	// 	$("[name=\'Registration[W1]\']").val(0);
+	// 	$("[name=\'Registration[W2]\']").val(0);
+	// 	$("[name=\'Registration[W3]\']").val(0);
+	// 	$("[name=\'Registration[W4]\']").val(0);
+	// 	$("[name=\'Registration[W5]\']").val(0);
+	// 	$("[name=\'Registration[W6]\']").val(0);
+	// 	$("[name=\'Registration[W7]\']").val(0);
+	// 	$("[name=\'Registration[T1]\']").val(0);
+		
+	// 	var keys = $workgrid.yiiGridView(\'getSelectedRows\');
+	// 	//if (typeof keys[0] !== \'undefined\') {
+	// 	for (i = 0; i < keys.length; i++) { 	
+	// 		switch(keys[i]){
+	// 			case 1: $("[name=\'Registration[W1]\']").val(1); break;
+	// 			case 2: $("[name=\'Registration[W2]\']").val(1); break;
+	// 			case 3: $("[name=\'Registration[W3]\']").val(1); break;
+	// 			case 4: $("[name=\'Registration[W4]\']").val(1); break;
+	// 			case 5: $("[name=\'Registration[W5]\']").val(1); break;
+	// 			case 6: $("[name=\'Registration[W6]\']").val(1); break;
+	// 			case 7: $("[name=\'Registration[W7]\']").val(1); break;
+	// 			case 8: $("[name=\'Registration[T1]\']").val(1); break;
+	// 		}
+	// 	}
+	// });
 });

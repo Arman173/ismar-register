@@ -94,3 +94,15 @@ div.required label.control-label:after {
     content: " *";
     color: red;
 }
+
+@media screen and (max-width: 767px) {
+    /* Ajustes para la barra de navegación en móviles */
+    .navbar-brand {
+        white-space: normal; 	/* Permite el salto de línea */
+        font-size: 16px; 		/* Reduce el tamaño de letra */
+        line-height: 1.2;
+        height: auto; 			/* Permite que la barra crezca a lo alto */
+        max-width: 75%; 		/* Evita que el texto pise el botón de sándwich */
+        padding: 10px 15px;
+    }
+}

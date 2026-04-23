@@ -3,6 +3,8 @@
 /* @var $this \yii\web\View */
 /* @var $content string */
 
+// Armando: agregamos el modelo del concei para mostrar el nombre en el navbar
+use app\models\Concei;
 use yii\helpers\Html;
 use yii\bootstrap\Nav;
 use yii\bootstrap\NavBar;
@@ -24,10 +26,15 @@ AppAsset::register($this);
 <body>
 <?php $this->beginBody() ?>
 
+<?php
+// Armando: Obtenemos el nombre del concei para mostrarlo en el navbar
+$concei = Concei::find()->one();
+?>
+
 <div class="wrap">
     <?php
     NavBar::begin([
-        'brandLabel' => 'Congreso de Ciencias Exactas e Ingenierias (ConCEI) 2026',
+        'brandLabel' => $concei ? $concei->titulo : 'ConCEI',
         'brandUrl' => 'https://concei.uady.mx/',
         'options' => [
             'class' => 'navbar-inverse navbar-fixed-top',
@@ -36,6 +43,11 @@ AppAsset::register($this);
     echo Nav::widget([
         'options' => ['class' => 'navbar-nav navbar-right'],
         'items' => [
+            [
+				'label' => 'ConCEI',
+				'url' => ['/concei/index'],
+				'visible' => !Yii::$app->user->isGuest,
+			],
 			[
 				'label' => 'Registros',
 				'url' => ['/registration/index'],
@@ -46,11 +58,6 @@ AppAsset::register($this);
 				'url' => ['/registration-type/index'],
 				'visible' => !Yii::$app->user->isGuest,
 			],
-            // [
-            //     'label' => 'Workshops',
-            //     'url' => ['/workshops/index'],
-            //     'visible' => !Yii::$app->user->isGuest,
-            // ],
             [
                 'label' => 'Talleres',
                 'url' => ['/talleres/index'],

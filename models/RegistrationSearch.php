@@ -65,7 +65,9 @@ class RegistrationSearch extends Registration
         }
 
         $query->andFilterWhere([
-            'id' => $this->id,
+            // Armando: se especifica que se busque por el id de registro
+            //          no por el id del tipo de registro, para evitar confusiones al buscar por id.
+            'registration.id' => $this->id,
             'registration_type_id' => $this->registration_type_id,
 			'invoice_required' => $this->invoice_required,
         ]);

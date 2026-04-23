@@ -56,4 +56,21 @@ class Concei extends \yii\db\ActiveRecord
         ];
     }
 
+    // Armando: getters con logica de fecha de preventa
+    public function es_preventa() {
+        $fecha_actual = date('Y-m-d');
+        return $fecha_actual <= $this->fin_preventa;
+    }
+    public function getCostoTaller()
+    {
+        $costo = $this->es_preventa() ? $this->costo_preventa_taller:$this->costo_taller;
+        return $costo;
+    }
+
+    public function getCostoVisita()
+    {
+        $costo = $this->es_preventa() ? $this->costo_preventa_visita:$this->costo_visita;
+        return $costo;
+    }
+
 }

@@ -8,8 +8,12 @@ use app\models\RegistrationSearch;
 use app\models\RegistrationType;
 use app\models\RegistrationCode;
 use app\models\RegistrationWorkshop;
+// Armando: Agregamos estos modelos para la relacion con talleres y visitas
 use app\models\RegistroTaller;
 use app\models\RegistroVisita;
+// Este es para almacenar los pagos que se hagan tanto en un submit
+// de registro como en un update
+use app\models\Pago;
 use app\models\Invoice;
 use app\models\InvoiceSearch;
 use app\models\Taller;
@@ -35,6 +39,10 @@ class RegistrationController extends Controller
                 'actions' => [
                     'delete' => ['post'],
                     'update-display-name' => ['POST'],
+
+                    //Nuevos permisos para los botones del admin
+                    //'approve-payment' => ['POST'],
+                    //'reject-payment' => ['POST'],
                 ],
             ],
 			'access' => [
@@ -162,6 +170,8 @@ class RegistrationController extends Controller
 		$registration->invoice_required = 0;
 		$registration->registration_type_id = 1;
 		$registration->payment_type = 2; // credit card
+        //NUEVO
+        //$registration->confirmado = 0;
 
 
 		$invoice = new Invoice();
@@ -249,6 +259,8 @@ class RegistrationController extends Controller
 		$registration->registration_type_id = 1;
 		$registration->payment_type = 2; // credit card
 		$registration->invoice_required = 0;
+        //NUEVO: Todo registro empieza en revisión
+        //$registration->confirmado = 0;
 
 		$invoice = new Invoice();
         if ($registration->load(Yii::$app->request->post())) {
@@ -527,6 +539,8 @@ class RegistrationController extends Controller
 		if ($registration->load(Yii::$app->request->post())) {
 			$registration->file_payment_receipt = UploadedFile::getInstance($registration,'file_payment_receipt');
 			
+            $registration->confirmado = 0; // NUEVO: Regresa a revisión al subir nuevo recibo
+
 			if($registration->save())
 			{
 				Yii::$app->mailer->compose('registration/view-mail', ['model'=>$registration])
@@ -742,4 +756,47 @@ class RegistrationController extends Controller
         // Esto evita que el usuario pierda su 'token' en la URL si estaba en la vista 'submitted'
         return $this->redirect(Yii::$app->request->referrer ?: ['view', 'id' => $model->id]);
     }
+
+    //ACCIÓN DEL ADMIN: Aprueba el pago, cambia estatus a confirmado/aceptado y envía correo.
+    
+   /*public function actionApprovePayment($id)
+    {
+        $model = $this->findModel($id);
+        $model->confirmado = 1;
+
+        if ($model->save(false)) {
+            Yii::$app->mailer->compose('registration/approved-mail', ['model' => $model])
+                ->setFrom(Yii::$app->params['adminEmail'])
+                ->setTo($model->email)
+                ->setSubject('Confirmación de Registro - ConCEI-3')
+                ->send();
+
+            Yii::$app->session->setFlash('success', 'Pago verificado. Se ha notificado al usuario que su registro está Aceptado.');
+        } else {
+            Yii::$app->session->setFlash('error', 'Error al guardar en la base de datos.');
+        }
+
+        return $this->redirect(['view', 'id' => $model->id]);
+    }*/
+
+    
+    // ACCIÓN DEL ADMIN: Rechaza el pago, lo deja pendiente y envía correo de alerta.
+   /* public function actionRejectPayment($id)
+    {
+        $model = $this->findModel($id);
+        $model->confirmado = 0;
+
+        if ($model->save(false)) {
+            Yii::$app->mailer->compose('registration/rejected-mail', ['model' => $model])
+                ->setFrom(Yii::$app->params['adminEmail'])
+                ->setTo($model->email)
+                ->setSubject('Atención: Problema con su comprobante de pago - ConCEI-3')
+                ->send();
+
+            Yii::$app->session->setFlash('warning', 'Pago rechazado. Se ha notificado al usuario del problema.');
+        }
+
+        return $this->redirect(['view', 'id' => $model->id]);
+    }*/
+
 }

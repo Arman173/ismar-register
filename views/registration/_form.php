@@ -8,21 +8,30 @@ use app\models\Registration; // I did this
 use app\models\RegistrationType;
 use app\models\AdditionalTickets;
 use app\models\Workshops;
+use app\models\Concei; // Armando: modelo donde se guarda datos generales del concei
 use kartik\grid\GridView;
 use yii\data\ActiveDataProvider;
+use yii\web\NotFoundHttpException; // Armando: agregado para lanzar excepciones
 
 /* @var $this yii\web\View */
 /* @var $registration app\models\Registration */
 /* @var $invoice app\models\Invoice */
 /* @var $form yii\widgets\ActiveForm */
 
-// --- CONFIGURACIÓN ---
-$costo_taller = 100.00; // <--- PRECIO DEL TALLER
-$fecha_cambio_precio = '2026-02-17'; // Fecha fin de Early Bird (YYYY-MM-DD)
-$fecha_actual = date('Y-m-d');
+// Armando: cargamos datos del concei mediante su modelo
+$concei = Concei::find()->one();
+
+if (!$concei) {
+	throw new NotFoundHttpException('No existe un evento Concei');
+}
+
+// Armando:
+$precio_taller = $concei->getCostoTaller();
+$precio_visita = $concei->getCostoVisita();
+$preventa = $concei->es_preventa();
 
 // Determinamos si es Early Bird (Pre-registro) desde PHP para inicializar
-$isEarlyBird = ($fecha_actual <= $fecha_cambio_precio);
+$isEarlyBird = $preventa;
 
 // Preparamos los precios de los Tipos de Registro para Javascript
 $registrationTypes = RegistrationType::find()->asArray()->all();
@@ -39,246 +48,20 @@ $isEarlyBirdStr = $isEarlyBird ? 'true' : 'false';
 
 // INYECCIÓN AL WINDOW ---
 $jsVariables = <<<JS
-    window.workshopCost = {$costo_taller};
-    window.isEarlyBird = {$isEarlyBirdStr};
-    window.typePrices = {$pricesJsonString};
+	window.costo_taller = {$precio_taller};
+	window.costo_visita = {$precio_visita};
+    window.workshopCost = {'costo': '100'};
+    window.isEarlyBird 	= {$isEarlyBirdStr};
+	window.preventa		= {$preventa};
+    window.typePrices 	= {$pricesJsonString};
 JS;
 
 // Registramos las variables en el HEAD para que estén disponibles antes de que cargue tu JS externo
 $this->registerJs($jsVariables, \yii\web\View::POS_HEAD);
 // ------------------------------------------
 
+$this->registerJsFile('@web/js/registrationForm.js');
 ?>
-
-<?php $this->registerJs('
-
-	
-	
-	function showFileStudentId()
-	{
-		$("[name=\'Registration[file_student_id]\']").removeAttr("disabled");
-		$(".field-registration-file_student_id").show();
-	}
-	
-	function hideFileStudentId()
-	{
-		$("[name=\'Registration[file_student_id]\']").attr("disabled","disabled");
-		$(".field-registration-file_student_id").hide();
-	}
-	
-	function showFilePaymentReceipt()
-	{
-		$("[name=\'Registration[file_payment_receipt]\']").removeAttr("disabled");
-		$(".field-registration-file_payment_receipt").show();
-	}
-	
-	function hideFilePaymentReceipt()
-	{
-		$("[name=\'Registration[file_payment_receipt]\']").attr("disabled","disabled");
-		$(".field-registration-file_payment_receipt").hide();
-	}
-
-	function showRegistrationCode()
-	{
-		$("[name=\'Registration[registration_code]\']").removeAttr("disabled");
-		$(".field-registration-registration_code").show();
-	}
-	
-	function hideRegistrationCode()
-	{
-		$("[name=\'Registration[registration_code]\']").attr("disabled","disabled");
-		$(".field-registration-registration_code").hide();
-	}
-
-	// New code. Rodrigo
-	function toggleFilePaymentReceipt()
-	{
-		var paymentType = $("[name=\'Registration[payment_type]\']:checked").val();
-		if( paymentType == "2" )
-			showFilePaymentReceipt();
-		else
-			hideFilePaymentReceipt();
-		
-	}
-
-	function toggleRegistrationCode()
-	{
-		if( $("[name=\'Registration[payment_type]\']:checked").val() == 3 ){
-			showRegistrationCode();
-		}else{
-			hideRegistrationCode();
-		}
-	}
-		
-	function toggleStudentId()
-	{
-		//alert("Hola");
-		//var registrationType = $("[name=\'Registration[registration_type_id]\']:checked").val();
-		var registrationType2 = $("[name=\'Registration[registration_type_id]\']").val();
-		//alert(registrationType2);
-		switch( registrationType2 )
-		{
-			case "12": showFileStudentId(); break;
-			case "17": showFileStudentId(); break;
-			default: hideFileStudentId(); break;
-			// case "1":
-			// case "2": 
-			// case "5":
-			// case "6":
-			// case "10":
-			// case "11":
-			// case "14":
-			// case "15": hideFileStudentId(); break;
-			// case "3": 
-			// case "4": 
-			// case "7": 
-			// case "9": 
-			// case "12": 
-			// case "13": 
-			// case "16": 
-			// case "17": showFileStudentId(); break;
-		}
-	}
-
-	function toggleModalidadPresentacion() {
-		var registrationType = $("[name=\'Registration[registration_type_id]\']").val();
-		// El ID 17 corresponde a "Estudiantes y Profesores UADY"
-		 if (registrationType == "17") {
-			$("#div-modalidad-presentacion").hide();
-			$("#registration-modalidad_presentacion").val("");
-			$("#leyenda-modalidad-uady").show(); // <--- MUESTRA LA LEYENDA
-		} else { 
-			$("#div-modalidad-presentacion").show();
-			$("#leyenda-modalidad-uady").hide(); // <--- OCULTA LA LEYENDA
-		 }
-	}
-
-	function toggleInvoice()
-	{
-		if( $("[name=\'Registration[invoice_required]\']:checked").val() == "0" )
-		{
-			$("[name=\'Invoice[business_name]\']").attr("disabled","disabled");
-			$(".field-invoice-business_name").hide();
-			$("[name=\'Invoice[rfc]\']").attr("disabled","disabled");
-			$(".field-invoice-rfc").hide();
-			$("[name=\'Invoice[address]\']").attr("disabled","disabled");
-			$(".field-invoice-address").hide();
-			$("[name=\'Invoice[zip_code]\']").attr("disabled","disabled");
-			$(".field-invoice-zip_code").hide();
-			$("[name=\'Invoice[city]\']").attr("disabled","disabled");
-			$(".field-invoice-city").hide();
-			$("[name=\'Invoice[state]\']").attr("disabled","disabled");
-			$(".field-invoice-state").hide();
-			$("[name=\'Invoice[email]\']").attr("disabled","disabled");
-			$(".field-invoice-email").hide();
-		}
-		else
-		{
-			$("[name=\'Invoice[business_name]\']").removeAttr("disabled");
-			$(".field-invoice-business_name").show();
-			$("[name=\'Invoice[rfc]\']").removeAttr("disabled");
-			$(".field-invoice-rfc").show();
-			$("[name=\'Invoice[address]\']").removeAttr("disabled");
-			$(".field-invoice-address").show();
-			$("[name=\'Invoice[zip_code]\']").removeAttr("disabled");
-			$(".field-invoice-zip_code").show();
-			$("[name=\'Invoice[city]\']").removeAttr("disabled");
-			$(".field-invoice-city").show();
-			$("[name=\'Invoice[state]\']").removeAttr("disabled");
-			$(".field-invoice-state").show();
-			$("[name=\'Invoice[email]\']").removeAttr("disabled");
-			$(".field-invoice-email").show();
-		}
-	} // end of toogleInvoice()
-	
-	
-	$("[name=\'Registration[registration_type_id]\']").change(function(){
-		toggleStudentId();
-	});
-	
-	
-	$("[name=\'Registration[invoice_required]\']").change(function (){
-		toggleInvoice();
-	});
-	
-	$("[name=\'Registration[payment_type]\']").change(function(){
-		toggleFilePaymentReceipt();
-		toggleRegistrationCode();
-	});
-	
-		
-	toggleStudentId();
-	toggleFilePaymentReceipt();
-	toggleInvoice();
-	toggleModalidadPresentacion();
-	toggleRegistrationCode();
-
-
-	var $grid = $(\'#fee_type\'); // your registration grid identifier
-
-	$("input[name=kvradio][value=\'1\']").prop("checked",true);
-
-	$grid.on( \'grid.radiochecked\', function(ev, key, val){
-		$("#registration-registration_type_id").val(val);
-
-	// calculateConceptoPago();
-	actualizarConceptoPago();
-			switch( val )
-			{
-				case "12": showFileStudentId(); break;
-				case "17": showFileStudentId(); break;
-				default: hideFileStudentId(); break;
-				// case "1":
-				// case "2": 
-				// case "5":
-				// case "6":
-				// case "10":
-				// case "11":
-				// case "14":
-				// case "15": hideFileStudentId(); break;
-				// case "3": 
-				// case "4": 
-				// case "7": 
-				// case "9": 
-				// case "12": 
-				// case "13": 
-				// case "16": 
-				// case "17": showFileStudentId(); break;
-			}
-		toggleModalidadPresentacion();
-		}
-	);
-
-	//$("#workshop_type input[type=checkbox]").click(function(){
-	
-	// var $workgrid = $(\'#workshop_type\');
-	// $workgrid.on(\'click\',function(){
-	// 	$("[name=\'Registration[W1]\']").val(0);
-	// 	$("[name=\'Registration[W2]\']").val(0);
-	// 	$("[name=\'Registration[W3]\']").val(0);
-	// 	$("[name=\'Registration[W4]\']").val(0);
-	// 	$("[name=\'Registration[W5]\']").val(0);
-	// 	$("[name=\'Registration[W6]\']").val(0);
-	// 	$("[name=\'Registration[W7]\']").val(0);
-	// 	$("[name=\'Registration[T1]\']").val(0);
-		
-	// 	var keys = $workgrid.yiiGridView(\'getSelectedRows\');
-	// 	//if (typeof keys[0] !== \'undefined\') {
-	// 	for (i = 0; i < keys.length; i++) { 	
-	// 		switch(keys[i]){
-	// 			case 1: $("[name=\'Registration[W1]\']").val(1); break;
-	// 			case 2: $("[name=\'Registration[W2]\']").val(1); break;
-	// 			case 3: $("[name=\'Registration[W3]\']").val(1); break;
-	// 			case 4: $("[name=\'Registration[W4]\']").val(1); break;
-	// 			case 5: $("[name=\'Registration[W5]\']").val(1); break;
-	// 			case 6: $("[name=\'Registration[W6]\']").val(1); break;
-	// 			case 7: $("[name=\'Registration[W7]\']").val(1); break;
-	// 			case 8: $("[name=\'Registration[T1]\']").val(1); break;
-	// 		}
-	// 	}
-	// });
-	
-'); ?>
 
 
 <div class="registration-form">
@@ -601,7 +384,33 @@ $this->registerJs($jsVariables, \yii\web\View::POS_HEAD);
         </p>
     </div>
 
-	<div id="checkbox-talleres-container"></div>
+	<div class="panel-seleccion-trigger">
+		<div class="trigger-info">
+			<span class="trigger-label">Talleres seleccionados:</span>
+			<span class="trigger-count" id="contador-talleres">0</span>
+		</div>
+		
+		<button type="button" class="btn btn-trigger-action btn-abrir-modal-fs" data-target="#modal-talleres">
+			Seleccionar <span class="glyphicon glyphicon-chevron-right"></span>
+		</button>
+	</div>
+
+	<div id="modal-talleres" class="modal-fs-container oculto">
+		
+		<div class="modal-fs-header">
+			<h4 class="modal-fs-title">Selección de Talleres</h4>
+			
+			<button type="button" class="btn btn-fs-close btn-cerrar-modal-fs">
+				Cerrar <span class="glyphicon glyphicon-remove"></span>
+			</button>
+		</div>
+		
+		<div class="modal-fs-body">
+			<div id="checkbox-talleres-container">
+				</div>
+		</div>
+
+	</div>
 	
 
 	<div class="alert alert-warning" style="margin-top: 30px; border-left: 5px solid #ffcc84;">
@@ -611,7 +420,32 @@ $this->registerJs($jsVariables, \yii\web\View::POS_HEAD);
         </p>
     </div>
 
-	<div id="checkbox-visitas-container"></div>
+	<div class="panel-seleccion-trigger">
+		<div class="trigger-info">
+			<span class="trigger-label">Visitas seleccionadas:</span>
+			<span class="trigger-count" id="contador-visitas">0</span>
+		</div>
+		
+		<button type="button" class="btn btn-trigger-action btn-abrir-modal-fs" data-target="#modal-visitas">
+			Seleccionar <span class="glyphicon glyphicon-chevron-right"></span>
+		</button>
+	</div>
+
+	<div id="modal-visitas" class="modal-fs-container oculto">
+		
+		<div class="modal-fs-header">
+			<h4 class="modal-fs-title">Selección de Visitas Industriales</h4>
+			
+			<button type="button" class="btn btn-fs-close btn-cerrar-modal-fs">
+				Cerrar <span class="glyphicon glyphicon-remove"></span>
+			</button>
+		</div>
+		
+		<div class="modal-fs-body">
+			<div id="checkbox-visitas-container"></div>
+		</div>
+
+	</div>
 
 	<?= $form->field($registration, 'proceedings_copies')->hiddenInput()->label(false) ?>
 	
@@ -691,7 +525,7 @@ $this->registerJs($jsVariables, \yii\web\View::POS_HEAD);
             </tr>
             <tr>
                 <td colspan="2" style="text-align: right;">
-                    <em>A pagar: <span id="display-total-extras-paid">0</span> x $<?= $costo_taller ?></em>
+                    <em>A pagar: <span id="display-total-extras-paid">0</span> x $<?= '100' ?></em>
                 </td>
                 <td style="text-align: right; font-weight: bold; color: #d9534f;" id="display-extras-total">$0.00</td>
             </tr>
@@ -749,8 +583,18 @@ $this->registerJs($jsVariables, \yii\web\View::POS_HEAD);
 		'disabled' => ($registration->scenario == 'Update')? true: false,
 	]) ?>
     
+	<?php /*
     <div class="form-group">
         <?= Html::submitButton($registration->isNewRecord ? Yii::t('app', 'Submit') : Yii::t('app', 'Update data'), ['class' => $registration->isNewRecord ? 'btn btn-success' : 'btn btn-primary']) ?>
+    </div>
+	*/?>
+
+	<div class="form-group">
+        <?= Html::submitButton($registration->isNewRecord ? Yii::t('app', 'Submit') : Yii::t('app', 'Update data'), [
+            'class' => $registration->isNewRecord ? 'btn btn-success' : 'btn btn-primary',
+            'id' => 'btn-submit',
+            'onclick' => "this.disabled=true; this.innerText='Enviando...'; this.form.submit();" 
+        ]) ?>
     </div>
 
     <?php ActiveForm::end(); ?>
@@ -773,6 +617,126 @@ $this->registerJs($jsVariables, \yii\web\View::POS_HEAD);
 </div>
 
 <style>
+
+	/* ===================================================
+   DISEÑO DEL DISPARADOR (Trigger)
+   =================================================== */
+.panel-seleccion-trigger {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #ffffff; /* Fondo completamente blanco */
+    border: 1px solid #dce0e5; /* Borde gris muy sutil */
+    border-radius: 6px;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04); /* Sombra casi invisible para dar relieve */
+}
+
+.trigger-info {
+    font-size: 16px;
+    color: #333333;
+}
+
+.trigger-count {
+    font-weight: bold;
+    color: #333333;
+    background-color: #f4f6f8; /* Un fondito gris muy claro para el número */
+    padding: 4px 12px;
+    border-radius: 15px;
+    margin-left: 8px;
+    border: 1px solid #e1e4e8;
+}
+
+.btn-trigger-action {
+    background-color: #ffffff;
+    color: #333;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 6px 16px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-trigger-action:hover {
+    background-color: #f8f9fa;
+    border-color: #adadad;
+}
+
+/* ===================================================
+   MODAL FULL-SCREEN
+   =================================================== */
+.oculto {
+    display: none !important;
+}
+
+.modal-fs-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #ffffff; /* Fondo blanco para el modal */
+    z-index: 1040; /* Asegura que esté por encima de otros elementos (navbar 1030 y abajo del modal 1050) */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Encabezado: Texto a la izq, Botón a la der. Mantiene formato en móvil. */
+.modal-fs-header {
+    display: flex;
+    flex-direction: row !important; 
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 25px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e5e5e5; /* Línea separadora */
+}
+
+.modal-fs-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Botón de cerrar: Sin rojo, súper limpio */
+.btn-fs-close {
+    background-color: transparent;
+    color: #666;
+    border: 1px solid transparent;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-fs-close:hover {
+    background-color: #f0f0f0;
+    color: #111;
+}
+
+.modal-fs-body {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 20px 25px;
+	padding-bottom: 40px;
+    background-color: #ffffff; 
+}
+
+/* Ajustes mínimos para pantallas de celular muy pequeñas */
+@media (max-width: 480px) {
+    .panel-seleccion-trigger { padding: 12px 15px; }
+    .trigger-info { font-size: 14px; }
+    .trigger-count { padding: 2px 8px; }
+    .modal-fs-header { padding: 12px 15px; }
+    .modal-fs-title { font-size: 18px; }
+    .modal-fs-body { padding: 15px; }
+}
+
     #modal-detalles {
         text-align: center;
     }
@@ -801,15 +765,7 @@ $this->registerJs($jsVariables, \yii\web\View::POS_HEAD);
 	Estilos Responsivos para la Tabla de Registros (para moviles)
 	======================================================= */
 	@media screen and (max-width: 767px) {
-		/* Ajustes para la barra de navegación en móviles */
-		.navbar-brand {
-			white-space: normal; 	/* Permite el salto de línea */
-			font-size: 16px; 		/* Reduce el tamaño de letra */
-			line-height: 1.2;
-			height: auto; 			/* Permite que la barra crezca a lo alto */
-			max-width: 75%; 		/* Evita que el texto pise el botón de sándwich */
-			padding: 10px 15px;
-		}
+		
 		
 		/* Forzamos a la tabla a comportarse como bloques en lugar de una cuadrícula */
 		#fee_type table, 

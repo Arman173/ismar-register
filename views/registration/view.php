@@ -102,7 +102,6 @@ use yii\bootstrap\ActiveForm;
 	
 	<?= Html::endForm() ?>
 	
-
     <?= DetailView::widget([
         'model' => $model,
         'attributes' => [

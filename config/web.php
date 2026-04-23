@@ -40,18 +40,18 @@ $config = [
         'errorHandler' => [
             'errorAction' => 'site/error',
         ],
-        // para produccion, se recomienda configurar un servidor SMTP y descomentar esta sección
-        // 'mailer' => (file_exists(__DIR__ . '/smtp.php')) 
-        //     ? require(__DIR__ . '/smtp.php') 
-        //     : [
-        //         'class' => 'yii\swiftmailer\Mailer',
-        //         'useFileTransport' => true,
-        // ],
+       //  para produccion, se recomienda configurar un servidor SMTP y descomentar esta sección
+         'mailer' => (file_exists(__DIR__ . '/smtp.php')) 
+             ? require(__DIR__ . '/smtp.php') 
+             : [
+                'class' => 'yii\swiftmailer\Mailer',
+                'useFileTransport' => true,
+         ],
         // para desarrollo, los guarda como archivos .eml en la carpeta "runtime/mail/"
-        'mailer' => [
-            'class' => 'yii\swiftmailer\Mailer',
-            'useFileTransport' => true,
-        ],
+        //'mailer' => [
+        //    'class' => 'yii\swiftmailer\Mailer',
+        //    'useFileTransport' => true,
+        //],
         'log' => [
             'traceLevel' => YII_DEBUG ? 3 : 0,
             'targets' => [

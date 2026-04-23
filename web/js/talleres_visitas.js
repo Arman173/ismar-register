@@ -16,7 +16,7 @@ function mostrarModalDetalles(titulo, detalles, tallerista = null){
 
    if (tallerista != null) {
 
-        htmlFinal += "<strong class=\"text-primary\" style=\"font-size: 1.1em;\">Tallerista:</strong><br>";
+        htmlFinal += "<strong class=\"text-primary\" style=\"font-size: 1.1em;\">Tallerista/as:</strong><br>";
         htmlFinal += tallerista + "<br><br>";
     }
 
@@ -48,6 +48,10 @@ window.onload = function() {
     const visitas = window.datosVisitas;
     const datosVisitas = [];
     const modal = document.getElementById('modal-detalles');
+
+    // contadores de seleccion de talleres y visitas
+    const contadorTalleres = document.getElementById('contador-talleres');
+    const contadorVisitas = document.getElementById('contador-visitas');
 
     if (!talleres || !visitas) {
         console.error("No se encontraron los datos de talleres o visitas. Asegúrate de que estén definidos en el servidor.");
@@ -82,6 +86,7 @@ window.onload = function() {
             ],
             onSelectionChange: function(estado) {
                 console.log('Seleccionados:', estado.todosLosSeleccionados);
+                contadorTalleres.textContent = estado.todosLosSeleccionados.length;
             }
         });
     
@@ -110,7 +115,38 @@ window.onload = function() {
             ],
             onSelectionChange: function(estado) {
                 console.log('Seleccionados:', estado.todosLosSeleccionados);
+                contadorVisitas.textContent = estado.todosLosSeleccionados.length;
             }
         });
+    
+    // 1. Abrir Modal
+    const botonesAbrir = document.querySelectorAll('.btn-abrir-modal-fs');
+    
+    botonesAbrir.forEach(function(boton) {
+        boton.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            const modal = document.querySelector(targetId);
+            
+            if (modal) {
+                modal.classList.remove('oculto');
+                document.body.style.overflow = 'hidden'; // Evita el scroll del fondo
+            }
+        });
+    });
+
+    // 2. Cerrar Modal
+    const botonesCerrar = document.querySelectorAll('.btn-cerrar-modal-fs');
+    
+    botonesCerrar.forEach(function(boton) {
+        boton.addEventListener('click', function() {
+            // Busca el contenedor padre del modal actual
+            const modal = this.closest('.modal-fs-container');
+            
+            if (modal) {
+                modal.classList.add('oculto');
+                document.body.style.overflow = ''; // Regresa el scroll al form principal
+            }
+        });
+    });
 
 }
