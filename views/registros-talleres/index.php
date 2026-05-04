@@ -10,7 +10,7 @@ use yii\grid\GridView;
 /** @var app\models\RegistroTallerSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Registro Talleres';
+$this->title = 'Registro Tallers';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="registro-taller-index">
@@ -33,6 +33,7 @@ $this->params['breadcrumbs'][] = $this->title;
             'registration_id',
             'taller_id',
             'created_at',
+            'pago_id',
             [
                 'class' => ActionColumn::className(),
                 'urlCreator' => function ($action, RegistroTaller $model, $key, $index, $column) {

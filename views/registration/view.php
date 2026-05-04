@@ -4,9 +4,22 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\widgets\DetailView;
 use yii\bootstrap\ActiveForm;
+use app\models\Pago;
+use app\models\RegistroTaller;
+use app\models\RegistroVisita;
 
 /* @var $this yii\web\View */
 /* @var $model app\models\Registration */
+
+/*
+	uso de la función estadoPagos
+	$model->estadoPagos()  // es una funcion del modelo de registration
+
+	// para las pruebas puedes ponerle un numero de argumento del 1-3
+	// 1 -> "verificado", 2 -> "pendiente", 3 -> "rechazado"
+	// cuando la funcion este terminada (el codigo en el modelo), se tendran que
+	// quitar los numeros en el argumento.
+*/
 
 
 	$s_transm  = $model->create_s_transm();
@@ -38,7 +51,7 @@ use yii\bootstrap\ActiveForm;
 ?>
 <div class="registration-view">
    
-		<?php if( $model->confirmado ): ?>
+		<?php if( $model->estadoPagos() == "rechazado" ): ?>
 		<div class="alert alert-warning">
         	<h2>Registro pendiente</h2>
 			<p><?= Html::encode($model->fullName) ?>, sus datos han sido guardados correctamente.</p>
@@ -47,7 +60,7 @@ use yii\bootstrap\ActiveForm;
 		</div>
 		<?php endif; ?>
 		
-		<?php if( !$model->confirmado ): ?>
+		<?php if( $model->estadoPagos() != "rechazado" ): ?>
 		<div class="alert alert-success">
 			<h2>Confirmación de registro</h2>
 			<p><?= Html::encode($model->fullName) ?>, <br />Gracias por registrarse al ConCEI-3, que se llevará a cabo en Mérida, México del 7 al 9 de octubre de 2026 en el Campus de Ciencias Exactas e Ingenierías de la Universidad Autónoma de Yucatán (UADY).</p>
@@ -151,6 +164,72 @@ use yii\bootstrap\ActiveForm;
 			],
         ],
     ]) ?>
+
+	<!-- NUEVO: tabla de pagos del registro -->
+	<h2>Pagos</h2>
+	<table class="table table-bordered table-striped">
+		<thead>
+			<tr>
+				<?php if (!Yii::$app->user->isGuest): ?>
+					<th>ID del Pago</th>
+				<?php endif; ?>
+				<th>Concepto</th>
+				<th>Estado</th>
+				<th>Comprobante</th>
+				<?php if (!Yii::$app->user->isGuest): ?>
+					<th>Acciones</th>
+				<?php endif; ?>
+			</tr>
+		</thead>
+		<tbody>
+			<?php foreach ($model->pagos as $pago): ?>
+				<tr>
+					<?php if (!Yii::$app->user->isGuest): ?>
+						<td><?= $pago->id ?></td>
+					<?php endif; ?>
+					<td><?= Html::encode($pago->concepto) ?></td>
+					<td>
+						<span class="badge <?= $pago->estado == 'Rechazado' ? 'bg-danger' : 'bg-warning' ?>">
+							<?= Html::encode($pago->estado) ?>
+						</span>
+					</td>
+					<td>
+						<?php if ($pago->comprobante_pago): ?>
+							<?= \yii\helpers\Html::a('Ver Comprobante', 
+								[
+									'view-payment-receipt', 
+									'pago_id' => $pago->id, 
+									// Pasamos el token del registro. Si es un admin viéndolo, pasará el token igual, 
+									// pero el controlador lo ignorará gracias a la regla de arriba.
+									'token' => $model->token 
+								], 
+								[
+									'class' => 'btn btn-info btn-sm', 
+									'target' => '_blank'
+								]
+							) ?>
+							<!-- <a href="<?= Yii::getAlias('@web/files/payment/') . $pago->comprobante_pago ?>" target="_blank">Ver Recibo</a> -->
+						<?php else: ?>
+							Sin archivo
+						<?php endif; ?>
+					</td>
+					<?php if (!Yii::$app->user->isGuest): ?>
+					<td>
+						<?php if ($pago->estado !== 'Rechazado' && $pago->comprobante_pago): ?>
+							<?= Html::a('Rechazar Pago', ['rechazar-pago', 'pago_id' => $pago->id], [
+								'class' => 'btn btn-sm btn-danger',
+								'data' => [
+									'confirm' => '¿Estás seguro de que deseas rechazar el comprobante de este pago específico y notificar al usuario?',
+									'method' => 'post', 
+								],
+							]) ?>
+						<?php endif; ?>
+					</td>
+					<?php endif; ?>
+				</tr>
+			<?php endforeach; ?>
+		</tbody>
+	</table>
 	
 	<?php if(!empty($model->invoice)): ?>
 	

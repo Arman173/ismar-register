@@ -56,7 +56,7 @@ class Concei extends \yii\db\ActiveRecord
         ];
     }
 
-    // Armando: getters con logica de fecha de preventa
+    // getters con logica de fecha de preventa
     public function es_preventa() {
         $fecha_actual = date('Y-m-d');
         return $fecha_actual <= $this->fin_preventa;

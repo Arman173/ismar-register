@@ -22,7 +22,7 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'costo_visita')->textInput() ?>
 
-    <?php// Armando: para que el input sea una fecha valida ?>
+    <?php// para que el input sea una fecha valida ?>
     <?= $form->field($model, 'fin_preventa')->input('date') ?>
 
     <div class="form-group">

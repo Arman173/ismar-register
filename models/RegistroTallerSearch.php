@@ -17,7 +17,7 @@ class RegistroTallerSearch extends RegistroTaller
     public function rules()
     {
         return [
-            [['id', 'registration_id', 'taller_id'], 'integer'],
+            [['id', 'registration_id', 'taller_id', 'pago_id'], 'integer'],
             [['created_at'], 'safe'],
         ];
     }
@@ -63,6 +63,7 @@ class RegistroTallerSearch extends RegistroTaller
             'registration_id' => $this->registration_id,
             'taller_id' => $this->taller_id,
             'created_at' => $this->created_at,
+            'pago_id' => $this->pago_id,
         ]);
 
         return $dataProvider;

@@ -14,6 +14,8 @@ use Yii;
  * @property string $horario
  * @property string $modalidad
  * @property string $tallerista
+ * @property int $cupos
+ * @property int $reservados
  */
 class Taller extends \yii\db\ActiveRecord
 {
@@ -33,7 +35,8 @@ class Taller extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['nombre', 'descripcion', 'fecha', 'horario', 'modalidad', 'tallerista'], 'required'],
+            [['nombre', 'descripcion', 'fecha', 'horario', 'modalidad', 'tallerista', 'cupos', 'reservados'], 'required'],
+            [['cupos', 'reservados'], 'integer'],
             [['nombre', 'tallerista'], 'string', 'max' => 150],
             [['descripcion'], 'string', 'max' => 1024],
             [['fecha', 'horario'], 'string', 'max' => 255],
@@ -54,6 +57,8 @@ class Taller extends \yii\db\ActiveRecord
             'horario' => 'Horario',
             'modalidad' => 'Modalidad',
             'tallerista' => 'Tallerista',
+            'cupos' => 'Cupos',
+            'reservados' => 'Reservados',
         ];
     }
 

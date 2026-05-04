@@ -24,6 +24,10 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'tallerista')->textInput(['maxlength' => true]) ?>
 
+    <?= $form->field($model, 'cupos')->textInput() ?>
+
+    <?= $form->field($model, 'reservados')->textInput() ?>
+
     <div class="form-group">
         <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
     </div>

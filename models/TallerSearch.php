@@ -17,7 +17,7 @@ class TallerSearch extends Taller
     public function rules()
     {
         return [
-            [['id'], 'integer'],
+            [['id', 'cupos', 'reservados'], 'integer'],
             [['nombre', 'descripcion', 'fecha', 'horario', 'modalidad', 'tallerista'], 'safe'],
         ];
     }
@@ -60,6 +60,8 @@ class TallerSearch extends Taller
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
+            'cupos' => $this->cupos,
+            'reservados' => $this->reservados,
         ]);
 
         $query->andFilterWhere(['like', 'nombre', $this->nombre])

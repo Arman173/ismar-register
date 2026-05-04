@@ -3,7 +3,7 @@
 /* @var $this \yii\web\View */
 /* @var $content string */
 
-// Armando: agregamos el modelo del concei para mostrar el nombre en el navbar
+// agregamos el modelo del concei para mostrar el nombre en el navbar
 use app\models\Concei;
 use yii\helpers\Html;
 use yii\bootstrap\Nav;
@@ -27,7 +27,7 @@ AppAsset::register($this);
 <?php $this->beginBody() ?>
 
 <?php
-// Armando: Obtenemos el nombre del concei para mostrarlo en el navbar
+// Obtenemos el nombre del concei para mostrarlo en el navbar
 $concei = Concei::find()->one();
 ?>
 
@@ -51,6 +51,11 @@ $concei = Concei::find()->one();
 			[
 				'label' => 'Registros',
 				'url' => ['/registration/index'],
+				'visible' => !Yii::$app->user->isGuest,
+			],
+            [
+				'label' => 'Pagos',
+				'url' => ['/pagos/index'],
 				'visible' => !Yii::$app->user->isGuest,
 			],
 			[

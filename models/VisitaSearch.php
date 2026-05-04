@@ -17,7 +17,7 @@ class VisitaSearch extends Visita
     public function rules()
     {
         return [
-            [['id'], 'integer'],
+            [['id', 'cupos', 'reservados'], 'integer'],
             [['nombre', 'descripcion', 'fecha', 'horario', 'modalidad'], 'safe'],
         ];
     }
@@ -60,6 +60,8 @@ class VisitaSearch extends Visita
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
+            'cupos' => $this->cupos,
+            'reservados' => $this->reservados,
         ]);
 
         $query->andFilterWhere(['like', 'nombre', $this->nombre])

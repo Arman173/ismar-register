@@ -35,6 +35,8 @@ $this->params['breadcrumbs'][] = $this->title;
             'fecha',
             'horario',
             //'modalidad',
+            //'cupos',
+            //'reservados',
             [
                 'class' => ActionColumn::className(),
                 'urlCreator' => function ($action, Visita $model, $key, $index, $column) {

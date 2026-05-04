@@ -13,6 +13,8 @@ use Yii;
  * @property string $fecha
  * @property string $horario
  * @property string $modalidad
+ * @property int $cupos
+ * @property int $reservados
  */
 class Visita extends \yii\db\ActiveRecord
 {
@@ -32,7 +34,8 @@ class Visita extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['nombre', 'descripcion', 'fecha', 'horario', 'modalidad'], 'required'],
+            [['nombre', 'descripcion', 'fecha', 'horario', 'modalidad', 'cupos', 'reservados'], 'required'],
+            [['cupos', 'reservados'], 'integer'],
             [['nombre'], 'string', 'max' => 150],
             [['descripcion'], 'string', 'max' => 1024],
             [['fecha', 'horario'], 'string', 'max' => 255],
@@ -52,6 +55,8 @@ class Visita extends \yii\db\ActiveRecord
             'fecha' => 'Fecha',
             'horario' => 'Horario',
             'modalidad' => 'Modalidad',
+            'cupos' => 'Cupos',
+            'reservados' => 'Reservados',
         ];
     }
 

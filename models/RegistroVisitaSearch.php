@@ -17,7 +17,7 @@ class RegistroVisitaSearch extends RegistroVisita
     public function rules()
     {
         return [
-            [['id', 'registration_id', 'visita_id'], 'integer'],
+            [['id', 'registration_id', 'visita_id', 'pago_id'], 'integer'],
             [['created_at'], 'safe'],
         ];
     }
@@ -63,6 +63,7 @@ class RegistroVisitaSearch extends RegistroVisita
             'registration_id' => $this->registration_id,
             'visita_id' => $this->visita_id,
             'created_at' => $this->created_at,
+            'pago_id' => $this->pago_id,
         ]);
 
         return $dataProvider;

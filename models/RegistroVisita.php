@@ -11,6 +11,7 @@ use Yii;
  * @property int $registration_id
  * @property int $visita_id
  * @property string $created_at
+ * @property int $pago_id
  */
 class RegistroVisita extends \yii\db\ActiveRecord
 {
@@ -30,8 +31,8 @@ class RegistroVisita extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['registration_id', 'visita_id'], 'required'],
-            [['registration_id', 'visita_id'], 'integer'],
+            [['registration_id', 'visita_id', 'pago_id'], 'required'],
+            [['registration_id', 'visita_id', 'pago_id'], 'integer'],
             [['created_at'], 'safe'],
         ];
     }
@@ -46,6 +47,7 @@ class RegistroVisita extends \yii\db\ActiveRecord
             'registration_id' => 'Registration ID',
             'visita_id' => 'Visita ID',
             'created_at' => 'Created At',
+            'pago_id' => 'Pago ID',
         ];
     }
 

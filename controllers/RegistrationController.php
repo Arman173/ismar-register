@@ -8,7 +8,7 @@ use app\models\RegistrationSearch;
 use app\models\RegistrationType;
 use app\models\RegistrationCode;
 use app\models\RegistrationWorkshop;
-// Armando: Agregamos estos modelos para la relacion con talleres y visitas
+// Agregamos estos modelos para la relacion con talleres y visitas
 use app\models\RegistroTaller;
 use app\models\RegistroVisita;
 // Este es para almacenar los pagos que se hagan tanto en un submit
@@ -63,6 +63,11 @@ class RegistrationController extends Controller
                         'actions' => ['create', 'view', 'update-display-name'],
                         'allow' => true,
                     ],
+                    [
+                        'actions' => ['rechazar-pago', 'view-payment-receipt'],
+                        'allow' => true,
+                        'roles' => ['@']
+                    ]
 				],
 			],
         ];
@@ -119,21 +124,57 @@ class RegistrationController extends Controller
      * @param string $id
      * @return mixed
      */
-    public function actionViewPaymentReceipt($id, $token)
+    // public function actionViewPaymentReceipt($id, $token)
+    // {
+	// 	$model = $this->findModel($id);
+		
+	// 	if( $model->token != $token )
+	// 	{
+	// 		throw new UnauthorizedHttpException("You are not allowed to access this registry");
+	// 	}
+		
+	// 	$pathFile = 'files/payment/'.$model->payment_receipt;
+	// 	// var_dump($pathFile);
+	// 	if( file_exists( $pathFile ) )
+	// 		Yii::$app->response->sendFile($pathFile,null,['inline'=>true]);
+	// 	else
+	// 		throw new NotFoundHttpException('The requested page does not exist.');
+    // }
+
+    // Le ponemos $token = null por defecto para que los Admins puedan entrar a la URL sin mandar token
+    public function actionViewPaymentReceipt($pago_id, $token = null)
     {
-		$model = $this->findModel($id);
-		
-		if( $model->token != $token )
-		{
-			throw new UnauthorizedHttpException("You are not allowed to access this registry");
-		}
-		
-		$pathFile = 'files/payment/'.$model->payment_receipt;
-		// var_dump($pathFile);
-		if( file_exists( $pathFile ) )
-			Yii::$app->response->sendFile($pathFile,null,['inline'=>true]);
-		else
-			throw new NotFoundHttpException('The requested page does not exist.');
+        // 1. Buscamos el pago específico que queremos ver
+        $pago = Pago::findOne($pago_id);
+        if (!$pago) {
+            throw new NotFoundHttpException('El pago solicitado no existe.');
+        }
+
+        // 2. Buscamos al dueño (Registration) de este pago para validar su token
+        $registration = Registration::findOne($pago->registration_id);
+        if (!$registration) {
+            throw new NotFoundHttpException('El registro asociado a este pago no existe.');
+        }
+
+        // 3. SEGURIDAD MIXTA: ¿Es invitado o es Administrador?
+        if (Yii::$app->user->isGuest) {
+            // Si no ha iniciado sesión, es un usuario externo. ¡Exigimos el token exacto!
+            if ($registration->token !== $token) {
+                throw new UnauthorizedHttpException("No tienes permiso para ver este comprobante.");
+            }
+        }
+        // (Si NO es invitado, es el Admin logueado, así que se salta la validación del token y pasa directo)
+
+        // 4. Ruta del archivo
+        // Usamos el alias de Yii para asegurar la ruta absoluta en cualquier servidor
+        $pathFile = Yii::getAlias('@webroot/files/payment/') . $pago->comprobante_pago;
+        
+        // 5. Mostramos el archivo si existe
+        if (!empty($pago->comprobante_pago) && file_exists($pathFile)) {
+            return Yii::$app->response->sendFile($pathFile, null, ['inline' => true]);
+        } else {
+            throw new NotFoundHttpException('El archivo físico del comprobante no se encontró en el servidor.');
+        }
     }
 	
 	/**
@@ -223,6 +264,7 @@ class RegistrationController extends Controller
 						$invoice->registration_id = $registration->id;
 						$isSaved = $isSaved && $invoice->save();
 					}
+
 					if($isSaved)
 						return $this->redirect(['view', 'id' => $registration->id]);
 				}
@@ -256,9 +298,12 @@ class RegistrationController extends Controller
     {
         // $registration = new Registration(['scenario'=>'Create']);
 		$registration = new Registration();
+        $pago         = new Pago();
+
 		$registration->registration_type_id = 1;
 		$registration->payment_type = 2; // credit card
 		$registration->invoice_required = 0;
+
         //NUEVO: Todo registro empieza en revisión
         //$registration->confirmado = 0;
 
@@ -274,7 +319,8 @@ class RegistrationController extends Controller
             // exit;
             // ==========================================
 
-			$registration->file_payment_receipt = UploadedFile::getInstance($registration,'file_payment_receipt');
+            $registration->file_payment_receipt = UploadedFile::getInstance($registration,'file_payment_receipt');
+			$pago->comprobante_pago = UploadedFile::getInstance($registration,'file_payment_receipt');
 			
 			//Nueva línea para el CV
 			$registration->file_cv = UploadedFile::getInstance($registration,'file_cv');
@@ -285,9 +331,7 @@ class RegistrationController extends Controller
 				case 4:
 				case 7:
 				case 9:
-				case 12:
-				case 13:
-				case 16:
+				case 12: $registration->file_student_id = UploadedFile::getInstance($registration,'file_student_id'); break;
 				case 17: $registration->file_student_id = UploadedFile::getInstance($registration,'file_student_id'); break;
 			}
 			
@@ -311,8 +355,16 @@ class RegistrationController extends Controller
                         throw new \Exception('No se pudo guardar el registro principal.');
                     }
 
-                    // logica del guardado del codigo de registro
-                    if ($registration->payment_type == 3) {
+                    $pago->registration_id = $registration->id;
+                    $pago->estado = 'confirmado';
+
+                    // despues guardamos el pago del registro principal para obtener su ID
+                    if (!$pago->save(false)) {
+                        throw new \Exception('No se pudo guardar el pago del registro principal.');
+                    }
+
+                    // logica del guardado del codigo de registro (si el tipo de registro es por registration code 18)
+                    if ($registration->registration_type_id == 18) {
                         $registrationCode = RegistrationCode::find()->where(['code' => $registration->registration_code])->one();
                         // Validamos que el código realmente exista antes de intentar guardar
                         if ($registrationCode) {
@@ -333,29 +385,33 @@ class RegistrationController extends Controller
                         }
                     }
 
-                    $talleresSeleccionados = Yii::$app->request->post('talleres_seleccionados', []);
-
                     // agregando registro de talleres seleccionados al registro
-                    foreach ($talleresSeleccionados as $taller_id) {
-                        $record = new RegistroTaller();
-                        $record->registration_id = $registration->id;
-                        $record->taller_id = $taller_id;
-
-                        if (!$record->save(false)) {
-                            throw new \Exception('No se pudo guardar el taller seleccionado con ID: ' . $taller_id);
-                        }
-                    }
-
+                    $talleresSeleccionados = Yii::$app->request->post('talleres_seleccionados', []);
                     // agregando registro de visitas seleccionadas al registro
                     $visitasSeleccionadas = Yii::$app->request->post('visitas_seleccionadas', []);
-                    foreach ($visitasSeleccionadas as $visita_id) {
-                        $record = new RegistroVisita();
-                        $record->registration_id = $registration->id;
-                        $record->visita_id = $visita_id;
 
-                        if (!$record->save(false)) {
-                            throw new \Exception('No se pudo guardar la visita seleccionada con ID: ' . $visita_id);
-                        }
+                    $talleres = $this->generarTalleres($talleresSeleccionados, $registration->id, $pago->id);
+                    $visitas = $this->generarVisitas($visitasSeleccionadas, $registration->id, $pago->id);
+
+                    $pago->generarConcepto(
+                        $registration->getFirstNameCode(), $registration->getLastNameCode(),
+                        $registration->getRegistrationTypeCode(),
+                        $talleres, $visitas
+                    );
+
+                    $registration->talleres_seleccionados = $talleresSeleccionados;
+                    $registration->visitas_seleccionadas = $visitasSeleccionadas;
+
+                   // $pago->mount = 0; // O el cálculo real si ya lo tienes
+                    $registration->calculateTotalCost();
+                    $pago->mount = $registration->total_amount;
+                    
+                    if (!$pago->save()) {
+                        // 1. Extraemos los errores de validación internos de Yii2
+                        $erroresYii = json_encode($pago->getErrors());
+                        
+                        // 2. Los metemos en la excepción para que tu programa en C++ los pueda leer
+                        throw new \Exception("Falló la validación del modelo Pago. Detalles: " . $erroresYii);
                     }
 
                     // Si llegamos hasta aquí, todo fue un éxito
@@ -382,35 +438,6 @@ class RegistrationController extends Controller
                     // MENSAJE PARA EL USUARIO: Amigable y sin exponer datos críticos
                     Yii::$app->session->setFlash('error', 'An unexpected error occurred while processing your registration. Please try again later or contact support.');
                 }
-
-                // -------------------------------------------------------------------------------------------------
-				// if($registration->save())
-				// {
-				// 	$isSaved = true;
-                //     if($registration->payment_type == 3)
-				// 	{
-				// 		$registrationCode = RegistrationCode::find()->where(['code'=>$registration->registration_code])->one();
-				// 		$registrationCode->registration_id = $registration->id;
-				// 		$isSaved = $isSaved && $registrationCode->save();
-				// 	}
-				// 	if($registration->invoice_required)
-				// 	{
-				// 		$invoice->registration_id = $registration->id;
-				// 		$isSaved = $isSaved && $invoice->save();
-				// 	}
-				// 	if($isSaved)
-				// 	{
-				// 		Yii::$app->session->setFlash('registration-submitted-successfully-mail');
-				// 		Yii::$app->mailer->compose('registration/view-mail', ['model'=>$registration])
-				// 			->setFrom(Yii::$app->params['adminEmail'])
-				// 			->setTo($registration->email)
-				// 			->setCc([Yii::$app->params['coordinatorEmail1'],Yii::$app->params['coordinatorEmail2']])
-				// 			->setSubject('Notificación de Registro - ConCEI-3')
-				// 			->send();
-				// 		Yii::$app->session->setFlash('registration-submitted-successfully');
-				// 		return $this->redirect(['submitted', 'id' => $registration->id, 'token' => $registration->token]);
-				// 	}
-				// }
 			}
         }
 
@@ -500,6 +527,46 @@ class RegistrationController extends Controller
                         $invoice->registration_id = $registration->id;
                         $isSaved = $isSaved && $invoice->save();
                     }
+
+                    // INICIO DEL BLINDAJE DE TALLERES Y VISITAS
+                    // ==========================================
+                    if ($isSaved) {
+                        // 1. Obtenemos lo que el usuario YA tiene registrado en la BD
+                        $talleresPagados = RegistroTaller::find()->select('taller_id')->where(['registration_id' => $registration->id])->column();
+                        $visitasPagadas  = RegistroVisita::find()->select('visita_id')->where(['registration_id' => $registration->id])->column();
+
+                        // 2. Obtenemos lo que viene del formulario (POST)
+                        $talleresPost = Yii::$app->request->post('talleres_seleccionados', []);
+                        $visitasPost  = Yii::$app->request->post('visitas_seleccionadas', []);
+
+                        // 3. LA MAGIA: Comparamos y nos quedamos ÚNICAMENTE con los IDs nuevos.
+                        $nuevosTalleres = array_diff($talleresPost, $talleresPagados);
+                        $nuevasVisitas  = array_diff($visitasPost, $visitasPagadas);
+
+                        // 4. Si realmente hay talleres o visitas nuevas, generamos un NUEVO pago
+                        if (!empty($nuevosTalleres) || !empty($nuevasVisitas)) {
+                            
+                            $nuevoPago = new Pago();
+                            $nuevoPago->registration_id = $registration->id;
+                            $nuevoPago->estado = 'No Verificado';
+                            
+                            // Si subió un nuevo comprobante para estos nuevos talleres, lo asignamos
+                            if (isset($registration->change_file_payment_receipt[0]) && $registration->change_file_payment_receipt[0] === '1') {
+                                $nuevoPago->comprobante_pago = $registration->file_payment_receipt;
+                            }
+
+                            if ($nuevoPago->save(false)) {
+                                // Reutilizamos tus funciones generarTalleres y generarVisitas
+                                if (!empty($nuevosTalleres)) {
+                                    $this->generarTalleres($nuevosTalleres, $registration->id, $nuevoPago->id);
+                                }
+                                if (!empty($nuevasVisitas)) {
+                                    $this->generarVisitas($nuevasVisitas, $registration->id, $nuevoPago->id);
+                                }
+                            }
+                        }
+                    }
+                    // FIN DEL BLINDAJE
                     if($isSaved)
                         return $this->redirect(['view', 'id' => $registration->id]);
                 }
@@ -618,6 +685,70 @@ class RegistrationController extends Controller
                         $invoice->registration_id = $registration->id;
                         $isSaved = $isSaved && $invoice->save();
                     }
+
+
+                     // Inicio de lo nuevo para ocultar talleres y visitas ya seleccionados
+                    if ($isSaved) {
+                        // Obtenemos lo que el usuario YA tiene registrado en la BD
+                        $talleresPagados = RegistroTaller::find()->select('taller_id')->where(['registration_id' => $registration->id])->column();
+                        $visitasPagadas  = RegistroVisita::find()->select('visita_id')->where(['registration_id' => $registration->id])->column();
+
+                        // Obtenemos lo que viene del formulario (POST)
+                        $talleresPost = Yii::$app->request->post('talleres_seleccionados', []);
+                        $visitasPost  = Yii::$app->request->post('visitas_seleccionadas', []);
+
+                        // Comparamos y nos quedamos ÚNICAMENTE con los IDs nuevos.
+                        // array_diff ignora lo que ya existe y extrae solo las adiciones reales.
+                        $nuevosTalleres = array_diff($talleresPost, $talleresPagados);
+                        $nuevasVisitas  = array_diff($visitasPost, $visitasPagadas);
+
+                        // Si realmente hay talleres o visitas nuevas, generamos un NUEVO pago
+                        if (!empty($nuevosTalleres) || !empty($nuevasVisitas)) {
+                            
+                            $nuevoPago = new Pago();
+                            $nuevoPago->registration_id = $registration->id;
+                            $nuevoPago->estado = 'No Verificado';
+                            
+                            // Si subió un nuevo comprobante para estos nuevos talleres, lo asignamos
+                            if (isset($registration->change_file_payment_receipt[0]) && $registration->change_file_payment_receipt[0] === '1') {
+                                $nuevoPago->comprobante_pago = $registration->file_payment_receipt;
+                            }
+
+                            if ($nuevoPago->save(false)) {
+                                // Reutilizamos tus funciones generarTalleres y generarVisitas
+                                if (!empty($nuevosTalleres)) {
+                                    $talleresGenerados = $this->generarTalleres($nuevosTalleres, $registration->id, $nuevoPago->id);
+                                }
+                                if (!empty($nuevasVisitas)) {
+                                    $visitasGeneradas = $this->generarVisitas($nuevasVisitas, $registration->id, $nuevoPago->id);
+                                }
+
+                                // Nuevo
+                                $concei = \app\models\Concei::find()->one();
+                                $costoTaller = $concei->getCostoTaller();
+                                $costoVisita = $concei->getCostoVisita();
+
+                                $montoNuevosTalleres = count($nuevosTalleres) * $costoTaller;
+                                $montoNuevasVisitas  = count($nuevasVisitas) * $costoVisita;
+
+                                $nuevoPago->mount = $montoNuevosTalleres + $montoNuevasVisitas;
+                                $nuevoPago->save(false);
+                                // Fin de lo nuevo
+
+                                // Opcional: Generar el concepto del nuevo pago como lo haces en actionSubmit
+                                /*
+                                $nuevoPago->generarConcepto(
+                                    $registration->getFirstNameCode(), $registration->getLastNameCode(),
+                                    $registration->getRegistrationTypeCode(),
+                                    $talleresGenerados ?? [], $visitasGeneradas ?? []
+                                );
+                                $nuevoPago->save(false);
+                                */
+                            }
+                        }
+                    }
+
+                    // Fin de lo nuevo
                     if($isSaved)
                         return $this->redirect(['submitted', 'id' => $registration->id, 'token' => $registration->token]);
                 }
@@ -655,6 +786,60 @@ class RegistrationController extends Controller
         $this->findModel($id)->delete();
 
         return $this->redirect(['index']);
+    }
+
+    public function actionRechazarPago($pago_id) 
+    {
+        // 1. Buscamos el pago específico
+        $pago = Pago::findOne($pago_id);
+        
+        if ($pago) {
+            // 2. Obtenemos el registro (el usuario) al que pertenece este pago 
+            // para poder enviarle el correo
+            $registration = Registration::findOne($pago->registration_id);
+
+            if ($registration) {
+                // 3. Borramos el archivo físico del servidor
+                // if (!empty($pago->comprobante_pago)) {
+                //     $rutaArchivo = Yii::getAlias('@webroot/files/payment/') . $pago->comprobante_pago;
+                //     if (file_exists($rutaArchivo)) {
+                //         unlink($rutaArchivo);
+                //     }
+                // }
+
+                // 4. Limpiamos el nombre en la BD y cambiamos el estado
+                // $pago->comprobante_pago = ''; // o null, según tus reglas
+                $pago->estado = 'rechazado'; 
+
+                // 5. Guardamos y notificamos
+                if ($pago->save(false)) {
+                    try {
+                        Yii::$app->mailer->compose('registration/view-mail', [
+                                'model' => $registration, 
+                                'pago' => $pago // Le pasamos el pago a la vista del correo por si quieres imprimir el concepto rechazado
+                            ])
+                            ->setFrom(Yii::$app->params['adminEmail'])
+                            ->setTo($registration->email)
+                            ->setSubject('Acción Requerida: Problema con su comprobante de pago')
+                            ->send();
+                        
+                        Yii::$app->session->setFlash('success', 'El pago fue rechazado y el usuario notificado.');
+                    } catch (\Throwable $e) {
+                        // Usamos \Throwable para atrapar cualquier error de PHP 7+ al enviar el correo
+                        Yii::error("Error al enviar correo de rechazo: " . $e->getMessage());
+                        Yii::$app->session->setFlash('warning', 'Pago rechazado, pero el servidor de correo falló. Notifica al usuario manualmente.');
+                    }
+                } else {
+                    Yii::$app->session->setFlash('error', 'Error al intentar actualizar el estado del pago.');
+                }
+            }
+        } else {
+            Yii::$app->session->setFlash('error', 'El pago especificado no existe.');
+        }
+
+        // Retornamos a la vista del registro principal. 
+        // Usamos el registration_id para saber a qué perfil regresar.
+        return $this->redirect(['view', 'id' => $pago->registration_id]);
     }
 	
 	public function actionPaid()
@@ -756,6 +941,59 @@ class RegistrationController extends Controller
         // Esto evita que el usuario pierda su 'token' en la URL si estaba en la vista 'submitted'
         return $this->redirect(Yii::$app->request->referrer ?: ['view', 'id' => $model->id]);
     }
+
+    public function generarTalleres($talleres_seleccionados, $registro_id, $pago_id)
+    {
+        $talleres = [];
+        foreach ($talleres_seleccionados as $taller_id) {
+            $record = new RegistroTaller();
+            $record->registration_id = $registro_id;
+            $record->taller_id = $taller_id;
+            $record->pago_id = $pago_id;
+
+            if (!$record->save(false)) {
+                throw new \Exception('No se pudo guardar el taller seleccionado con ID: ' . $taller_id);
+            }
+
+            $taller = Taller::findOne($taller_id);
+            if (!$taller) {
+                throw new \Exception('No existe un taller con ID: ' . $taller_id);
+            }
+            $talleres[] = ['id' => $taller_id];
+        }
+
+        return $talleres;
+    }
+
+    public function generarVisitas($visitas_seleccionadas, $registro_id, $pago_id)
+    {
+        $visitas = [];
+
+        foreach ($visitas_seleccionadas as $visita_id) {
+            $record = new RegistroVisita();
+            $record->registration_id = $registro_id;
+            $record->visita_id = $visita_id;
+            $record->pago_id = $pago_id;
+
+            if (!$record->save(false)) {
+                throw new \Exception('No se pudo guardar la visita seleccionada con ID: ' . $visita_id);
+            }
+
+            $visita = Visita::findOne($visita_id);
+            if (!$visita) {
+                throw new \Exception('No existe una visita con ID: ' . $visita_id);
+            }
+            $visitas[] = ['id' => $visita_id];
+        }
+        return $visitas;
+    }
+
+    // NUEVO: función para generar el pago
+    public function generarPago($tipo_registro) {
+        $nuevo_pago = new Pago();
+    }
+
+    // NUEVO: funcion para calcular el monto del pago
 
     //ACCIÓN DEL ADMIN: Aprueba el pago, cambia estatus a confirmado/aceptado y envía correo.
     

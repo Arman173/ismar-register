@@ -8,24 +8,23 @@ use app\models\Registration; // I did this
 use app\models\RegistrationType;
 use app\models\AdditionalTickets;
 use app\models\Workshops;
-use app\models\Concei; // Armando: modelo donde se guarda datos generales del concei
+use app\models\Concei; // modelo donde se guarda datos generales del concei
 use kartik\grid\GridView;
 use yii\data\ActiveDataProvider;
-use yii\web\NotFoundHttpException; // Armando: agregado para lanzar excepciones
+use yii\web\NotFoundHttpException; //agregado para lanzar excepciones
 
 /* @var $this yii\web\View */
 /* @var $registration app\models\Registration */
 /* @var $invoice app\models\Invoice */
 /* @var $form yii\widgets\ActiveForm */
 
-// Armando: cargamos datos del concei mediante su modelo
+// cargamos datos del concei mediante su modelo
 $concei = Concei::find()->one();
 
 if (!$concei) {
 	throw new NotFoundHttpException('No existe un evento Concei');
 }
 
-// Armando:
 $precio_taller = $concei->getCostoTaller();
 $precio_visita = $concei->getCostoVisita();
 $preventa = $concei->es_preventa();
@@ -45,14 +44,16 @@ foreach ($registrationTypes as $type) {
 }
 $pricesJsonString = json_encode($pricesJson);
 $isEarlyBirdStr = $isEarlyBird ? 'true' : 'false';
+$is_new_registration = $registration->isNewRecord ? 'true' : 'false';
 
 // INYECCIÓN AL WINDOW ---
 $jsVariables = <<<JS
+    window.es_nuevo_registro = {$is_new_registration};
 	window.costo_taller = {$precio_taller};
 	window.costo_visita = {$precio_visita};
     window.workshopCost = {'costo': '100'};
     window.isEarlyBird 	= {$isEarlyBirdStr};
-	window.preventa		= {$preventa};
+	window.preventa		= {$isEarlyBirdStr};
     window.typePrices 	= {$pricesJsonString};
 JS;
 
@@ -60,9 +61,11 @@ JS;
 $this->registerJs($jsVariables, \yii\web\View::POS_HEAD);
 // ------------------------------------------
 
-$this->registerJsFile('@web/js/registrationForm.js');
-?>
+$this->registerJsFile('@web/js/libs/ResponsiveInputs.js');
 
+$this->registerJsFile('@web/js/registrationForm.js');
+
+?>
 
 <div class="registration-form">
 
@@ -77,18 +80,10 @@ $this->registerJsFile('@web/js/registrationForm.js');
 
     <?= $form->field($registration, 'first_name')->textInput([
 		'maxlength' => true,
-		// 'onchange' => "$('#registration-display_name').val(
-		// 	$('#registration-first_name').val() + ' ' + 
-		// 	$('#registration-last_name').val()
-		// )",
 	]) ?>
 
     <?= $form->field($registration, 'last_name')->textInput([
 		'maxlength' => true,
-		// 'onchange' => "$('#registration-display_name').val(
-		// 	$('#registration-first_name').val() + ' ' + 
-		// 	$('#registration-last_name').val()
-		// )",
 	]) ?>
 
 
@@ -123,6 +118,10 @@ $this->registerJsFile('@web/js/registrationForm.js');
 		<br> <b> <?= Html::encode('Estudiante y Profesor UADY:')?> </b> <?= Html::encode('Acceso a todas las conferencias. No incluye talleres ni visitas industriales.')?>
     </p>
 
+    <?php if($registration->scenario == 'Update'): ?>
+	<p class="alert alert-warning"><em>Nota: No puede actualizar su tipo de registro, si tiene algún conflicto con esto por favor contáctenos</em></p>
+	<?php endif; ?>
+
     <?php $dataProviderReg = new ActiveDataProvider([
 		'query' => RegistrationType::find(),
 	]); ?>
@@ -134,8 +133,11 @@ $this->registerJsFile('@web/js/registrationForm.js');
 			[
 				'class' => 'kartik\grid\RadioColumn',
 			 	'showClear' => false,
-			],
-			
+                'radioOptions' => [
+					'disabled' => ($registration->scenario == 'Update')? true: false,
+				],
+            ],
+
 			[
 				'class' => '\kartik\grid\DataColumn',
 				'attribute' => 'name',
@@ -167,66 +169,19 @@ $this->registerJsFile('@web/js/registrationForm.js');
 		'options' => ['style' => 'max-width: 700px; width: 100%; margin: 0;'],
 	]);?>
 
+    <?php echo $form->field($registration, 'registration_code', [
+        'options' => ['style' => 'display:none;']
+    ])->textInput(['maxlength' => true])->label(null,[
+		'class'=>'control-label col-sm-3 required',
+		'disabled' => ($registration->scenario == 'Update')? true: false,
+	]) ?>
+
+    <br> <br> <br>
 
 	<p> <?= Html::encode('* El registro de estudiante y de profesores de la UADY requiere una prueba de estatus o, para estudiantes, una credencial de estudiante que confirme que la persona registrada es estudiante de tiempo completo en el momento de la conferencia.')?> </p>
     
     
-	<?php if(!$registration->isNewRecord): ?>
-
-
-	<?php $this->registerJs('
-
-		function showChangeFileStudentId()
-		{
-			$("[name=\'Registration[change_file_student_id][]\']").removeAttr("disabled");
-			$(".field-registration-change_file_student_id").show();
-		}
-		
-		function hideChangeFileStudentId()
-		{
-			$("[name=\'Registration[change_file_student_id][]\']").attr("disabled","disabled");
-			$(".field-registration-change_file_student_id").hide();
-		}
-		
-		function toggleChangeFileStudentId()
-		{
-			var registrationType = $("[name=\'Registration[registration_type_id]\']:checked").val();
-			switch( registrationType )
-			{
-				case "2": 
-				case "4": 
-				case "5": showChangeFileStudentId(); break;
-				case "1":
-				case "3": hideChangeFileStudentId(); break;
-			}
-		}
-		
-		hideFileStudentId();
-		hideFilePaymentReceipt();
-		toggleChangeFileStudentId();
-		
-		// I made this comment to avoid duplicate Student File dialog. Anabel
-		/*
-		$("[name=\'Registration[change_file_student_id][]\']").change(function (){
-			if( $(this).is(":checked") )
-				showFileStudentId();
-			else
-				hideFileStudentId();
-		});	
-		*/
-		
-		$("[name=\'Registration[change_file_payment_receipt][]\']").change(function (){
-			if( $(this).is(":checked") )
-				showFilePaymentReceipt();
-			else
-				hideFilePaymentReceipt();
-		});
 	
-	
-	'); ?>
-    
-	    
-	<?php endif; ?>
 
 	<?= $form->field($registration, 'file_student_id')->fileInput() ?>
 	
@@ -313,7 +268,7 @@ $this->registerJsFile('@web/js/registrationForm.js');
 
     <h3><?= Html::encode('Talleres y Visitas Industriales') ?></h3>
 
-	<?php
+	<?php /*
 	// Obtenemos los modelos actuales del proveedor de datos
 	$modelosTalleres = $dataProviderTalleres->getModels();
 	$modelosVisitas = $dataProviderVisitas->getModels();
@@ -350,16 +305,77 @@ $this->registerJsFile('@web/js/registrationForm.js');
 		window.datosTalleres = {$jsonTalleres};
 		window.datosVisitas = {$jsonVisitas};
 	", \yii\web\View::POS_HEAD); // POS_HEAD asegura que cargue antes que nuestro JS externo
-	?>
+	*/?>
+
+    <?php
+    // Obtenemos los modelos actuales del proveedor de datos
+    $modelosTalleres = $dataProviderTalleres->getModels();
+    $modelosVisitas = $dataProviderVisitas->getModels();
+
+    // ==========================================
+    // 1. Obtenemos los IDs que el usuario ya tiene registrados
+    // ==========================================
+    $talleresPagadosIds = [];
+    $visitasPagadasIds = [];
+    
+    if ($registration->scenario == 'Update' && !$registration->isNewRecord) {
+        $talleresPagadosIds = \app\models\RegistroTaller::find()->select('taller_id')->where(['registration_id' => $registration->id])->column();
+        $visitasPagadasIds  = \app\models\RegistroVisita::find()->select('visita_id')->where(['registration_id' => $registration->id])->column();
+    }
+
+    $talleresJs = [];
+    foreach ($modelosTalleres as $taller) {
+        // LA CLAVE: Si ya lo pagó, nos saltamos este ciclo y NO se lo mandamos al JS
+        if (in_array($taller->id, $talleresPagadosIds)) {
+            continue; 
+        }
+
+        // Usamos el ID del taller como llave (key) del arreglo para buscarlo fácil en JS
+        $talleresJs[] = [
+            'id'     => $taller->id,
+            'nombre'   => $taller->nombre,
+            'descripcion' => $taller->descripcion,
+            'fecha'   => $taller->fecha,
+            'horario'  => $taller->horario,
+            'modalidad'=> $taller->modalidad,
+            'tallerista' => $taller->tallerista
+        ];
+    }
+
+    $visitasJs = [];
+    foreach ($modelosVisitas as $visita) {
+        // LA CLAVE: Si ya la pagó, nos saltamos este ciclo y NO se lo mandamos al JS
+        if (in_array($visita->id, $visitasPagadasIds)) {
+            continue; 
+        }
+
+        $visitasJs[] = [
+            'id'     => $visita->id,
+            'nombre'   => $visita->nombre,
+            'descripcion' => $visita->descripcion,
+            'fecha'   => $visita->fecha,
+            'horario'  => $visita->horario,
+            'modalidad'=> $visita->modalidad
+        ];
+    }
+
+    $jsonTalleres = Json::encode($talleresJs);
+    $jsonVisitas = Json::encode($visitasJs);
+
+    $this->registerJs("
+        window.datosTalleres = {$jsonTalleres};
+        window.datosVisitas = {$jsonVisitas};
+    ", \yii\web\View::POS_HEAD); // POS_HEAD asegura que cargue antes que nuestro JS externo
+    ?>
 	
 	<?php
-		# Importamos nuestros js y css para los talleres y visitas
+		# Importamos css y nuestros scripts unificados para el formulario
 		$this->registerCssFile('@web/css/ResponsiveInputs.css');
-		$this->registerJsFile('@web/js/libs/ResponsiveInputs.js',);
-		$this->registerJsFile(
-			'@web/js/talleres_visitas.js',
-			['depends' => [\yii\web\JqueryAsset::class]]
-		);
+		//$this->registerJsFile('@web/js/libs/ResponsiveInputs.js');
+		//$this->registerJsFile(
+			//'@web/js/registrationForm.js', 
+			//['depends' => [\yii\web\JqueryAsset::class]]
+		//);
 	?>
 	
 	<!-- PENDIENTE INVESTIGAR SI SE PUEDE ELIMINAR -->
@@ -384,68 +400,98 @@ $this->registerJsFile('@web/js/registrationForm.js');
         </p>
     </div>
 
-	<div class="panel-seleccion-trigger">
-		<div class="trigger-info">
-			<span class="trigger-label">Talleres seleccionados:</span>
-			<span class="trigger-count" id="contador-talleres">0</span>
-		</div>
-		
-		<button type="button" class="btn btn-trigger-action btn-abrir-modal-fs" data-target="#modal-talleres">
-			Seleccionar <span class="glyphicon glyphicon-chevron-right"></span>
-		</button>
-	</div>
+    <!-- ========================================== -->
+    <!-- INTERFAZ DE TALLERES                       -->
+    <!-- ========================================== -->
+    <?php if ($registration->scenario == 'Update' && !empty($talleresPagadosIds)): ?>
+        <div class="alert alert-info" style="background-color: #e8f4f8; border-color: #bce8f1; color: #31708f; margin-bottom: 10px;">
+            <h5 style="margin-top: 0;"><b><span class="glyphicon glyphicon-ok-circle"></span> Talleres ya adquiridos y pagados:</b></h5>
+            <ul>
+                <?php 
+                foreach ($modelosTalleres as $taller) {
+                    if (in_array($taller->id, $talleresPagadosIds)) {
+                        echo "<li>" . Html::encode($taller->nombre) . "</li>";
+                    }
+                }
+                ?>
+            </ul>
+        </div>
+    <?php endif; ?>
 
-	<div id="modal-talleres" class="modal-fs-container oculto">
-		
-		<div class="modal-fs-header">
-			<h4 class="modal-fs-title">Selección de Talleres</h4>
-			
-			<button type="button" class="btn btn-fs-close btn-cerrar-modal-fs">
-				Cerrar <span class="glyphicon glyphicon-remove"></span>
-			</button>
-		</div>
-		
-		<div class="modal-fs-body">
-			<div id="checkbox-talleres-container">
-				</div>
-		</div>
+    <div class="panel-seleccion-trigger">
+        <div class="trigger-info">
+            <span class="trigger-label">
+                <?= ($registration->scenario == 'Update' && !empty($talleresPagadosIds)) ? 'Nuevos talleres a agregar:' : 'Talleres seleccionados:' ?>
+            </span>
+            <span class="trigger-count" id="contador-talleres">0</span>
+        </div>
+        
+        <button type="button" class="btn btn-trigger-action btn-abrir-modal-fs" data-target="#modal-talleres">
+            Seleccionar <span class="glyphicon glyphicon-chevron-right"></span>
+        </button>
+    </div>
 
-	</div>
-	
+    <!-- El Modal de Talleres se queda igual... -->
+    <div id="modal-talleres" class="modal-fs-container oculto">
+        <div class="modal-fs-header">
+            <h4 class="modal-fs-title">Selección de Talleres</h4>
+            <button type="button" class="btn btn-fs-close btn-cerrar-modal-fs">
+                Cerrar <span class="glyphicon glyphicon-remove"></span>
+            </button>
+        </div>
+        <div class="modal-fs-body">
+            <div id="checkbox-talleres-container"></div>
+        </div>
+    </div>
 
-	<div class="alert alert-warning" style="margin-top: 30px; border-left: 5px solid #ffcc84;">
+    <!-- INTERFAZ DE VISITAS                        -->
+    <div class="alert alert-warning" style="margin-top: 30px; border-left: 5px solid #ffcc84;">
         <p style="font-size: 1.1em; margin-bottom: 0;">
             <strong style="color: #d58512;"><span class="glyphicon glyphicon-exclamation-sign"></span> Requisitos de acceso en las visitas:</strong> 
             Zapatos cerrados, pantalón largo (sin roturas), cabello recogido, sin aretes, anillos, pulseras y similares. Prohibido el uso del celular y de la toma de fotografías.
         </p>
     </div>
 
-	<div class="panel-seleccion-trigger">
-		<div class="trigger-info">
-			<span class="trigger-label">Visitas seleccionadas:</span>
-			<span class="trigger-count" id="contador-visitas">0</span>
-		</div>
-		
-		<button type="button" class="btn btn-trigger-action btn-abrir-modal-fs" data-target="#modal-visitas">
-			Seleccionar <span class="glyphicon glyphicon-chevron-right"></span>
-		</button>
-	</div>
+    <?php if ($registration->scenario == 'Update' && !empty($visitasPagadasIds)): ?>
+        <div class="alert alert-info" style="background-color: #fcf8e3; border-color: #faebcc; color: #8a6d3b; margin-bottom: 10px;">
+            <h5 style="margin-top: 0;"><b><span class="glyphicon glyphicon-briefcase"></span> Visitas ya adquiridas y pagadas:</b></h5>
+            <ul>
+                <?php 
+                foreach ($modelosVisitas as $visita) {
+                    if (in_array($visita->id, $visitasPagadasIds)) {
+                        echo "<li>" . Html::encode($visita->nombre) . "</li>";
+                    }
+                }
+                ?>
+            </ul>
+        </div>
+    <?php endif; ?>
 
-	<div id="modal-visitas" class="modal-fs-container oculto">
-		
-		<div class="modal-fs-header">
-			<h4 class="modal-fs-title">Selección de Visitas Industriales</h4>
-			
-			<button type="button" class="btn btn-fs-close btn-cerrar-modal-fs">
-				Cerrar <span class="glyphicon glyphicon-remove"></span>
-			</button>
-		</div>
-		
-		<div class="modal-fs-body">
-			<div id="checkbox-visitas-container"></div>
-		</div>
+    <div class="panel-seleccion-trigger">
+        <div class="trigger-info">
+            <span class="trigger-label">
+                <?= ($registration->scenario == 'Update' && !empty($visitasPagadasIds)) ? 'Nuevas visitas a agregar:' : 'Visitas seleccionadas:' ?>
+            </span>
+            <span class="trigger-count" id="contador-visitas">0</span>
+        </div>
+        
+        <button type="button" class="btn btn-trigger-action btn-abrir-modal-fs" data-target="#modal-visitas">
+            Seleccionar <span class="glyphicon glyphicon-chevron-right"></span>
+        </button>
+    </div>
 
-	</div>
+    <!-- El Modal de Visitas se queda igual... -->
+    <div id="modal-visitas" class="modal-fs-container oculto">
+        <div class="modal-fs-header">
+            <h4 class="modal-fs-title">Selección de Visitas Industriales</h4>
+            <button type="button" class="btn btn-fs-close btn-cerrar-modal-fs">
+                Cerrar <span class="glyphicon glyphicon-remove"></span>
+            </button>
+        </div>
+        <div class="modal-fs-body">
+            <div id="checkbox-visitas-container"></div>
+        </div>
+    </div>
 
 	<?= $form->field($registration, 'proceedings_copies')->hiddenInput()->label(false) ?>
 	
@@ -486,12 +532,6 @@ $this->registerJsFile('@web/js/registrationForm.js');
     <h3><?= Html::encode('Bolsa de Trabajo')?></h3>
     <p> <?= Html::encode('Si deseas compartir tu Curriculum Vitae (CV) con las empresas patrocinadoras, puedes adjuntarlo aquí, en formato pdf.')?> </p>
     <?= $form->field($registration, 'file_cv')->fileInput()->label('Subir CV') ?>
-
-	<?php
-		# Cargamos el script para todo lo dinamico relacionado con el pago y precio del registro
-		# Resumen de pago y concepto de pago
-		$this->registerJsFile('@web/js/vista_pago.js', ['depends' => [\yii\web\JqueryAsset::class]]);
-	?>
     
 	<h3>Política de cancelación</h3>
 	<p> <?= Html::encode('Las cuotas de inscripción, talleres y visitas industriales no serán rembolsables. Es importante destacar que a los autores que no se presenten se les retirará su artículo de las memorias del congreso. Para cualquier duda o aclaracion favor de contactar concei@correo.uady.mx')?> </p>
@@ -513,19 +553,21 @@ $this->registerJsFile('@web/js/registrationForm.js');
                 <td>Talleres</td>
                 <td style="text-align: right;">
                     Seleccionados: <span id="display-talleres-count">0</span>
+					<div id="display-talleres-nombres" style="font-size: 0.85em; color: #777; margin-top: 5px; text-align: right; line-height: 1.3;"></div>
                 </td>
                 <td style="text-align: right; font-weight: bold;" id="display-talleres-total">$0.00</td>
-            </tr>
+			</tr>
             <tr>
                 <td>Visitas Industriales</td>
                 <td style="text-align: right;">
                     Seleccionados: <span id="display-visitas-count">0</span>
+					<div id="display-visitas-nombres" style="font-size: 0.85em; color: #777; margin-top: 5px; text-align: right; line-height: 1.3;"></div>
                 </td>
                 <td style="text-align: right; font-weight: bold;" id="display-visitas-total">$0.00</td>
             </tr>
             <tr>
                 <td colspan="2" style="text-align: right;">
-                    <em>A pagar: <span id="display-total-extras-paid">0</span> x $<?= '100' ?></em>
+                    <em>A pagar: <span id="display-total-extras-paid">0</span> x $<?= $precio_taller ?></em>
                 </td>
                 <td style="text-align: right; font-weight: bold; color: #d9534f;" id="display-extras-total">$0.00</td>
             </tr>
@@ -538,11 +580,6 @@ $this->registerJsFile('@web/js/registrationForm.js');
 
 	<h3>Instrucciones de pago</h3>
 
-	<?php
-		# cargamos scripts que generen los previews y concepto de pago
-		// $this->registerJsFile('@web/js/vista_pago.js', ['depends' => [\yii\web\JqueryAsset::class]]);
-	?>
-	
 	<div class="well" style="background-color: #f8f9fa; border-left: 5px solid #0055A5;">
 		<p style="font-size: 1.1em; margin-bottom: 10px;">El pago podrá ser realizado por transferencia bancaria con los siguientes datos:</p>
 		<ul style="list-style-type: none; padding-left: 0; font-size: 1.1em;">
@@ -568,7 +605,7 @@ $this->registerJsFile('@web/js/registrationForm.js');
     	<?= $form->field($registration, 'payment_type')->radioList([
 		// 1 => 'Credit Card',
 		2 => 'Transferencia bancaria (Cargue su recibo)',
-		3 => 'Codigo de Registro',
+		// 3 => 'Codigo de Registro',
 	], [
 		'itemOptions' => [
 			'disabled' => ($registration->scenario == 'Update')? true: false
@@ -577,11 +614,6 @@ $this->registerJsFile('@web/js/registrationForm.js');
 	])->label('Tipo de Pago') ?>
 
 	<?php echo $form->field($registration, 'file_payment_receipt')->fileInput() ?>
-	
-	<?php echo $form->field($registration, 'registration_code')->textInput(['maxlength' => true])->label(null,[
-		'class'=>'control-label col-sm-3 required',
-		'disabled' => ($registration->scenario == 'Update')? true: false,
-	]) ?>
     
 	<?php /*
     <div class="form-group">
@@ -618,9 +650,6 @@ $this->registerJsFile('@web/js/registrationForm.js');
 
 <style>
 
-	/* ===================================================
-   DISEÑO DEL DISPARADOR (Trigger)
-   =================================================== */
 .panel-seleccion-trigger {
     display: flex;
     justify-content: space-between;
@@ -641,7 +670,7 @@ $this->registerJsFile('@web/js/registrationForm.js');
 .trigger-count {
     font-weight: bold;
     color: #333333;
-    background-color: #f4f6f8; /* Un fondito gris muy claro para el número */
+    background-color: #f4f6f8; /* Un fondo gris muy claro para el número */
     padding: 4px 12px;
     border-radius: 15px;
     margin-left: 8px;
@@ -663,9 +692,6 @@ $this->registerJsFile('@web/js/registrationForm.js');
     border-color: #adadad;
 }
 
-/* ===================================================
-   MODAL FULL-SCREEN
-   =================================================== */
 .oculto {
     display: none !important;
 }
@@ -677,12 +703,11 @@ $this->registerJsFile('@web/js/registrationForm.js');
     width: 100vw;
     height: 100vh;
     background-color: #ffffff; /* Fondo blanco para el modal */
-    z-index: 1040; /* Asegura que esté por encima de otros elementos (navbar 1030 y abajo del modal 1050) */
+    z-index: 1040;
     display: flex;
     flex-direction: column;
 }
 
-/* Encabezado: Texto a la izq, Botón a la der. Mantiene formato en móvil. */
 .modal-fs-header {
     display: flex;
     flex-direction: row !important; 
@@ -690,7 +715,7 @@ $this->registerJsFile('@web/js/registrationForm.js');
     align-items: center;
     padding: 15px 25px;
     background-color: #ffffff;
-    border-bottom: 1px solid #e5e5e5; /* Línea separadora */
+    border-bottom: 1px solid #e5e5e5;
 }
 
 .modal-fs-title {
@@ -700,7 +725,6 @@ $this->registerJsFile('@web/js/registrationForm.js');
     color: #333;
 }
 
-/* Botón de cerrar: Sin rojo, súper limpio */
 .btn-fs-close {
     background-color: transparent;
     color: #666;
@@ -761,11 +785,7 @@ $this->registerJsFile('@web/js/registrationForm.js');
         padding: 20px;
     }
 
-	/* =======================================================
-	Estilos Responsivos para la Tabla de Registros (para moviles)
-	======================================================= */
 	@media screen and (max-width: 767px) {
-		
 		
 		/* Forzamos a la tabla a comportarse como bloques en lugar de una cuadrícula */
 		#fee_type table, 
@@ -788,9 +808,9 @@ $this->registerJsFile('@web/js/registrationForm.js');
 		/* Estilizamos cada fila (<tr>) para que parezca una tarjeta */
 		#fee_type tbody tr { 
 			border: 1px solid #ddd;
-			border-radius: 8px; /* Bordes redondeados */
+			border-radius: 8px; 
 			margin-bottom: 15px; /* Separación entre tarjetas */
-			box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* Pequeña sombra elegante */
+			box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 			background-color: #fff;
 			overflow: hidden;
 		}
@@ -825,7 +845,6 @@ $this->registerJsFile('@web/js/registrationForm.js');
 		#fee_type td:nth-of-type(3)::before { content: "Pre-Registro:"; }
 		#fee_type td:nth-of-type(4)::before { content: "Registro Regular:"; }
 
-		/* Mejoramos la usabilidad del Radio Button en móviles */
 		#fee_type td:nth-of-type(1) {
 			background-color: #f9f9f9; /* Destacar la zona de selección */
 		}
@@ -835,6 +854,72 @@ $this->registerJsFile('@web/js/registrationForm.js');
 			cursor: pointer;
 		}
 	}
+
 </style>
+
+<?php
+// SOLUCIÓN: RECUPERAR DATOS SELECCIONADOS AL FALLAR LA VALIDACIÓN
+
+// Recuperar el Tipo de Registro seleccionado previamente (o 1 por defecto)
+$tipoSeleccionado = $registration->registration_type_id ? $registration->registration_type_id : 1;
+
+// Recuperar los Talleres desde el POST (Solo lo nuevo en caso de error de validación)
+$postTalleres = Yii::$app->request->post('talleres_seleccionados', []);
+
+// Recuperar las Visitas desde el POST
+$postVisitas = Yii::$app->request->post('visitas_seleccionadas', []);
+
+$jsonPostTalleres = yii\helpers\Json::encode($postTalleres);
+$jsonPostVisitas = yii\helpers\Json::encode($postVisitas);
+
+$jsRecuperarChecks = <<<JS
+$(document).ready(function() {
+    // Usamos setTimeout para darle tiempo a los scripts externos de dibujar 
+    // la tabla y los checkboxes antes de que intentemos marcarlos.
+    setTimeout(function() {
+        
+        // RECUPERAR TIPO DE REGISTRO
+        var tipoGuardado = '{$tipoSeleccionado}';
+        $("input[name='kvradio']").prop("checked", false);
+        $("input[name='kvradio'][value='" + tipoGuardado + "']").prop("checked", true);
+        $("#registration-registration_type_id").val(tipoGuardado);
+        
+        //RECUPERAR TALLERES
+        var selectedTalleres = {$jsonPostTalleres};
+        if (selectedTalleres && selectedTalleres.length > 0) {
+            selectedTalleres.forEach(function(id) {
+                $('input[name="talleres_seleccionados[]"][value="' + id + '"]').prop('checked', true);
+            });
+            // Actualizar el número visual del contador de talleres
+            $("#contador-talleres").text(selectedTalleres.length);
+        }
+        
+        //RECUPERAR VISITAS
+        var selectedVisitas = {$jsonPostVisitas};
+        if (selectedVisitas && selectedVisitas.length > 0) {
+            selectedVisitas.forEach(function(id) {
+                $('input[name="visitas_seleccionadas[]"][value="' + id + '"]').prop('checked', true);
+            });
+            // Actualizar el número visual del contador de visitas
+            $("#contador-visitas").text(selectedVisitas.length);
+        }
+        
+        // ACTUALIZAR TOTALES
+        $('input[name="talleres_seleccionados[]"], input[name="visitas_seleccionadas[]"]').first().trigger('change');
+        
+        if(typeof calculateTotal === 'function') {
+            calculateTotal();
+        }
+        if(typeof actualizarConceptoPago === 'function') {
+            actualizarConceptoPago();
+        }
+        
+    }, 600);
+});
+JS;
+
+// Registramos el script al final de la página
+$this->registerJs($jsRecuperarChecks, \yii\web\View::POS_END);
+?>
 
 <!-- <script src="../web/js/form.js"></script> -->

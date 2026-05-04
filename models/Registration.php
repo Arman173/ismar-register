@@ -4,6 +4,8 @@ namespace app\models;
 
 use Yii;
 use app\models\RegistrationType;
+use app\models\Pagos;
+use app\models\Concei;
 
 /**
  * This is the model class for table "registration".
@@ -243,25 +245,27 @@ class Registration extends \yii\db\ActiveRecord
      * Calcula y asigna el costo total del registro incluyendo talleres/visitas extra.
      * Réplica exacta de la lógica del frontend.
      */
+
     public function calculateTotalCost()
     {
-        $costoTaller = 100.00; 
-        $fechaCambioPrecio = '2026-02-17';
-        $isEarlyBird = (date('Y-m-d') <= $fechaCambioPrecio);
+		$concei = Concei::find()->one();
+        $costoTaller = $concei->getCostoTaller();
+		$costoVisita = $concei->getCostoVisita();
+        $isEarlyBird = $concei->es_preventa();
 
-        // 1. Obtener costo base usando la relación (si está cargada) o buscando el tipo
+        // Obtener costo base usando la relación (si está cargada) o buscando el tipo
         $baseCost = 0;
         $tipoRegistro = RegistrationType::findOne($this->registration_type_id);
         if ($tipoRegistro) {
             $baseCost = $isEarlyBird ? $tipoRegistro->cost_early_bird : $tipoRegistro->cost_late;
         }
 
-        // 2. Contar extras (Asegurándonos de que no sean vacíos/null)
+        // Contar extras (Asegurándonos de que no sean vacíos/null)
         $countTalleres = is_array($this->talleres_seleccionados) ? count($this->talleres_seleccionados) : 0;
         $countVisitas = is_array($this->visitas_seleccionadas) ? count($this->visitas_seleccionadas) : 0;
         $totalExtrasCount = $countTalleres + $countVisitas;
 
-        // 3. Lógica de cobro (1 gratis para General(1) y Estudiante(12))
+        // Lógica de cobro (1 gratis para General(1) y Estudiante(12))
         $paidExtras = 0;
         $typeIdStr = (string)$this->registration_type_id;
 
@@ -280,6 +284,72 @@ class Registration extends \yii\db\ActiveRecord
         // Asignar a la variable (y columna de BD) total_amount
         $this->total_amount = $baseCost + $extrasTotalCost; 
     }
+
+	/*// Esta función centraliza toda la lógica de negocio y precios
+    public function getDesglosePrecios()
+    {
+        $concei = Concei::find()->one();
+        $isEarlyBird = $concei ? $concei->es_preventa() : false;
+
+        $costoTaller = $isEarlyBird ? (float)$concei->costo_preventa_taller : (float)$concei->costo_taller;
+        $costoVisita = $isEarlyBird ? (float)$concei->costo_preventa_visita : (float)$concei->costo_visita;
+
+        $items = [];
+        $total = 0;
+
+        // 2. TIPO DE REGISTRO (Gafete)
+        $tipoRegistro = RegistrationType::findOne($this->registration_type_id);
+        if ($tipoRegistro) {
+            $costoBase = $isEarlyBird ? (float)$tipoRegistro->cost_early_bird : (float)$tipoRegistro->cost_late;
+            $items[] = [
+                'concepto' => $tipoRegistro->name,
+                'precio' => $costoBase
+            ];
+            $total += $costoBase;
+        }
+
+        // 3. TALLERES Y VISITAS DESDE LA BD
+        $extras = [];
+        $talleresBD = \app\models\RegistroTaller::find()->where(['registration_id' => $this->id])->all();
+        foreach ($talleresBD as $rt) {
+            $t = \app\models\Taller::findOne($rt->taller_id);
+            if ($t) $extras[] = ['concepto' => 'Taller: ' . $t->nombre, 'precio' => $costoTaller];
+        }
+
+        $visitasBD = \app\models\RegistroVisita::find()->where(['registration_id' => $this->id])->all();
+        foreach ($visitasBD as $rv) {
+            $v = \app\models\Visita::findOne($rv->visita_id);
+            if ($v) $extras[] = ['concepto' => 'Visita: ' . $v->nombre, 'precio' => $costoVisita];
+        }
+
+        // 4. REGLA DEL GRATIS (Tipos 1 y 12)
+        if (in_array($this->registration_type_id, [1, 12]) && count($extras) > 0) {
+            $extras[0]['precio'] = 0; // El primero se vuelve gratis
+        }
+
+        // 5. SUMAR LOS EXTRAS AL TOTAL
+        foreach ($extras as $extra) {
+            $items[] = $extra;
+            $total += $extra['precio'];
+        }
+
+        return [
+            'items' => $items,
+            'total' => $total
+        ];
+    }
+
+    // Ahora la función original simplemente usa el desglose para no repetir código
+    public function calculateTotalCost()
+    {
+        $desglose = $this->getDesglosePrecios();
+        $this->total_amount = $desglose['total'];
+    }*/
+
+	public function getPagos()
+	{
+		return $this->hasMany(Pago::className(), ['registration_id' => 'id']);
+	}
 	
 	public function beforeSave($insert)
 	{
@@ -302,13 +372,13 @@ class Registration extends \yii\db\ActiveRecord
 			// if($this->paid_by_credit_card == true)
 			// 	$this->payment = 'Credit Card';
 			// PAYMENT_RECEIPT
-			if( !empty($this->file_payment_receipt) )
-			{
-				$fileNamePaymentReceipt = uniqid() . '.' . $this->file_payment_receipt->extension;
-				$this->file_payment_receipt->saveAs('files/payment/' . $fileNamePaymentReceipt);
-				$this->payment_receipt = $fileNamePaymentReceipt;
-				$this->payment = 'Bank Transfer';
-			}
+			// if( !empty($this->file_payment_receipt) )
+			// {
+			// 	$fileNamePaymentReceipt = uniqid() . '.' . $this->file_payment_receipt->extension;
+			// 	$this->file_payment_receipt->saveAs('files/payment/' . $fileNamePaymentReceipt);
+			// 	$this->payment_receipt = $fileNamePaymentReceipt;
+			// 	$this->payment = 'Bank Transfer';
+			// }
 			
 			if(empty($this->payment))
 				$this->payment = 'None';
@@ -345,6 +415,30 @@ class Registration extends \yii\db\ActiveRecord
 			return true;
 		}
 		return false;
+	}
+
+	public function getFirstNameCode() {
+		$first_name = strtoupper($this->first_name);
+		$longitud = strlen($first_name);
+
+		return $longitud >= 3 ? substr($first_name, 0, 3):str_pad($first_name, 3, '0', STR_PAD_LEFT);
+	}
+
+	public function getLastNameCode() {
+		$last_name = strtoupper($this->last_name);
+		$longitud = strlen($last_name);
+
+		return $longitud >= 3 ? substr($last_name, 0, 3):str_pad($last_name, 3, '0', STR_PAD_LEFT);
+	}
+
+	public function getRegistrationTypeCode() {
+		switch ($this->registration_type_id) {
+			case 1: return "RG";
+			case 12: return "RE";
+			case 17: return "RU";
+			case 16: return "";
+		}
+		return "XX";
 	}
 	
 	public function getFullName()
@@ -453,6 +547,28 @@ class Registration extends \yii\db\ActiveRecord
         
         return $apellidoStr . $nombreStr . $tipoRegistro;
     }*/
+
+	// NUEVO: nos da un estado de los pagos
+	// "verificado" -> todos los pagos relacionados al registro estan en estado de verificado
+	// "pendiente"  -> al menos un pago de los relacionados al registro no esta en verificado
+	//				   y ninguno esta en rechazado
+	// "rechazado"  -> al menos un pago de los relacionado esta en rechazado
+	public function estadoPagos()
+	{
+		$pagos = $this->pagos;
+
+		$estado = "verificado";
+		foreach ($pagos as $pago) {
+			if ($pago->estado != "verificado") {
+				if ($pago->estado == "confirmado") {
+					$estado = "confirmado";
+				} else {
+					return "rechazado";
+				}
+			}
+		}
+		return $estado;
+	}
 
 	// **************Función para el concepto de pago*************
     public function getConceptoPago()

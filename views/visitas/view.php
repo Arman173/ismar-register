@@ -35,6 +35,8 @@ $this->params['breadcrumbs'][] = $this->title;
             'fecha',
             'horario',
             'modalidad',
+            'cupos',
+            'reservados',
         ],
     ]) ?>
 
