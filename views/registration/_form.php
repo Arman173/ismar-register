@@ -576,16 +576,12 @@ $this->registerJsFile('@web/js/registrationForm.js');
 
 </div>
 
-    	<?= $form->field($registration, 'payment_type')->radioList([
-		// 1 => 'Credit Card',
-		2 => 'Transferencia bancaria (Cargue su recibo)',
-		// 3 => 'Codigo de Registro',
-	], [
-		'itemOptions' => [
-			'disabled' => ($registration->scenario == 'Update')? true: false
-		],
-		'unselect' => null,
-	])->label('Tipo de Pago') ?>
+        <?= $form->field($registration, 'payment_type')->radioList([
+         2 => 'Transferencia bancaria (Cargue su recibo)',
+    ], [
+        'itemOptions' => [], 
+        'unselect' => null,
+    ])->label('Tipo de Pago') ?>
 
 	<?php echo $form->field($registration, 'file_payment_receipt')->fileInput() ?>
     

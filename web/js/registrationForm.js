@@ -340,16 +340,12 @@ function hideRegistrationCode()
     $(".field-registration-registration_code").hide();
 }
 
-// New code. Rodrigo
-function toggleFilePaymentReceipt()
-{
+function toggleFilePaymentReceipt() {
     var paymentType = $("input[name='Registration[payment_type]']:checked").val();
     
-    // Leemos el radio button o el input oculto
     var radioChecked = document.querySelector('input[name="kvradio"]:checked');
     var selectedTypeId = radioChecked ? radioChecked.value : $("#registration-registration_type_id").val();
     
-    // Contamos cuántos extras nuevos seleccionó
     var tText = document.getElementById('contador-talleres') ? document.getElementById('contador-talleres').textContent : "0";
     var vText = document.getElementById('contador-visitas') ? document.getElementById('contador-visitas').textContent : "0";
     
@@ -359,7 +355,6 @@ function toggleFilePaymentReceipt()
 
     let requierePago = false;
 
-    // Evaluamos si debe pagar dependiendo de si es registro nuevo o actualización
     if (window.es_nuevo_registro) {
         if (selectedTypeId == "1" || selectedTypeId == "12") {
             requierePago = true;
@@ -369,31 +364,34 @@ function toggleFilePaymentReceipt()
             requierePago = totalExtrasCount > 0; 
         }
     } else {
-        // ES LA VISTA DE ACTUALIZAR: Solo paga si agrega ALGO NUEVO
-        requierePago = totalExtrasCount > 0;
+        // CORRECCIÓN: Si agregó extras O si seleccionó Transferencia bancaria (2)
+        if (totalExtrasCount > 0 || paymentType == "2") {
+            requierePago = true;
+        }
     }
 
-    // APLICAMOS LOS CAMBIOS VISUALES
     if (requierePago) {
-        // 1. Mostrar todo el bloque de pago
         $('#instrucciones-pago').show();
+        $('.field-registration-payment_type').show();
         
-        // 2. Mostrar u ocultar el input del recibo según si eligió transferencia (2)
         if (paymentType == "2") {
             showFilePaymentReceipt();
         } else {
             hideFilePaymentReceipt();
         }
     } else {
-        // 1. Ocultar TODO el bloque de pago porque el costo es $0
         $('#instrucciones-pago').hide();
+        $('.field-registration-payment_type').hide();
         
-        // 2. Limpiar selecciones previas por seguridad
-        $("input[name='Registration[payment_type]']").prop('checked', false); 
+        // CORRECCIÓN: Solo desmarcamos el radio button si es un registro nuevo.
+        if (window.es_nuevo_registro) {
+            $("input[name='Registration[payment_type]']").prop('checked', false); 
+        }
         hideFilePaymentReceipt();
     }
 }
 
+/*
 // New code. Rodrigo
 function toggleFilePaymentReceipt()
 {
@@ -439,35 +437,8 @@ function toggleFilePaymentReceipt()
         $("input[name='Registration[payment_type]']").prop('checked', false); 
         hideFilePaymentReceipt();
     }
-}
+}*/
 
-/*
-// New code. Rodrigo
-function toggleFilePaymentReceipt()
-{
-    var paymentType = $("[name='Registration[payment_type]']:checked").val();
-    const selectedTypeId = $("[name='Registration[registration_type_id]']").val();
-    
-    const contadorTalleres = document.getElementById('contador-talleres');
-    const contadorVisitas = document.getElementById('contador-visitas');
-    const totalExtrasCount = (parseInt(contadorTalleres ? contadorTalleres.textContent : 0)) + (parseInt(contadorVisitas ? contadorVisitas.textContent : 0));
-
-    let requierePago = false;
-
-    if (selectedTypeId == "1" || selectedTypeId == "12") {
-        requierePago = true;
-    } else if (selectedTypeId == "18") {
-        requierePago = totalExtrasCount > 1;
-    } else if (selectedTypeId == "17") {
-        requierePago = totalExtrasCount > 0;
-    }
-
-    if (requierePago && paymentType == "2") {
-        showFilePaymentReceipt();
-    } else {
-        hideFilePaymentReceipt();
-    }
-} */
 
 function toggleRegistrationCode()
 {
@@ -792,6 +763,8 @@ window.addEventListener('load', function() {
 		toggleInvoice();
 	});
 
+
+
     // $("input[name=kvradio][value='1']").prop("checked",true);
     // $grid.on( 'grid.radiochecked', function(ev, key, val){
     //     $("#registration-registration_type_id").val(val);
@@ -815,4 +788,12 @@ window.addEventListener('load', function() {
     toggleInvoice();
     toggleRegistrationCode();
     verificarCuposDinamicos();
+
+    // Detectar cuando el usuario cambia el método de pago
+    $("input[name='Registration[payment_type]']").change(function() {
+        toggleFilePaymentReceipt();
+    });
+    
+    // Ejecutar la función una vez al cargar la página para revisar el estado inicial
+    toggleFilePaymentReceipt();
 });
