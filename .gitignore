@@ -31,3 +31,6 @@ phpunit.phar
 /web/files/studentid
 
 /.env
+
+# Ignoramos cualquier archivo .sql
+/*.sql

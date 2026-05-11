@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "80:80"
+    # Le pasamos las variables secretas al contenedor web
+    env_file: 
+      - .env
+    volumes:
+      # Refleja tu código en vivo (si modificas un PHP, se ve al instante)
+      - .:/var/www/html 
+      # El "disco duro externo" para que los PDFs no se borren
+      - uploads_data:/var/www/html/web/files 
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    # Le pasamos las variables secretas al contenedor de la base de datos
+    env_file: 
+      - .env
+    ports:
+      - "3306:3306"
+    volumes:
+      # El "disco duro externo" donde MySQL guarda la información real
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:
+  uploads_data:

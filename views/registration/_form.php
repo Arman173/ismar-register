@@ -169,19 +169,13 @@ $this->registerJsFile('@web/js/registrationForm.js');
 		'options' => ['style' => 'max-width: 700px; width: 100%; margin: 0;'],
 	]);?>
 
-    <?php echo $form->field($registration, 'registration_code', [
-        'options' => ['style' => 'display:none;']
-    ])->textInput(['maxlength' => true])->label(null,[
+    <?php echo $form->field($registration, 'registration_code')->textInput(['maxlength' => true])->label(null,[
 		'class'=>'control-label col-sm-3 required',
 		'disabled' => ($registration->scenario == 'Update')? true: false,
 	]) ?>
 
-    <br> <br> <br>
-
 	<p> <?= Html::encode('* El registro de estudiante y de profesores de la UADY requiere una prueba de estatus o, para estudiantes, una credencial de estudiante que confirme que la persona registrada es estudiante de tiempo completo en el momento de la conferencia.')?> </p>
-    
-    
-	
+
 
 	<?= $form->field($registration, 'file_student_id')->fileInput() ?>
 	
@@ -338,7 +332,10 @@ $this->registerJsFile('@web/js/registrationForm.js');
             'fecha'   => $taller->fecha,
             'horario'  => $taller->horario,
             'modalidad'=> $taller->modalidad,
-            'tallerista' => $taller->tallerista
+            'tallerista' => $taller->tallerista,
+            'cupo_general'=> $taller->getCupoGeneral(),
+            'cupo_otros'   => $taller->getCupoOtros(),
+            // 'disponible' => $taller->hayCupos() ? 'Disponible' : 'No disponible'
         ];
     }
 
@@ -355,7 +352,11 @@ $this->registerJsFile('@web/js/registrationForm.js');
             'descripcion' => $visita->descripcion,
             'fecha'   => $visita->fecha,
             'horario'  => $visita->horario,
-            'modalidad'=> $visita->modalidad
+            'modalidad'=> $visita->modalidad,
+            'cupo_general' => $visita->getCupoGeneral(), //Nuevo
+            'cupo_otros'   => $visita->getCupoOtros(),   //  
+            'disponible'   => '' //
+
         ];
     }
 
@@ -578,6 +579,8 @@ $this->registerJsFile('@web/js/registrationForm.js');
         </table>
     </div>
 
+<div id="instrucciones-pago">
+
 	<h3>Instrucciones de pago</h3>
 
 	<div class="well" style="background-color: #f8f9fa; border-left: 5px solid #0055A5;">
@@ -601,6 +604,8 @@ $this->registerJsFile('@web/js/registrationForm.js');
         
         <p style="font-size: 0.85em; color: #7f8c8d; text-align: center; margin-bottom: 0;"><i>*Esta clave se actualiza automáticamente al escribir su nombre, apellido, elegir su tipo de registro, talleres y visitas.</i></p>
 	</div>
+
+</div>
 
     	<?= $form->field($registration, 'payment_type')->radioList([
 		// 1 => 'Credit Card',
@@ -921,5 +926,7 @@ JS;
 // Registramos el script al final de la página
 $this->registerJs($jsRecuperarChecks, \yii\web\View::POS_END);
 ?>
+
+
 
 <!-- <script src="../web/js/form.js"></script> -->

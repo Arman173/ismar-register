@@ -24,7 +24,7 @@ $estadoPago = $model->estadoPagos();
         <div style="padding: 15px; margin-bottom: 20px; border: 1px solid #cccccc; border-radius: 4px; background-color: #f9f9f9; color: #333333;">
             <h2 style="margin-top: 0; color: #222222;">Problema con su comprobante - ConCEI 3</h2>
             <p>Estimado/a <?= Html::encode($model->fullName) ?>,</p>
-            <p>Le informamos que hemos encontrado un problema con su comprobante de pago. Por favor, ingrese al sistema a su panel de usuario para revisar las observaciones y <strong>subir un nuevo comprobante</strong> para poder continuar con su registro.</p>
+            <p>Le informamos que hemos rechazado su comprobante de pago por irregularidades encontradas. Por favor, ingrese al sistema a su panel de usuario para subir un comprobante <strong> válido </strong> para poder continuar con su registro.</p>
         </div>
 
     <?php else: ?>
@@ -34,11 +34,17 @@ $estadoPago = $model->estadoPagos();
             <h2 style="margin-top: 0; color: #222222;">Registro confirmado - ConCEI 3</h2>
             <p>Estimado/a <?= Html::encode($model->fullName) ?>,</p>
             <p>Gracias por registrarse al tercer Congreso de Ciencias Exactas e Ingenierías 3, que se llevará a cabo en Mérida, México, del 7 al 9 de octubre de 2026 en el Campus de Ciencias Exactas e Ingenierías (CCEI) de la Universidad Autónoma de Yucatán.</p>
-            <p>Le informamos que hemos recibido su comprobante de pago, el cual se encuentra <strong>En revisión</strong>. Nuestro equipo administrativo ya se encuentra validando su transferencia bancaria.</p>
-            <p>Podrá visualizar el estatus de su comprobante de pago en su panel de usuario.</p>
+          
         </div>
 
-    <?php endif; ?>
+        <?php endif; ?>
+
+    <div style="text-align: center; margin: 20px 0;">
+        <p>Para acceder a sus datos o si quiere agregar talleres o visitas puede acceder a su panel de usuario en el siguiente enlace:</p>
+        <a href="<?= Url::to(['registration/view', 'id' => $model->id], true) ?>" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
+            Ver Datos de Registro: 
+        </a>
+    </div>
 
     <p style="color: #555; font-size: 0.9em;">
         <?php

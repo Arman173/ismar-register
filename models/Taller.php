@@ -3,6 +3,7 @@
 namespace app\models;
 
 use Yii;
+use app\models\RegistroTaller;
 
 /**
  * This is the model class for table "talleres".
@@ -60,6 +61,21 @@ class Taller extends \yii\db\ActiveRecord
             'cupos' => 'Cupos',
             'reservados' => 'Reservados',
         ];
+    }
+
+    public function getInscritosCount() {
+        return \app\models\RegistroTaller::find()->where(['taller_id' => $this->id])->count();
+    }
+
+    public function getCupoGeneral() {
+        if (!$this->cupos) return true;
+        $reservados = $this->reservados ? $this->reservados : 0;
+        return $this->getInscritosCount() < ($this->cupos + $reservados);
+    }
+
+    public function getCupoOtros() {
+        if (!$this->cupos) return true;
+        return $this->getInscritosCount() < $this->cupos;
     }
 
 }

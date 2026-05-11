@@ -3,16 +3,52 @@
     el formulario del ConCEI
 */
 
+function verificarCuposDinamicos() {
+    console.log("Verificando cupos dinámicos...");
+    // Buscamos el radio seleccionado. Si Yii2 no ha marcado nada, asumimos '1' (General)
+    const selectedRadio = document.querySelector('input[name="kvradio"]:checked');
+    const tipoId = selectedRadio ? selectedRadio.value : '1'; 
+    const esGeneral = (tipoId === '1');
+
+    function actualizarFilas(datos, inputName, spanClass) {
+        if (!datos) return;
+        //Comienza a revisar la lista de talleres/visitas, uno por uno.
+        datos.forEach(function(item) {
+            const tieneCupo = esGeneral ? item.cupo_general : item.cupo_otros;
+            
+            const checkbox = $('input[name="' + inputName + '"][value="' + item.id + '"]');
+            const fila = checkbox.closest('tr');
+            const spanStatus = $('.' + spanClass + '[data-id="' + item.id + '"]');
+            
+            if (spanStatus.length > 0) {
+                if (!tieneCupo) {
+                    checkbox.prop('disabled', true).prop('checked', false);
+                    fila.css('opacity', '0.5');
+                    spanStatus.html('<span style="color:red;font-weight:bold;">Agotado</span>');
+                } else {
+                    checkbox.prop('disabled', false);
+                    fila.css('opacity', '1');
+                    spanStatus.html('<span style="color:green;font-weight:bold;">Disponible</span>');
+                }
+            }
+        });
+    }
+
+    actualizarFilas(window.datosTalleres, 'talleres_seleccionados[]', 'status-cupo-taller');
+    actualizarFilas(window.datosVisitas, 'visitas_seleccionadas[]', 'status-cupo-visita');
+    
+    if (typeof calculateTotal === 'function') calculateTotal(); 
+}
+
 // funcion que se ejecuta cada que el radio button del tipo de registro cambia
 function cambioTipoRegistro(event) {
     if (event.target && event.target.name === 'kvradio') {
         const valorSeleccionado = event.target.value;
+        $("#registration-registration_type_id").val(valorSeleccionado);
         console.log("ID del tipo de registro seleccionado:", valorSeleccionado);
 
-        // BONUS: Si también quieres obtener el texto de la fila seleccionada (ej. "Estudiante")
-        // Buscamos la fila (tr) más cercana al radio button que presionaste
         const fila = event.target.closest('tr'); 
-        // Obtenemos el texto de la segunda columna (índice 1)
+
         const nombreRegistro = fila.cells[1].innerText; 
         
         console.log("Nombre del registro:", nombreRegistro);
@@ -23,10 +59,11 @@ function cambioTipoRegistro(event) {
             case "17": showFileStudentId(); break;
             default: hideFileStudentId(); break;
         }
-        toggleRegistrationCode();
-        toggleModalidadPresentacion();
-
         calculateTotal();
+        toggleModalidadPresentacion();
+        verificarCuposDinamicos(); // Nuevo
+        toggleRegistrationCode();
+
     }
 }
 
@@ -157,7 +194,7 @@ function calculateTotal() {
     const workshopCost = parseFloat(window.costo_taller);
     
     // 1. Obtener ID del tipo de registro
-    const selectedTypeId = document.querySelector('input[name="kvradio"]:checked').value;
+    const selectedTypeId = $("[name='Registration[registration_type_id]']").val();
     
     // Costo base según Early Bird
     console.log(preciosRegistros[selectedTypeId]);
@@ -219,6 +256,12 @@ function calculateTotal() {
     
     actualizarConceptoPago();
     toggleFilePaymentReceipt();
+
+    if (total === 0) {
+        $('#instrucciones-pago').hide(); 
+    } else {
+        $('#instrucciones-pago').show(); 
+    }
 }
 
 /* FUNCION PARA ABRIR Y CERRAR MODALS
@@ -298,29 +341,32 @@ function hideRegistrationCode()
 function toggleFilePaymentReceipt()
 {
     var paymentType = $("[name='Registration[payment_type]']:checked").val();
-    const selectedTypeId = document.querySelector('input[name="kvradio"]:checked').value;
-    if (selectedTypeId == "18") {
-        const contadorTalleres = document.getElementById('contador-talleres');
-        const contadorVisitas = document.getElementById('contador-visitas');
+    const selectedTypeId = $("[name='Registration[registration_type_id]']").val();
+    
+    const contadorTalleres = document.getElementById('contador-talleres');
+    const contadorVisitas = document.getElementById('contador-visitas');
+    const totalExtrasCount = (parseInt(contadorTalleres ? contadorTalleres.textContent : 0)) + (parseInt(contadorVisitas ? contadorVisitas.textContent : 0));
 
-        const totalExtrasCount = parseInt(contadorTalleres.textContent) + parseInt(contadorVisitas.textContent);
-        if (totalExtrasCount > 1) {
-            showFilePaymentReceipt();
-        } else {
-            hideFilePaymentReceipt();
-        }
-        return; //
+    let requierePago = false;
+
+    if (selectedTypeId == "1" || selectedTypeId == "12") {
+        requierePago = true;
+    } else if (selectedTypeId == "18") {
+        requierePago = totalExtrasCount > 1;
+    } else if (selectedTypeId == "17") {
+        requierePago = totalExtrasCount > 0;
     }
-    if( paymentType == "2" )
+
+    if (requierePago && paymentType == "2") {
         showFilePaymentReceipt();
-    else {
+    } else {
         hideFilePaymentReceipt();
     }
 }
 
 function toggleRegistrationCode()
 {
-    const selectedTypeId = document.querySelector('input[name="kvradio"]:checked').value;
+    const selectedTypeId = $("[name='Registration[registration_type_id]']").val();
     // console.log(selectedTypeId.value);
     if( selectedTypeId == "18" ){
         showRegistrationCode();
@@ -393,124 +439,6 @@ function toggleInvoice()
         $(".field-invoice-email").show();
     }
 } // end of toogleInvoice()
-
-// Este Listener (evento) se ejecuta una vez se haya cargado todo el DOM, es decir, el
-// contenido HTML, incluyendo los elementos que se van a manipular con JavaScript.
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM cargado...');
-
-    // Cargamos los datos de talleres y visitas inyectados por PHP en
-    // variables globales del window.
-    const talleres = window.datosTalleres;
-    const visitas = window.datosVisitas;
-    
-    const feeTypeGrid = document.getElementById('fee_type');
-    console.log("feeTypeGrid:", feeTypeGrid);
-    // elemento html del modal de detalles de talleres y visitas
-    const modal = document.getElementById('modal-detalles');
-    // elemento html de contadores de seleccion de talleres y visitas
-    const contadorTalleres = document.getElementById('contador-talleres');
-    const contadorVisitas = document.getElementById('contador-visitas');
-
-    const firstName = document.querySelector('#registration-first_name');
-    const lastName = document.querySelector('#registration-last_name');
-
-    firstName.addEventListener('input', (e) => {
-        actualizarConceptoPago();
-    });
-
-    lastName.addEventListener('input', (e) => {
-        actualizarConceptoPago();
-    });
-
-    if (!talleres || !visitas) {
-        console.error("No se encontraron los datos de talleres o visitas. Asegúrate de que estén definidos en el servidor.");
-        return;
-    }
-
-    console.log("Datos de talleres:", talleres);
-    console.log("Datos de visitas:", visitas);
-    console.log("Es preventa:", window.preventa);
-
-    feeTypeGrid.addEventListener('change', cambioTipoRegistro);
-
-    new ResponsiveCheckboxGrid({
-            containerId: 'checkbox-talleres-container',
-            inputName: 'talleres_seleccionados[]',
-            data: window.datosTalleres,
-            columns: [
-                { attribute: 'nombre', label: 'Nombre del Taller' },
-                { 
-                    attribute: 'descripcion', 
-                    label: 'Descripción',
-                    actionName: 'ver_mas', 
-                    format: function(model) {
-                        return `<button type='button' class='btn btn-info btn-xs rcg-action-btn' data-action='ver_mas'>
-                                    <span class='glyphicon glyphicon-info-sign'></span> Leer más
-                                </button>`;
-                    },
-                    onAction: function(model) {
-                        //Modificado
-                        mostrarModalDetalles(model.nombre, model.descripcion, model.tallerista);
-                    }
-                },
-                { attribute: 'modalidad', label: 'Modalidad' },
-                { attribute: 'horario', label: 'Horario' }
-            ],
-            onSelectionChange: function(estado) {
-                console.log('Seleccionados:', estado.todosLosSeleccionados);
-                contadorTalleres.textContent = estado.todosLosSeleccionados.length;
-                calculateTotal();
-            }
-        });
-    
-    new ResponsiveCheckboxGrid({
-            containerId: 'checkbox-visitas-container',
-            inputName: 'visitas_seleccionadas[]',
-            data: window.datosVisitas,
-            columns: [
-                { attribute: 'nombre', label: 'Nombre de la Empresa' },
-                { attribute: 'fecha', label: 'Fecha' },
-                //{ attribute: 'modalidad', label: 'Modalidad' },
-                { attribute: 'horario', label: 'Horario' },
-                {
-                    attribute: 'descripcion', 
-                    label: 'Requisitos',
-                    actionName: 'ver_mas', // Identificador para el evento click
-                    format: function(model) {
-                        return `<button type='button' class='btn btn-info btn-xs rcg-action-btn' data-action='ver_mas'>
-                                    <span class='glyphicon glyphicon-info-sign'></span> Leer más
-                                </button>`;
-                    },
-                    onAction: function(model) {
-                        //Modificadoooooo puede fallaaar
-                        mostrarModalDetalles(model.nombre, model.descripcion, null);
-                    }
-                }
-            ],
-            onSelectionChange: function(estado) {
-                console.log('Seleccionados:', estado.todosLosSeleccionados);
-                contadorVisitas.textContent = estado.todosLosSeleccionados.length;
-                calculateTotal();
-            }
-        });
-    
-    inicializarModals();
-
-    $("[name='Registration[invoice_required]']").change(function (){
-		toggleInvoice();
-	});
-
-    toggleStudentId();
-    // toggleRegistrationCode();
-    toggleModalidadPresentacion();
-    toggleInvoice();
-    toggleRegistrationCode();
-    // calculateTotal();
-
-});
-
-//Vista_pago-------------------------------------------------------------------------------------
 
 // document.addEventListener('DOMContentLoaded', (event) => {
 //     console.log('El DOM está listo');
@@ -638,3 +566,149 @@ document.addEventListener('DOMContentLoaded', function() {
 // 		}
 // 	);
 // });
+
+window.addEventListener('load', function() {
+    console.log('DOM cargado...');
+
+    // Cargamos los datos de talleres y visitas inyectados por PHP en
+    // variables globales del window.
+    const talleres = window.datosTalleres;
+    const visitas = window.datosVisitas;
+    
+    const feeTypeGrid = document.getElementById('fee_type');
+    console.log("feeTypeGrid:", feeTypeGrid);
+    // elemento html del modal de detalles de talleres y visitas
+    const modal = document.getElementById('modal-detalles');
+    // elemento html de contadores de seleccion de talleres y visitas
+    const contadorTalleres = document.getElementById('contador-talleres');
+    const contadorVisitas = document.getElementById('contador-visitas');
+
+    const firstName = document.querySelector('#registration-first_name');
+    const lastName = document.querySelector('#registration-last_name');
+
+    firstName.addEventListener('input', (e) => {
+        actualizarConceptoPago();
+    });
+
+    lastName.addEventListener('input', (e) => {
+        actualizarConceptoPago();
+    });
+
+    if (!talleres || !visitas) {
+        console.error("No se encontraron los datos de talleres o visitas. Asegúrate de que estén definidos en el servidor.");
+        return;
+    }
+
+    console.log("Datos de talleres:", talleres);
+    console.log("Datos de visitas:", visitas);
+    console.log("Es preventa:", window.preventa);
+
+    feeTypeGrid.addEventListener('change', cambioTipoRegistro);
+
+    new ResponsiveCheckboxGrid({
+            containerId: 'checkbox-talleres-container',
+            inputName: 'talleres_seleccionados[]',
+            data: window.datosTalleres,
+            columns: [
+                { attribute: 'nombre', label: 'Nombre del Taller' },
+                { 
+                    attribute: 'descripcion', 
+                    label: 'Descripción',
+                    actionName: 'ver_mas', 
+                    format: function(model) {
+                        return `<button type='button' class='btn btn-info btn-xs rcg-action-btn' data-action='ver_mas'>
+                                    <span class='glyphicon glyphicon-info-sign'></span> Leer más
+                                </button>`;
+                    },
+                    onAction: function(model) {
+                        //Modificado
+                        mostrarModalDetalles(model.nombre, model.descripcion, model.tallerista);
+                    }
+                },
+                { attribute: 'modalidad', label: 'Modalidad' },
+                { attribute: 'horario', label: 'Horario' },
+                { 
+                    attribute: 'disponible', 
+                    label: 'Disponibilidad',
+                    format: function(model) {
+                        return '<span class="status-cupo-taller" data-id="' + model.id + '"></span>';
+                    }
+                }
+            ],
+            onSelectionChange: function(estado) {
+                console.log('Seleccionados:', estado.todosLosSeleccionados);
+                contadorTalleres.textContent = estado.todosLosSeleccionados.length;
+                calculateTotal();
+            }
+        });
+    
+    new ResponsiveCheckboxGrid({
+            containerId: 'checkbox-visitas-container',
+            inputName: 'visitas_seleccionadas[]',
+            data: window.datosVisitas,
+            columns: [
+                { attribute: 'nombre', label: 'Nombre de la Empresa' },
+                { attribute: 'fecha', label: 'Fecha' },
+                //{ attribute: 'modalidad', label: 'Modalidad' },
+                { attribute: 'horario', label: 'Horario' },
+                {
+                    attribute: 'descripcion', 
+                    label: 'Requisitos',
+                    actionName: 'ver_mas', // Identificador para el evento click
+                    format: function(model) {
+                        return `<button type='button' class='btn btn-info btn-xs rcg-action-btn' data-action='ver_mas'>
+                                    <span class='glyphicon glyphicon-info-sign'></span> Leer más
+                                </button>`;
+                    },
+                    onAction: function(model) {
+                        //Modificadoooooo puede fallaaar
+                        mostrarModalDetalles(model.nombre, model.descripcion, null);
+                    }
+
+                },
+
+                { 
+                    attribute: 'disponible', 
+                    label: 'Disponibilidad',
+                    format: function(model) {
+                        return '<span class="status-cupo-visita" data-id="' + model.id + '"></span>';
+                    }
+               
+                }
+            ],
+        
+            onSelectionChange: function(estado) {
+                console.log('Seleccionados:', estado.todosLosSeleccionados);
+                contadorVisitas.textContent = estado.todosLosSeleccionados.length;
+                calculateTotal();
+            }
+        });
+
+    $("[name='Registration[invoice_required]']").change(function (){
+		toggleInvoice();
+	});
+
+    // $("input[name=kvradio][value='1']").prop("checked",true);
+    // $grid.on( 'grid.radiochecked', function(ev, key, val){
+    //     $("#registration-registration_type_id").val(val);
+
+    //     toggleRegistrationCode();
+    //     // console.log("...")
+
+    //     actualizarConceptoPago();
+    //         switch( val )
+    //         {
+    //             case "12": showFileStudentId(); break;
+    //             case "17": showFileStudentId(); break;
+    //             default: hideFileStudentId(); break;
+    //         }
+    //     toggleModalidadPresentacion();
+    // });
+
+    inicializarModals();
+    toggleStudentId();
+    toggleModalidadPresentacion();
+    toggleInvoice();
+    toggleRegistrationCode();
+    verificarCuposDinamicos();
+});

@@ -12,7 +12,7 @@
     display: grid;
     /* Ajusta las proporciones de las columnas aquí. 
        50px para el checkbox, 2fr para nombre, 1fr para el resto */
-    grid-template-columns: 50px 2fr 1fr 1fr 1fr; 
+    grid-template-columns: 50px 2fr 1fr 1fr 1fr 1fr;
     border-bottom: 1px solid #ddd;
     align-items: center;
 }

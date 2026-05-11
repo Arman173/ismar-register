@@ -60,4 +60,23 @@ class Visita extends \yii\db\ActiveRecord
         ];
     }
 
+    public function getInscritosCount() {
+        return \app\models\RegistroVisita::find()->where(['visita_id' => $this->id])->count();
+    }
+
+    public function getCupoGeneral() {
+        if (!$this->cupos) return true;
+        // General: Puede usar todos los cupos
+        return $this->getInscritosCount() < $this->cupos;
+    }
+
+    public function getCupoOtros() {
+        if (!$this->cupos) return true;
+        $reservados = $this->reservados ? $this->reservados : 0;
+        // Otros: Se les agota antes, dejando el espacio reservado
+        $limite = max(0, $this->cupos - $reservados); 
+        return $this->getInscritosCount() < $limite;
+    }
+
 }
+

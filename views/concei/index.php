@@ -10,16 +10,12 @@ use yii\grid\GridView;
 /** @var app\models\ConceiSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Conceis';
+$this->title = 'Concei';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="concei-index">
 
     <h1><?= Html::encode($this->title) ?></h1>
-
-    <p>
-        <?= Html::a('Create Concei', ['create'], ['class' => 'btn btn-success']) ?>
-    </p>
 
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
 

@@ -50,7 +50,7 @@ class RegistrationController extends Controller
 				'rules' => [
 					[
 						'allow' => true,
-						'actions' => ['index','view','create','update','delete','mail'],
+						'actions' => ['index','view','create','update','delete','mail','export'],
 						'roles' => ['@'],
 					],
 					[
@@ -85,6 +85,72 @@ class RegistrationController extends Controller
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    //Esta función es para exportar los registros a CSV respetando los filtros de búsqueda que podría hacer el admin
+    public function actionExport()
+    {
+        // Aquí instanciamos el modelo de búsqueda para mantener los filtros del admin
+        $searchModel = new RegistrationSearch();
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+        
+        //Esto es para exportar todos los resultados filtrados
+        $dataProvider->pagination = false;
+        $models = $dataProvider->getModels();
+
+        // Nombre del archivo
+        $filename = 'Registros_' . date('Ymd_His') . '.csv';
+
+        // Usamos un archivo temporal en memoria en lugar de la salida directa
+        $output = fopen('php://temp', 'w');
+        
+        // Escribimos el BOM para que Excel detecte correctamente los acentos (UTF-8)
+        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+
+        // Escribimos los encabezados
+        fputcsv($output, [
+            'ID',
+            'Folio',
+            'Nombre',
+            'Apellido',
+            'Organización/Compañía',
+            'Email',
+            'Teléfono',
+            'Ciudad',
+            'País',
+            'Total a Pagar',
+            'Estado de Pagos',
+            'Confirmado'
+        ]);
+
+        // Escribimos los datos
+        foreach ($models as $model) {
+            fputcsv($output, [
+                $model->id,
+                $model->getFolio(),             
+                $model->first_name,
+                $model->last_name,
+                $model->organization_name,
+                $model->email,
+                $model->business_phone,
+                $model->city,
+                $model->country,
+                $model->total_amount,
+                $model->estadoPagos(),         
+                $model->confirmado ? 'Sí' : 'No'
+            ]);
+        }
+
+        // Devolvemos el cursor al inicio y leemos el contenido
+        rewind($output);
+        $csvContent = stream_get_contents($output);
+        fclose($output);
+
+        // Enviamos el archivo usando la respuesta de Yii2
+        return Yii::$app->response->sendContentAsFile($csvContent, $filename, [
+            'mimeType' => 'text/csv',
+            'inline' => false
         ]);
     }
 
@@ -319,6 +385,9 @@ class RegistrationController extends Controller
             // exit;
             // ==========================================
 
+            $registration->talleres = Yii::$app->request->post('talleres_seleccionados', []);
+            $registration->visitas = Yii::$app->request->post('visitas_seleccionadas', []);
+
             $registration->file_payment_receipt = UploadedFile::getInstance($registration,'file_payment_receipt');
 			$pago->comprobante_pago = UploadedFile::getInstance($registration,'file_payment_receipt');
 			
@@ -386,12 +455,12 @@ class RegistrationController extends Controller
                     }
 
                     // agregando registro de talleres seleccionados al registro
-                    $talleresSeleccionados = Yii::$app->request->post('talleres_seleccionados', []);
+                    // $registration->talleres = Yii::$app->request->post('talleres_seleccionados', []);
                     // agregando registro de visitas seleccionadas al registro
-                    $visitasSeleccionadas = Yii::$app->request->post('visitas_seleccionadas', []);
+                    // $registration->visitas = Yii::$app->request->post('visitas_seleccionadas', []);
 
-                    $talleres = $this->generarTalleres($talleresSeleccionados, $registration->id, $pago->id);
-                    $visitas = $this->generarVisitas($visitasSeleccionadas, $registration->id, $pago->id);
+                    $talleres = $this->generarTalleres($registration->talleres, $registration->id, $pago->id);
+                    $visitas = $this->generarVisitas($registration->visitas, $registration->id, $pago->id);
 
                     $pago->generarConcepto(
                         $registration->getFirstNameCode(), $registration->getLastNameCode(),
@@ -399,10 +468,10 @@ class RegistrationController extends Controller
                         $talleres, $visitas
                     );
 
-                    $registration->talleres_seleccionados = $talleresSeleccionados;
-                    $registration->visitas_seleccionadas = $visitasSeleccionadas;
+                    // $registration->talleres_seleccionados = $registration->talleresPost;
+                    // $registration->visitas_seleccionadas = $registration->visitasPost;
 
-                   // $pago->mount = 0; // O el cálculo real si ya lo tienes
+                    // $pago->mount = 0; // O el cálculo real si ya lo tienes
                     $registration->calculateTotalCost();
                     $pago->mount = $registration->total_amount;
                     
