@@ -556,6 +556,9 @@ class RegistrationController extends Controller
         $registration->invoice_required = (empty($registration->invoice))? 0 : 1;
 
         if ($registration->load(Yii::$app->request->post())) {
+
+            $registration->talleres = Yii::$app->request->post('talleres_seleccionados', []);
+            $registration->visitas = Yii::$app->request->post('visitas_seleccionadas', []);
             
             if( isset( $registration->change_file_payment_receipt[0] ) && $registration->change_file_payment_receipt[0] === '1' )
                 $registration->file_payment_receipt = UploadedFile::getInstance($registration,'file_payment_receipt');
@@ -588,57 +591,130 @@ class RegistrationController extends Controller
             
             if($valid)
             {
-                if($registration->save())
-                {
-                    $isSaved = true;
-                    if($registration->invoice_required)
-                    {
+                // NUEVO: actualizacion de registro con nuestro nuevo sistema de pagos
+                $transaction = Yii::$app->db->beginTransaction();
+                try {
+
+                    if (!$registration->save()) {
+                        throw new \Exception('No se pudo actualizar el registro principal. Detalles: ' . json_encode($registration->getErrors()));
+                    }
+
+                    if ($registration->invoice_required) {
                         $invoice->registration_id = $registration->id;
-                        $isSaved = $isSaved && $invoice->save();
+                        if (!$invoice->save()) {
+                            throw new \Exception('No se pudo guardar la información de la factura. Detalles: ' . json_encode($invoice->getErrors()));
+                        }
                     }
 
                     // INICIO DEL BLINDAJE DE TALLERES Y VISITAS
                     // ==========================================
-                    if ($isSaved) {
-                        // 1. Obtenemos lo que el usuario YA tiene registrado en la BD
-                        $talleresPagados = RegistroTaller::find()->select('taller_id')->where(['registration_id' => $registration->id])->column();
-                        $visitasPagadas  = RegistroVisita::find()->select('visita_id')->where(['registration_id' => $registration->id])->column();
+                    
+                    // Obtenemos lo que el usuario YA tiene registrado en la BD
+                    $talleresPagados = RegistroTaller::find()->select('taller_id')->where(['registration_id' => $registration->id])->column();
+                    $visitasPagadas  = RegistroVisita::find()->select('visita_id')->where(['registration_id' => $registration->id])->column();
 
-                        // 2. Obtenemos lo que viene del formulario (POST)
-                        $talleresPost = Yii::$app->request->post('talleres_seleccionados', []);
-                        $visitasPost  = Yii::$app->request->post('visitas_seleccionadas', []);
+                    // Obtenemos lo que viene del formulario (POST)
+                    $talleresPost = Yii::$app->request->post('talleres_seleccionados', []);
+                    $visitasPost  = Yii::$app->request->post('visitas_seleccionadas', []);
 
-                        // 3. LA MAGIA: Comparamos y nos quedamos ÚNICAMENTE con los IDs nuevos.
-                        $nuevosTalleres = array_diff($talleresPost, $talleresPagados);
-                        $nuevasVisitas  = array_diff($visitasPost, $visitasPagadas);
+                    // Comparamos y nos quedamos ÚNICAMENTE con los IDs nuevos.
+                    $nuevosTalleres = array_diff($talleresPost, $talleresPagados);
+                    $nuevasVisitas  = array_diff($visitasPost, $visitasPagadas);
 
-                        // 4. Si realmente hay talleres o visitas nuevas, generamos un NUEVO pago
-                        if (!empty($nuevosTalleres) || !empty($nuevasVisitas)) {
-                            
-                            $nuevoPago = new Pago();
-                            $nuevoPago->registration_id = $registration->id;
-                            $nuevoPago->estado = 'No Verificado';
-                            
-                            // Si subió un nuevo comprobante para estos nuevos talleres, lo asignamos
-                            if (isset($registration->change_file_payment_receipt[0]) && $registration->change_file_payment_receipt[0] === '1') {
-                                $nuevoPago->comprobante_pago = $registration->file_payment_receipt;
-                            }
-
-                            if ($nuevoPago->save(false)) {
-                                // Reutilizamos tus funciones generarTalleres y generarVisitas
-                                if (!empty($nuevosTalleres)) {
-                                    $this->generarTalleres($nuevosTalleres, $registration->id, $nuevoPago->id);
-                                }
-                                if (!empty($nuevasVisitas)) {
-                                    $this->generarVisitas($nuevasVisitas, $registration->id, $nuevoPago->id);
-                                }
-                            }
+                    // Si realmente hay talleres o visitas nuevas, generamos un NUEVO pago
+                    if (!empty($nuevosTalleres) || !empty($nuevasVisitas)) {
+                        
+                        $nuevoPago = new Pago();
+                        $nuevoPago->registration_id = $registration->id;
+                        $nuevoPago->estado = 'No Verificado';
+                        
+                        // Si subió un nuevo comprobante para estos nuevos talleres, lo asignamos
+                        if (isset($registration->change_file_payment_receipt[0]) && $registration->change_file_payment_receipt[0] === '1') {
+                            $nuevoPago->comprobante_pago = $registration->file_payment_receipt;
                         }
+
+                        // Guardamos el nuevo pago
+                        if (!$nuevoPago->save(false)) {
+                            throw new \Exception('No se pudo generar el nuevo registro de pago para los talleres/visitas adicionales.');
+                        }
+
+                        // Reutilizamos tus funciones para insertar en las tablas relacionales
+                        if (!empty($nuevosTalleres)) {
+                            // Nota: Asumo que generarTalleres hace sus propios inserts o arroja excepciones si falla.
+                            $this->generarTalleres($nuevosTalleres, $registration->id, $nuevoPago->id);
+                        }
+                        if (!empty($nuevasVisitas)) {
+                            $this->generarVisitas($nuevasVisitas, $registration->id, $nuevoPago->id);
+                        }
+                        
+                        // (Opcional) Si necesitas recalcular el costo o actualizar el monto del nuevo pago, hazlo aquí
+                        // $nuevoPago->mount = ...;
+                        // $nuevoPago->save();
                     }
                     // FIN DEL BLINDAJE
-                    if($isSaved)
-                        return $this->redirect(['view', 'id' => $registration->id]);
+
+                    // Si llegamos hasta aquí sin que nada truene, confirmamos los cambios en la BD
+                    $transaction->commit();
+                    
+                    Yii::$app->session->setFlash('success', 'Registration updated successfully.');
+                    return $this->redirect(['view', 'id' => $registration->id]);
+
+                } catch (\Throwable $e) {
+                    Yii::error("Error al actualizar Registration/Invoice: " . $e->getMessage() . "\n" . $e->getTraceAsString(), __METHOD__);
+                    Yii::$app->session->setFlash('error', 'An unexpected error occurred while updating your registration. Please try again later or contact support.');
+                    return $this->redirect(['update', 'id' => $registration->id, 'token' => $registration->token]);
                 }
+                // if($registration->save())
+                // {
+                //     $isSaved = true;
+                //     if($registration->invoice_required)
+                //     {
+                //         $invoice->registration_id = $registration->id;
+                //         $isSaved = $isSaved && $invoice->save();
+                //     }
+
+                //     // INICIO DEL BLINDAJE DE TALLERES Y VISITAS
+                //     // ==========================================
+                //     if ($isSaved) {
+                //         // 1. Obtenemos lo que el usuario YA tiene registrado en la BD
+                //         $talleresPagados = RegistroTaller::find()->select('taller_id')->where(['registration_id' => $registration->id])->column();
+                //         $visitasPagadas  = RegistroVisita::find()->select('visita_id')->where(['registration_id' => $registration->id])->column();
+
+                //         // 2. Obtenemos lo que viene del formulario (POST)
+                //         $talleresPost = Yii::$app->request->post('talleres_seleccionados', []);
+                //         $visitasPost  = Yii::$app->request->post('visitas_seleccionadas', []);
+
+                //         // 3. LA MAGIA: Comparamos y nos quedamos ÚNICAMENTE con los IDs nuevos.
+                //         $nuevosTalleres = array_diff($talleresPost, $talleresPagados);
+                //         $nuevasVisitas  = array_diff($visitasPost, $visitasPagadas);
+
+                //         // 4. Si realmente hay talleres o visitas nuevas, generamos un NUEVO pago
+                //         if (!empty($nuevosTalleres) || !empty($nuevasVisitas)) {
+                            
+                //             $nuevoPago = new Pago();
+                //             $nuevoPago->registration_id = $registration->id;
+                //             $nuevoPago->estado = 'No Verificado';
+                            
+                //             // Si subió un nuevo comprobante para estos nuevos talleres, lo asignamos
+                //             if (isset($registration->change_file_payment_receipt[0]) && $registration->change_file_payment_receipt[0] === '1') {
+                //                 $nuevoPago->comprobante_pago = $registration->file_payment_receipt;
+                //             }
+
+                //             if ($nuevoPago->save(false)) {
+                //                 // Reutilizamos tus funciones generarTalleres y generarVisitas
+                //                 if (!empty($nuevosTalleres)) {
+                //                     $this->generarTalleres($nuevosTalleres, $registration->id, $nuevoPago->id);
+                //                 }
+                //                 if (!empty($nuevasVisitas)) {
+                //                     $this->generarVisitas($nuevasVisitas, $registration->id, $nuevoPago->id);
+                //                 }
+                //             }
+                //         }
+                //     }
+                //     // FIN DEL BLINDAJE
+                //     if($isSaved)
+                //         return $this->redirect(['view', 'id' => $registration->id]);
+                // }
             }
         } 
         
@@ -805,14 +881,12 @@ class RegistrationController extends Controller
                                 // Fin de lo nuevo
 
                                 // Opcional: Generar el concepto del nuevo pago como lo haces en actionSubmit
-                                /*
                                 $nuevoPago->generarConcepto(
                                     $registration->getFirstNameCode(), $registration->getLastNameCode(),
                                     $registration->getRegistrationTypeCode(),
                                     $talleresGenerados ?? [], $visitasGeneradas ?? []
                                 );
                                 $nuevoPago->save(false);
-                                */
                             }
                         }
                     }

@@ -109,20 +109,20 @@ class Registration extends \yii\db\ActiveRecord
                 // 	return true;
                 // }
                 if ($model->registration_type_id == 1 || $model->registration_type_id == 12) {
-                return true;
+                    return true;
                 }
 
                 // 2. Tipos de registro condicionales (17 y 18)
                 if ($model->registration_type_id == 18 || $model->registration_type_id == 17) {
-                // Usamos las propiedades que capturan el POST (arreglos de IDs)
-                $tCount = is_array($model->talleres) ? count($model->talleres) : 0;
-                $vCount = is_array($model->visitas) ? count($model->visitas) : 0;
-                $totalExtras = $tCount + $vCount;
+                    // Usamos las propiedades que capturan el POST (arreglos de IDs)
+                    $tCount = is_array($model->talleres) ? count($model->talleres) : 0;
+                    $vCount = is_array($model->visitas) ? count($model->visitas) : 0;
+                    $totalExtras = $tCount + $vCount;
 
-                $gratis = ($model->registration_type_id == 17) ? 0 : 1;
-                //   echo $gratis. " gratis, ".$totalExtras." extras.";
-                //   exit;
-                return $totalExtras > $gratis;
+                    $gratis = ($model->registration_type_id == 17) ? 0 : 1;
+                    //   echo $gratis. " gratis, ".$totalExtras." extras.";
+                    //   exit;
+                    return $totalExtras > $gratis;
                 }
                 return false;
                 },
@@ -151,29 +151,21 @@ class Registration extends \yii\db\ActiveRecord
                 'when' => function ($model) {
                     
                 if ($model->payment_type != 2) { return false; }
-                // ==========================================
-                // PARA DEPURACIÓN: Congelamos la pantalla
-                // echo "<h2 style='color:red;'>DATOS RECIBIDOS EN EL POST:</h2>";
-                // echo "<pre>"; 
-                // print_r(Yii::$app->request->post()); 
-                // echo "</pre>"; 
-                // exit;
-                // ==========================================
-                // 1. Tipos de registro que SIEMPRE requieren pago
+                    // 1. Tipos de registro que SIEMPRE requieren pago
                 if ($model->registration_type_id == 1 || $model->registration_type_id == 12) {
-                return true;
+                    return true;
                 }
 
                 // 2. Tipos de registro condicionales (17 y 18)
                 if ($model->registration_type_id == 18 || $model->registration_type_id == 17) {
-                // Usamos las propiedades que capturan el POST (arreglos de IDs)
-                $tCount = is_array($model->talleres) ? count($model->talleres) : 0;
-                $vCount = is_array($model->visitas) ? count($model->visitas) : 0;
-                $totalExtras = $tCount + $vCount;
+                    // Usamos las propiedades que capturan el POST (arreglos de IDs)
+                    $tCount = is_array($model->talleres) ? count($model->talleres) : 0;
+                    $vCount = is_array($model->visitas) ? count($model->visitas) : 0;
+                    $totalExtras = $tCount + $vCount;
 
-                $gratis = ($model->registration_type_id == 17) ? 0 : 1;
-                
-                return $totalExtras > $gratis;
+                    $gratis = ($model->registration_type_id == 17) ? 0 : 1;
+                    
+                    return $totalExtras > $gratis;
                 }
 
                 // 3. Cualquier otro caso (o si no se cumple lo anterior)
@@ -197,6 +189,18 @@ class Registration extends \yii\db\ActiveRecord
                                 return false;
                             }',
                 'except' => ['Update'],
+            ],
+            [
+                ['file_payment_receipt'],
+                'file',
+                'skipOnEmpty' => true,
+                'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx, zip',
+                'when' => function ($model) {
+                    $tCount = is_array($model->talleres) ? count($model->talleres) : 0;
+                    $vCount = is_array($model->visitas) ? count($model->visitas) : 0;
+                    return ($tCount + $vCount) > 0;
+                },
+                'on' => 'Update',
             ],
             [
                 ['registration_code'],
@@ -504,7 +508,7 @@ class Registration extends \yii\db\ActiveRecord
    case 1: return "RG";
    case 12: return "RE";
    case 17: return "RU";
-   case 16: return "";
+   case 18: return "";
   }
   return "XX";
  }

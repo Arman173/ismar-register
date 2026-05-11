@@ -262,53 +262,12 @@ $this->registerJsFile('@web/js/registrationForm.js');
 
     <h3><?= Html::encode('Talleres y Visitas Industriales') ?></h3>
 
-	<?php /*
-	// Obtenemos los modelos actuales del proveedor de datos
-	$modelosTalleres = $dataProviderTalleres->getModels();
-	$modelosVisitas = $dataProviderVisitas->getModels();
-
-	$talleresJs = [];
-	foreach ($modelosTalleres as $taller) {
-		// Usamos el ID del taller como llave (key) del arreglo para buscarlo fácil en JS
-		$talleresJs[] = [
-			'id'     => $taller->id,
-			'nombre'   => $taller->nombre,
-			'descripcion' => $taller->descripcion,
-			'fecha'   => $taller->fecha,
-			'horario'  => $taller->horario,
-			'modalidad'=> $taller->modalidad,
-			'tallerista' => $taller->tallerista
-		];
-	}
-	$visitasJs = [];
-	foreach ($modelosVisitas as $visita) {
-		$visitasJs[] = [
-			'id'     => $visita->id,
-			'nombre'   => $visita->nombre,
-			'descripcion' => $visita->descripcion,
-			'fecha'   => $visita->fecha,
-			'horario'  => $visita->horario,
-			'modalidad'=> $visita->modalidad
-		];
-	}
-
-	$jsonTalleres = Json::encode($talleresJs);
-	$jsonVisitas = Json::encode($visitasJs);
-
-	$this->registerJs("
-		window.datosTalleres = {$jsonTalleres};
-		window.datosVisitas = {$jsonVisitas};
-	", \yii\web\View::POS_HEAD); // POS_HEAD asegura que cargue antes que nuestro JS externo
-	*/?>
-
     <?php
-    // Obtenemos los modelos actuales del proveedor de datos
+    // Obtenemos los modelos actuales
     $modelosTalleres = $dataProviderTalleres->getModels();
     $modelosVisitas = $dataProviderVisitas->getModels();
 
-    // ==========================================
-    // 1. Obtenemos los IDs que el usuario ya tiene registrados
-    // ==========================================
+    // Obtenemos los IDs que el usuario ya tiene registrados
     $talleresPagadosIds = [];
     $visitasPagadasIds = [];
     
@@ -401,17 +360,23 @@ $this->registerJsFile('@web/js/registrationForm.js');
         </p>
     </div>
 
-    <!-- ========================================== -->
-    <!-- INTERFAZ DE TALLERES                       -->
-    <!-- ========================================== -->
+    <!--INTERFAZ DE TALLERES-->
+    
     <?php if ($registration->scenario == 'Update' && !empty($talleresPagadosIds)): ?>
         <div class="alert alert-info" style="background-color: #e8f4f8; border-color: #bce8f1; color: #31708f; margin-bottom: 10px;">
             <h5 style="margin-top: 0;"><b><span class="glyphicon glyphicon-ok-circle"></span> Talleres ya adquiridos y pagados:</b></h5>
-            <ul>
+            <ul style="list-style-type: none; padding-left: 0;">
                 <?php 
                 foreach ($modelosTalleres as $taller) {
                     if (in_array($taller->id, $talleresPagadosIds)) {
-                        echo "<li>" . Html::encode($taller->nombre) . "</li>";
+                        echo "<li style='margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed #bce8f1;'>";
+                        echo "<strong style='font-size: 1.05em;'>" . Html::encode($taller->nombre) . "</strong><br>";
+                        echo "<span style='font-size: 0.9em; color: #4e86a0;'>";
+                        echo "<span class='glyphicon glyphicon-calendar'></span> " . Html::encode($taller->fecha) . " &nbsp;&nbsp;|&nbsp;&nbsp; ";
+                        echo "<span class='glyphicon glyphicon-time'></span> " . Html::encode($taller->horario) . " &nbsp;&nbsp;|&nbsp;&nbsp; ";
+                        echo "<span class='glyphicon glyphicon-map-marker'></span> Modalidad: " . Html::encode($taller->modalidad);
+                        echo "</span>";
+                        echo "</li>";
                     }
                 }
                 ?>
@@ -432,7 +397,6 @@ $this->registerJsFile('@web/js/registrationForm.js');
         </button>
     </div>
 
-    <!-- El Modal de Talleres se queda igual... -->
     <div id="modal-talleres" class="modal-fs-container oculto">
         <div class="modal-fs-header">
             <h4 class="modal-fs-title">Selección de Talleres</h4>
@@ -456,11 +420,17 @@ $this->registerJsFile('@web/js/registrationForm.js');
     <?php if ($registration->scenario == 'Update' && !empty($visitasPagadasIds)): ?>
         <div class="alert alert-info" style="background-color: #fcf8e3; border-color: #faebcc; color: #8a6d3b; margin-bottom: 10px;">
             <h5 style="margin-top: 0;"><b><span class="glyphicon glyphicon-briefcase"></span> Visitas ya adquiridas y pagadas:</b></h5>
-            <ul>
+            <ul style="list-style-type: none; padding-left: 0;">
                 <?php 
                 foreach ($modelosVisitas as $visita) {
                     if (in_array($visita->id, $visitasPagadasIds)) {
-                        echo "<li>" . Html::encode($visita->nombre) . "</li>";
+                        echo "<li style='margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed #faebcc;'>";
+                        echo "<strong style='font-size: 1.05em;'>" . Html::encode($visita->nombre) . "</strong><br>";
+                        echo "<span style='font-size: 0.9em; color: #a6894c;'>";
+                        echo "<span class='glyphicon glyphicon-calendar'></span> " . Html::encode($visita->fecha) . " &nbsp;&nbsp;|&nbsp;&nbsp; ";
+                        echo "<span class='glyphicon glyphicon-time'></span> " . Html::encode($visita->horario);
+                        echo "</span>";
+                        echo "</li>";
                     }
                 }
                 ?>
@@ -481,7 +451,6 @@ $this->registerJsFile('@web/js/registrationForm.js');
         </button>
     </div>
 
-    <!-- El Modal de Visitas se queda igual... -->
     <div id="modal-visitas" class="modal-fs-container oculto">
         <div class="modal-fs-header">
             <h4 class="modal-fs-title">Selección de Visitas Industriales</h4>
@@ -792,7 +761,7 @@ $this->registerJsFile('@web/js/registrationForm.js');
 
 	@media screen and (max-width: 767px) {
 		
-		/* Forzamos a la tabla a comportarse como bloques en lugar de una cuadrícula */
+		/* Forzamos a la tabla a comportarse como bloque */
 		#fee_type table, 
 		#fee_type thead, 
 		#fee_type tbody, 
@@ -863,7 +832,6 @@ $this->registerJsFile('@web/js/registrationForm.js');
 </style>
 
 <?php
-// SOLUCIÓN: RECUPERAR DATOS SELECCIONADOS AL FALLAR LA VALIDACIÓN
 
 // Recuperar el Tipo de Registro seleccionado previamente (o 1 por defecto)
 $tipoSeleccionado = $registration->registration_type_id ? $registration->registration_type_id : 1;
@@ -926,7 +894,5 @@ JS;
 // Registramos el script al final de la página
 $this->registerJs($jsRecuperarChecks, \yii\web\View::POS_END);
 ?>
-
-
 
 <!-- <script src="../web/js/form.js"></script> -->

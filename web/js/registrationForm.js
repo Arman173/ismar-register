@@ -72,7 +72,6 @@ function cambioTipoRegistro(event) {
 function mostrarModalDetalles(titulo, detalles, tallerista = null){
 
     detalles = detalles || "";
-    // tallerista = tallerista || "";
 
     let urlRegex = /(https?:\/\/[^\s<]+)/g;
     let links = detalles.match(urlRegex);
@@ -111,7 +110,6 @@ function mostrarModalDetalles(titulo, detalles, tallerista = null){
 
 }
 
-// --- NUEVO CODIGO: FUNCION DEL CONCEPTO ---
 function calculateConceptoPago() {
     var lastName = $('#registration-last_name').val() ? $('#registration-last_name').val().trim().toUpperCase() : '';
     var firstName = $('#registration-first_name').val() ? $('#registration-first_name').val().trim().toUpperCase() : '';
@@ -184,31 +182,35 @@ function actualizarConceptoPago() {
 }
 
 function calculateTotal() {
-    // Cargamos los precios de los tipos de registro igualment
-    // inyectados por PHP en una variable global.
     const preciosRegistros = window.typePrices;
     
     var total = 0;
     var baseCost = 0;
-    var extrasTotalCost = 0; // Costo de los talleres/visitas que SÍ se cobran
+    var extrasTotalCost = 0; 
     const workshopCost = parseFloat(window.costo_taller);
     
-    // 1. Obtener ID del tipo de registro
-    const selectedTypeId = $("[name='Registration[registration_type_id]']").val();
+    // Obtener ID del tipo de registro (más seguro)
+    const radioChecked = document.querySelector('input[name="kvradio"]:checked');
+    const selectedTypeId = radioChecked ? radioChecked.value : $("#registration-registration_type_id").val();
     
-    // Costo base según Early Bird
-    console.log(preciosRegistros[selectedTypeId]);
-    if (selectedTypeId && preciosRegistros[selectedTypeId]) {
-        if (window.preventa) {
-            baseCost = parseFloat(preciosRegistros[selectedTypeId].early) || 0;
+    // MODIFICACIÓN: Si NO es un nuevo registro, el costo base es $0
+    if (window.es_nuevo_registro) {
+        // Costo base según Early Bird
+        if (selectedTypeId && preciosRegistros[selectedTypeId]) {
+            if (window.preventa) {
+                baseCost = parseFloat(preciosRegistros[selectedTypeId].early) || 0;
+            } else {
+                baseCost = parseFloat(preciosRegistros[selectedTypeId].late) || 0;
+            }
         } else {
-            baseCost = parseFloat(preciosRegistros[selectedTypeId].late) || 0;
+            baseCost = 0;
         }
     } else {
+        // ES ACTUALIZAR: El ticket base ya se pagó, el costo a sumar es 0
         baseCost = 0;
     }
 
-    // 2. Contar de AMBAS tablas
+    // Contar de AMBAS tablas (solo cuenta los checkboxes marcados, es decir, lo NUEVO)
     const talleresContainer = document.getElementById('checkbox-talleres-container');
     const visitasContainer = document.getElementById('checkbox-visitas-container');
 
@@ -216,27 +218,34 @@ function calculateTotal() {
     const selectedVisitasCount = visitasContainer ? visitasContainer.querySelectorAll('.rcg-checkbox:checked').length : 0;
     var totalExtrasCount = selectedTalleresCount + selectedVisitasCount;
     
-    // 3. Lógica de Cobro de Extras (Talleres + Visitas)
+    // Lógica de Cobro de Extras (Talleres + Visitas)
     var paidExtras = 0;
     var typeStr = String(selectedTypeId);
     
     if (totalExtrasCount > 0) {
-        if (typeStr === '1' || typeStr === '12' || typeStr === '18') {
-            // General (1) y Estudiante (12): 1 Gratis en total (sea taller o visita)
-            paidExtras = Math.max(0, totalExtrasCount - 1);
-        } else if (typeStr === '17') {
-            // UADY (17): Paga todos
-            paidExtras = totalExtrasCount;
+        if (window.es_nuevo_registro) {
+            if (typeStr === '1' || typeStr === '12' || typeStr === '18') {
+                paidExtras = Math.max(0, totalExtrasCount - 1);
+            } else {
+                // UADY u otros: Paga todo extra
+                paidExtras = totalExtrasCount; 
+            }
         } else {
-            // Default: Paga todos
-            paidExtras = totalExtrasCount; 
+            paidExtras = totalExtrasCount;
         }
     }
     
     extrasTotalCost = paidExtras * workshopCost;
     total = baseCost + extrasTotalCost;
 
-    // 4. Actualizar vista en la tabla
+    console.log(total);
+    // if (total > 0) {
+    //     console.log("si hay que pagar!");
+    //     $("input[name='Registration[payment_type]']:checked").show();
+    // } else {
+    //     $("input[name='Registration[payment_type]']:checked").hide()
+    // }
+
     $('#display-base-cost').text('$' + baseCost.toFixed(2));
     
     // Fila Talleres
@@ -256,12 +265,6 @@ function calculateTotal() {
     
     actualizarConceptoPago();
     toggleFilePaymentReceipt();
-
-    if (total === 0) {
-        $('#instrucciones-pago').hide(); 
-    } else {
-        $('#instrucciones-pago').show(); 
-    }
 }
 
 /* FUNCION PARA ABRIR Y CERRAR MODALS
@@ -269,7 +272,7 @@ function calculateTotal() {
     modals que muestran a los checkboxes de los tallers y visitas
  */
 function inicializarModals() {
-    // 1. Abrir Modal
+    // Abrir Modal
     const botonesAbrir = document.querySelectorAll('.btn-abrir-modal-fs');
     
     botonesAbrir.forEach(function(boton) {
@@ -284,7 +287,7 @@ function inicializarModals() {
         });
     });
 
-    // 2. Cerrar Modal
+    // Cerrar Modal
     const botonesCerrar = document.querySelectorAll('.btn-cerrar-modal-fs');
     
     botonesCerrar.forEach(function(boton) {
@@ -340,6 +343,108 @@ function hideRegistrationCode()
 // New code. Rodrigo
 function toggleFilePaymentReceipt()
 {
+    var paymentType = $("input[name='Registration[payment_type]']:checked").val();
+    
+    // Leemos el radio button o el input oculto
+    var radioChecked = document.querySelector('input[name="kvradio"]:checked');
+    var selectedTypeId = radioChecked ? radioChecked.value : $("#registration-registration_type_id").val();
+    
+    // Contamos cuántos extras nuevos seleccionó
+    var tText = document.getElementById('contador-talleres') ? document.getElementById('contador-talleres').textContent : "0";
+    var vText = document.getElementById('contador-visitas') ? document.getElementById('contador-visitas').textContent : "0";
+    
+    var tCount = parseInt(tText) || 0;
+    var vCount = parseInt(vText) || 0;
+    var totalExtrasCount = tCount + vCount;
+
+    let requierePago = false;
+
+    // Evaluamos si debe pagar dependiendo de si es registro nuevo o actualización
+    if (window.es_nuevo_registro) {
+        if (selectedTypeId == "1" || selectedTypeId == "12") {
+            requierePago = true;
+        } else if (selectedTypeId == "18") {
+            requierePago = totalExtrasCount > 1;
+        } else if (selectedTypeId == "17") {
+            requierePago = totalExtrasCount > 0; 
+        }
+    } else {
+        // ES LA VISTA DE ACTUALIZAR: Solo paga si agrega ALGO NUEVO
+        requierePago = totalExtrasCount > 0;
+    }
+
+    // APLICAMOS LOS CAMBIOS VISUALES
+    if (requierePago) {
+        // 1. Mostrar todo el bloque de pago
+        $('#instrucciones-pago').show();
+        
+        // 2. Mostrar u ocultar el input del recibo según si eligió transferencia (2)
+        if (paymentType == "2") {
+            showFilePaymentReceipt();
+        } else {
+            hideFilePaymentReceipt();
+        }
+    } else {
+        // 1. Ocultar TODO el bloque de pago porque el costo es $0
+        $('#instrucciones-pago').hide();
+        
+        // 2. Limpiar selecciones previas por seguridad
+        $("input[name='Registration[payment_type]']").prop('checked', false); 
+        hideFilePaymentReceipt();
+    }
+}
+
+// New code. Rodrigo
+function toggleFilePaymentReceipt()
+{
+    var paymentType = $("input[name='Registration[payment_type]']:checked").val();
+    
+    var radioChecked = document.querySelector('input[name="kvradio"]:checked');
+    var selectedTypeId = radioChecked ? radioChecked.value : $("#registration-registration_type_id").val();
+    
+    var tText = document.getElementById('contador-talleres') ? document.getElementById('contador-talleres').textContent : "0";
+    var vText = document.getElementById('contador-visitas') ? document.getElementById('contador-visitas').textContent : "0";
+    
+    var tCount = parseInt(tText) || 0;
+    var vCount = parseInt(vText) || 0;
+    var totalExtrasCount = tCount + vCount;
+
+    let requierePago = false;
+
+    if (window.es_nuevo_registro) {
+        if (selectedTypeId == "1" || selectedTypeId == "12") {
+            requierePago = true;
+        } else if (selectedTypeId == "18") {
+            requierePago = totalExtrasCount > 1;
+        } else if (selectedTypeId == "17") {
+            requierePago = totalExtrasCount > 0; 
+        }
+    } else {
+        requierePago = totalExtrasCount > 0;
+    }
+
+    if (requierePago) {
+        $('#instrucciones-pago').show();
+        $('.field-registration-payment_type').show();
+        
+        if (paymentType == "2") {
+            showFilePaymentReceipt();
+        } else {
+            hideFilePaymentReceipt();
+        }
+    } else {
+        $('#instrucciones-pago').hide();
+        $('.field-registration-payment_type').hide();
+        
+        $("input[name='Registration[payment_type]']").prop('checked', false); 
+        hideFilePaymentReceipt();
+    }
+}
+
+/*
+// New code. Rodrigo
+function toggleFilePaymentReceipt()
+{
     var paymentType = $("[name='Registration[payment_type]']:checked").val();
     const selectedTypeId = $("[name='Registration[registration_type_id]']").val();
     
@@ -362,7 +467,7 @@ function toggleFilePaymentReceipt()
     } else {
         hideFilePaymentReceipt();
     }
-}
+} */
 
 function toggleRegistrationCode()
 {
@@ -661,7 +766,6 @@ window.addEventListener('load', function() {
                                 </button>`;
                     },
                     onAction: function(model) {
-                        //Modificadoooooo puede fallaaar
                         mostrarModalDetalles(model.nombre, model.descripcion, null);
                     }
 
