@@ -17,7 +17,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <p>
         <?= Html::a(Yii::t('app', 'Create Registration'), ['create'], ['class' => 'btn btn-success']) ?>
-        <?= Html::a('Exportar a CSV', array_merge(['export'], Yii::$app->request->queryParams), [
+        <?= Html::a('Exportar a CSV', array_merge(['export-resume'], Yii::$app->request->queryParams), [
         'class' => 'btn btn-info', 
         'data-pjax' => 0, 
         //'target' => '_blank'

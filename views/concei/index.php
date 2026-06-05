@@ -27,11 +27,11 @@ $this->params['breadcrumbs'][] = $this->title;
 
             'id',
             'titulo',
-            'costo_preventa_taller',
-            'costo_preventa_visita',
-            'costo_taller',
+            // 'costo_preventa_taller',
+            // 'costo_preventa_visita',
+            // 'costo_taller',
             //'costo_visita',
-            //'fin_preventa',
+            'fin_preventa',
             [
                 'class' => ActionColumn::className(),
                 'urlCreator' => function ($action, Concei $model, $key, $index, $column) {

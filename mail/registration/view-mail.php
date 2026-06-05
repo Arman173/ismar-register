@@ -6,11 +6,16 @@ use app\models\Visita;
 use app\models\RegistroTaller;
 use app\models\RegistroVisita;
 use app\models\Concei;
+use app\models\Pago;
 
 /* @var $this yii\web\View */
 /* @var $model app\models\Registration */
+/* @var $pago app\models\Pago */ // Esta la envía tu controlador al rechazar
 
 $estadoPago = $model->estadoPagos(); 
+
+// Validamos si este correo se está enviando desde el botón de Rechazar
+$esRechazo = isset($pago) && $pago->estado === 'rechazado';
 ?>
 
 <div class="registration-view">
@@ -18,9 +23,8 @@ $estadoPago = $model->estadoPagos();
         <img src="https://i.postimg.cc/tJs083Gk/logo-concei.jpg" alt="Logo ConCEI" style="max-width: 250px; height: auto;">
     </div>
 
-    <?php if ($estadoPago === 'rechazado'): ?>
+    <?php if ($esRechazo): ?>
         
-        <!-- ESTADO RECHAZADO -->
         <div style="padding: 15px; margin-bottom: 20px; border: 1px solid #cccccc; border-radius: 4px; background-color: #f9f9f9; color: #333333;">
             <h2 style="margin-top: 0; color: #222222;">Problema con su comprobante - ConCEI 3</h2>
             <p>Estimado/a <?= Html::encode($model->fullName) ?>,</p>
@@ -29,20 +33,18 @@ $estadoPago = $model->estadoPagos();
 
     <?php else: ?>
         
-        <!-- ESTADO CONFIRMADO (Registro nuevo o resubida -> En revisión) -->
         <div style="padding: 15px; margin-bottom: 20px; border: 1px solid #cccccc; border-radius: 4px; background-color: #f9f9f9; color: #333333;">
             <h2 style="margin-top: 0; color: #222222;">Registro confirmado - ConCEI 3</h2>
             <p>Estimado/a <?= Html::encode($model->fullName) ?>,</p>
             <p>Gracias por registrarse al tercer Congreso de Ciencias Exactas e Ingenierías 3, que se llevará a cabo en Mérida, México, del 7 al 9 de octubre de 2026 en el Campus de Ciencias Exactas e Ingenierías (CCEI) de la Universidad Autónoma de Yucatán.</p>
-          
         </div>
 
-        <?php endif; ?>
+    <?php endif; ?>
 
     <div style="text-align: center; margin: 20px 0;">
-        <p>Para acceder a sus datos o si quiere agregar talleres o visitas puede acceder a su panel de usuario en el siguiente enlace:</p>
+        <p>Para acceder a sus datos registrados o si quiere agregar talleres o visitas puede acceder a su panel de usuario en el siguiente enlace:</p>
         <a href="<?= Url::to(['registration/view', 'id' => $model->id], true) ?>" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
-            Ver Datos de Registro: 
+            Ver panel de usuario: 
         </a>
     </div>
 
@@ -54,7 +56,7 @@ $estadoPago = $model->estadoPagos();
         ?>
     </p>
 
-    <h3>Información registrada</h3>
+    <h3><?= $esRechazo ? 'Detalle de lo que se le rechazó' : 'Información registrada' ?></h3>
 
     <table style="border: solid 2px black; width: 100%; border-collapse: collapse; font-family: Arial, sans-serif;">
         <thead>
@@ -77,19 +79,42 @@ $estadoPago = $model->estadoPagos();
                 $itemsCobrados = 0; 
                 
                 $costoGafete = $esPreventa ? $model->registrationType->cost_early_bird : $model->registrationType->cost_late;
+
+                if ($esRechazo) {
+                    // Si se rechazó, buscamos SOLO lo que pertenece a ese comprobante
+                    $talleres = RegistroTaller::find()->where(['pago_id' => $pago->id])->all();
+                    $visitas  = RegistroVisita::find()->where(['pago_id' => $pago->id])->all();
+                    
+                    // Verificamos si en este comprobante rechazado venía incluido el Gafete
+                    $primerPago = Pago::find()->where(['registration_id' => $model->id])->orderBy(['id' => SORT_ASC])->one();
+                    $mostrarGafete = ($primerPago && $primerPago->id == $pago->id);
+                    
+                    $montoTotal = $pago->mount;
+                    $conceptoFolio = $pago->concepto;
+                } else {
+                    // Si es un correo normal, mostramos todo lo del usuario
+                    $talleres = RegistroTaller::find()->where(['registration_id' => $model->id])->all();
+                    $visitas  = RegistroVisita::find()->where(['registration_id' => $model->id])->all();
+                    $mostrarGafete = true;
+                    
+                    $montoTotal = $model->total_amount;
+                    $conceptoFolio = $model->getConceptoPago();
+                }
             ?>
 
+            <?php if ($mostrarGafete): ?>
             <tr>
                 <td style="padding: 8px; border: solid 1px #ccc;"><?= Html::encode($model->registrationType->name) ?></td>
                 <td style="padding: 8px; border: solid 1px #ccc; text-align: center;">1</td>
                 <td style="padding: 8px; border: solid 1px #ccc; text-align: right;"><?= number_format($costoGafete, 2) ?> MXN</td>
             </tr>
+            <?php endif; ?>
 
-            <?php foreach (RegistroTaller::find()->where(['registration_id' => $model->id])->all() as $rt): ?>
+            <?php foreach ($talleres as $rt): ?>
                 <?php 
                     $taller = Taller::findOne($rt->taller_id); 
                     $precioMostrar = $precioTaller;
-                    if ($tieneGratis && $itemsCobrados === 0) {
+                    if ($tieneGratis && $itemsCobrados === 0 && $mostrarGafete) {
                         $precioMostrar = 0; 
                     }
                     $itemsCobrados++;
@@ -101,11 +126,11 @@ $estadoPago = $model->estadoPagos();
                 </tr>
             <?php endforeach; ?>
 
-            <?php foreach (RegistroVisita::find()->where(['registration_id' => $model->id])->all() as $rv): ?>
+            <?php foreach ($visitas as $rv): ?>
                 <?php 
                     $visita = Visita::findOne($rv->visita_id); 
                     $precioMostrar = $precioVisita;
-                    if ($tieneGratis && $itemsCobrados === 0) {
+                    if ($tieneGratis && $itemsCobrados === 0 && $mostrarGafete) {
                         $precioMostrar = 0; 
                     }
                     $itemsCobrados++;
@@ -118,16 +143,16 @@ $estadoPago = $model->estadoPagos();
             <?php endforeach; ?>
 
             <tr>
-                <td colspan="2" style="text-align: right; font-weight: bold; border-top: solid 2px black; padding: 8px;">TOTAL PAGADO:</td>
+                <td colspan="2" style="text-align: right; font-weight: bold; border-top: solid 2px black; padding: 8px;">TOTAL DEL COMPROBANTE:</td>
                 <td style="text-align: right; font-weight: bold; border-top: solid 2px black; padding: 8px;">
-                    <?= number_format($model->total_amount, 2) ?> MXN
+                    <?= number_format($montoTotal, 2) ?> MXN
                 </td>
             </tr>
         </tbody>
     </table>
 
     <p style="margin-top: 20px; font-size: 0.95em; color: #555;">
-        <strong>Tu folio de transferencia asignado fue:</strong> <?= Html::encode($model->getConceptoPago()) ?>
+        <strong>Tu folio de transferencia asignado fue:</strong> <?= Html::encode($conceptoFolio) ?>
     </p>
 
     <?php if (!empty($model->invoice)): ?>

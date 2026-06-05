@@ -3,6 +3,12 @@
 namespace app\controllers;
 
 use Yii;
+// para la descarda de excel del resumen de la base de datos
+use yii\db\Query;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+// modelos a usar en el controlador
 use app\models\Registration;
 use app\models\RegistrationSearch;
 use app\models\RegistrationType;
@@ -50,7 +56,7 @@ class RegistrationController extends Controller
 				'rules' => [
 					[
 						'allow' => true,
-						'actions' => ['index','view','create','update','delete','mail','export'],
+						'actions' => ['index','view','create','update','delete','mail','export', 'export-resume'],
 						'roles' => ['@'],
 					],
 					[
@@ -64,7 +70,7 @@ class RegistrationController extends Controller
                         'allow' => true,
                     ],
                     [
-                        'actions' => ['rechazar-pago', 'view-payment-receipt'],
+                        'actions' => ['rechazar-pago', 'verificar-pago', 'view-payment-receipt'],
                         'allow' => true,
                         'roles' => ['@']
                     ]
@@ -154,6 +160,80 @@ class RegistrationController extends Controller
         ]);
     }
 
+    public function actionExportResume()
+    {
+        // 1. Instanciamos el documento de Excel
+        $spreadsheet = new Spreadsheet();
+        $spreadsheet->removeSheetByIndex(0);
+
+        // 2. Definimos las tablas a exportar
+        $tablesToExport = [
+            'registration'       => 'Registros',
+            'pagos'              => 'Pagos',
+            'talleres'           => 'Talleres',
+            'visitas'            => 'Visitas',
+            'registros_talleres' => 'Registro_Talleres',
+            'registros_visitas'  => 'Registro_Visitas',
+            'registration_type'  => 'Tipos_Registro',
+            'invoice'            => 'Facturacion'
+        ];
+
+        $sheetIndex = 0;
+
+        foreach ($tablesToExport as $tableName => $sheetTitle) {
+            // Instanciamos la hoja correctamente usando la clase importada
+            $worksheet = new Worksheet($spreadsheet, $sheetTitle);
+            $spreadsheet->addSheet($worksheet, $sheetIndex);
+
+            $schema = Yii::$app->db->getTableSchema($tableName);
+            if (!$schema) {
+                continue; 
+            }
+            $columns = $schema->getColumnNames();
+
+            // Escribimos los encabezados
+            $colLetter = 'A';
+            foreach ($columns as $column) {
+                $worksheet->setCellValue($colLetter . '1', strtoupper($column));
+                $worksheet->getStyle($colLetter . '1')->getFont()->setBold(true);
+                $colLetter++;
+            }
+
+            // Consultamos los datos
+            $data = (new Query())->from($tableName)->all();
+
+            // Volcamos los datos
+            $rowNum = 2;
+            foreach ($data as $row) {
+                $colLetter = 'A';
+                foreach ($columns as $column) {
+                    $worksheet->setCellValue($colLetter . $rowNum, $row[$column]);
+                    $colLetter++;
+                }
+                $rowNum++;
+            }
+            
+            // ELIMINAMOS la parte del AutoSize para evitar errores por falta de ext-gd
+
+            $sheetIndex++;
+        }
+
+        $spreadsheet->setActiveSheetIndex(0);
+
+        $filename = 'Resumen_ConCEI_Completo_' . date('Ymd_His') . '.xlsx';
+        $writer = new Xlsx($spreadsheet);
+
+        ob_start();
+        $writer->save('php://output');
+        $excelContent = ob_get_clean();
+
+        return Yii::$app->response->sendContentAsFile($excelContent, $filename, [
+            'mimeType' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'inline' => false
+        ]);
+    }
+
+    
     /**
      * Displays a single Registration model.
      * @param string $id
@@ -463,9 +543,9 @@ class RegistrationController extends Controller
                     $visitas = $this->generarVisitas($registration->visitas, $registration->id, $pago->id);
 
                     $pago->generarConcepto(
-                        $registration->getFirstNameCode(), $registration->getLastNameCode(),
+                        $registration->getLastNameCode(), $registration->getFirstNameCode(),
                         $registration->getRegistrationTypeCode(),
-                        $talleres, $visitas
+                        $registration->talleres, $registration->visitas
                     );
 
                     // $registration->talleres_seleccionados = $registration->talleresPost;
@@ -483,11 +563,14 @@ class RegistrationController extends Controller
                         throw new \Exception("Falló la validación del modelo Pago. Detalles: " . $erroresYii);
                     }
 
+                    $registration->ultimo_pago = $pago->id;
+                    $registration->save(false);
+
                     // Si llegamos hasta aquí, todo fue un éxito
                     $transaction->commit();
                     
                     Yii::$app->session->setFlash('registration-submitted-successfully-mail');
-                    Yii::$app->mailer->compose('registration/view-mail', ['model'=>$registration])
+                    Yii::$app->mailer->compose('registration/view-mail', ['model'=>$registration,'pago'=>$pago])
                         ->setFrom(Yii::$app->params['adminEmail'])
                         ->setTo($registration->email)
                         ->setCc([Yii::$app->params['coordinatorEmail1'],Yii::$app->params['coordinatorEmail2']])
@@ -559,8 +642,10 @@ class RegistrationController extends Controller
 
             $registration->talleres = Yii::$app->request->post('talleres_seleccionados', []);
             $registration->visitas = Yii::$app->request->post('visitas_seleccionadas', []);
-            
-            if( isset( $registration->change_file_payment_receipt[0] ) && $registration->change_file_payment_receipt[0] === '1' )
+
+            //Se comentó el if para la seccion de actualización (registro pendiente), 11/05/2026
+
+            //if( isset( $registration->change_file_payment_receipt[0] ) && $registration->change_file_payment_receipt[0] === '1' )
                 $registration->file_payment_receipt = UploadedFile::getInstance($registration,'file_payment_receipt');
             
             //Nueva línea del CV
@@ -626,10 +711,20 @@ class RegistrationController extends Controller
                         
                         $nuevoPago = new Pago();
                         $nuevoPago->registration_id = $registration->id;
-                        $nuevoPago->estado = 'No Verificado';
+
+                        //Se comentó esto 11/05/2026
+
+                       /*$nuevoPago->estado = 'No Verificado';
                         
                         // Si subió un nuevo comprobante para estos nuevos talleres, lo asignamos
                         if (isset($registration->change_file_payment_receipt[0]) && $registration->change_file_payment_receipt[0] === '1') {
+                            $nuevoPago->comprobante_pago = $registration->file_payment_receipt;
+                        }*/
+
+                        $nuevoPago->estado = 'confirmado'; // Cambiamos a confirmado
+                            
+                        // Asignamos el comprobante directamente si el usuario subió uno
+                        if ($registration->file_payment_receipt) {
                             $nuevoPago->comprobante_pago = $registration->file_payment_receipt;
                         }
 
@@ -647,6 +742,9 @@ class RegistrationController extends Controller
                             $this->generarVisitas($nuevasVisitas, $registration->id, $nuevoPago->id);
                         }
                         
+                        $registration->ultimo_pago = $nuevoPago->id;
+
+                        $registration->save(false);
                         // (Opcional) Si necesitas recalcular el costo o actualizar el monto del nuevo pago, hazlo aquí
                         // $nuevoPago->mount = ...;
                         // $nuevoPago->save();
@@ -738,24 +836,47 @@ class RegistrationController extends Controller
         ]);
     }
 	
-	public function actionUploadPaymentReceipt($id, $token)
+	public function actionUploadPaymentReceipt($id, $pago_id, $token)
 	{
 		$registration = $this->findModel($id);
+        $pago         = Pago::findOne($pago_id);
+        $nuevoPago    = new Pago();
 		$registration->scenario = 'UploadPaymentReceipt';
 		
 		if( $registration->token != $token )
 		{
 			throw new UnauthorizedHttpException("You are not allowed to access this registry");
 		}
+
+        $registros_taller = RegistroTaller::find()->where(['pago_id' => $pago->id])->all();
+        $registros_visita  = RegistroVisita::find()->where(['pago_id' => $pago->id])->all();
+
+        $nuevoPago->attributes = $pago->attributes;
+        $nuevoPago->id = null;
 		
 		if ($registration->load(Yii::$app->request->post())) {
 			$registration->file_payment_receipt = UploadedFile::getInstance($registration,'file_payment_receipt');
+            $nuevoPago->comprobante_pago = UploadedFile::getInstance($registration,'file_payment_receipt');
+            $nuevoPago->estado = 'confirmado';
 			
             $registration->confirmado = 0; // NUEVO: Regresa a revisión al subir nuevo recibo
+            
+            $pago->remplazado = 1; // ya esta remplazado
 
-			if($registration->save())
+			if($pago->save() && $nuevoPago->save())
 			{
-				Yii::$app->mailer->compose('registration/view-mail', ['model'=>$registration])
+                // Relacionamos los registros de talleres y visitas al nuevo pago
+                foreach ($registros_taller as $taller) {
+                    $taller->pago_id = $nuevoPago->id; // Asignamos el ID del nuevo pago
+                    $taller->save(false);
+                }
+                foreach ($registros_visita as $visita) {
+                    $visita->pago_id = $nuevoPago->id; // Asignamos el ID del nuevo pago
+                    $visita->save(false);
+                }
+                $registration->ultimo_pago = $pago->id;
+                $registration->save(false);
+				Yii::$app->mailer->compose('registration/view-mail', ['model'=>$registration, 'pago'=>$pago])
 					->setFrom(Yii::$app->params['adminEmail'])
 					->setTo($registration->email)
 					->setCc([Yii::$app->params['coordinatorEmail1'], Yii::$app->params['coordinatorEmail2'], Yii::$app->params['accountingEmail']])
@@ -791,7 +912,8 @@ class RegistrationController extends Controller
 
         if ($registration->load(Yii::$app->request->post())) {
             
-            if( isset( $registration->change_file_payment_receipt[0] ) && $registration->change_file_payment_receipt[0] === '1' )
+           // Nuevo: 11/05/2026
+           // if( isset( $registration->change_file_payment_receipt[0] ) && $registration->change_file_payment_receipt[0] === '1' )
                 $registration->file_payment_receipt = UploadedFile::getInstance($registration,'file_payment_receipt');
             
             //Nueva línea patra el CV
@@ -852,12 +974,20 @@ class RegistrationController extends Controller
                             
                             $nuevoPago = new Pago();
                             $nuevoPago->registration_id = $registration->id;
-                            $nuevoPago->estado = 'No Verificado';
+
+                           /* $nuevoPago->estado = 'No Verificado';
                             
                             // Si subió un nuevo comprobante para estos nuevos talleres, lo asignamos
                             if (isset($registration->change_file_payment_receipt[0]) && $registration->change_file_payment_receipt[0] === '1') {
                                 $nuevoPago->comprobante_pago = $registration->file_payment_receipt;
+                            }*/
+
+                            $nuevoPago->estado = 'confirmado'; // Directo a confirmado
+                            
+                            if ($registration->file_payment_receipt) {
+                                $nuevoPago->comprobante_pago = $registration->file_payment_receipt;
                             }
+                            
 
                             if ($nuevoPago->save(false)) {
                                 // Reutilizamos tus funciones generarTalleres y generarVisitas
@@ -882,17 +1012,32 @@ class RegistrationController extends Controller
 
                                 // Opcional: Generar el concepto del nuevo pago como lo haces en actionSubmit
                                 $nuevoPago->generarConcepto(
-                                    $registration->getFirstNameCode(), $registration->getLastNameCode(),
-                                    $registration->getRegistrationTypeCode(),
-                                    $talleresGenerados ?? [], $visitasGeneradas ?? []
+                                    $registration->getLastNameCode(), $registration->getFirstNameCode(),
+                                    '',
+                                    $nuevosTalleres ?? [], $nuevasVisitas ?? []
                                 );
                                 $nuevoPago->save(false);
+
+                                $registration->ultimo_pago = $nuevoPago->id;
+                                $registration->save(false);
                             }
                         }
                     }
 
                     // Fin de lo nuevo
                     if($isSaved)
+                        // Código añadido para enviar el correo de actualización
+                        try {
+                            Yii::$app->mailer->compose('registration/view-mail-update', ['model'=>$registration])
+                                ->setFrom(Yii::$app->params['adminEmail'])
+                                ->setTo($registration->email)
+                                ->setCc([Yii::$app->params['coordinatorEmail1'], Yii::$app->params['coordinatorEmail2']])
+                                ->setSubject('Actualización de Registro - ConCEI-3')
+                                ->send();
+                        } catch (\Throwable $e) {
+                            Yii::error("Error al enviar correo de actualización: " . $e->getMessage());
+                        }
+                        // Fin Código añadido
                         return $this->redirect(['submitted', 'id' => $registration->id, 'token' => $registration->token]);
                 }
             }
@@ -952,7 +1097,9 @@ class RegistrationController extends Controller
 
                 // 4. Limpiamos el nombre en la BD y cambiamos el estado
                 // $pago->comprobante_pago = ''; // o null, según tus reglas
-                $pago->estado = 'rechazado'; 
+                $pago->estado = 'rechazado';
+                // echo $pago->mount;
+                // exit;
 
                 // 5. Guardamos y notificamos
                 if ($pago->save(false)) {
@@ -963,6 +1110,7 @@ class RegistrationController extends Controller
                             ])
                             ->setFrom(Yii::$app->params['adminEmail'])
                             ->setTo($registration->email)
+                            ->setCc([Yii::$app->params['coordinatorEmail1'], Yii::$app->params['coordinatorEmail2']])
                             ->setSubject('Acción Requerida: Problema con su comprobante de pago')
                             ->send();
                         
@@ -982,6 +1130,29 @@ class RegistrationController extends Controller
 
         // Retornamos a la vista del registro principal. 
         // Usamos el registration_id para saber a qué perfil regresar.
+        return $this->redirect(['view', 'id' => $pago->registration_id]);
+    }
+
+    public function actionVerificarPago($pago_id) 
+    {
+        // Buscamos el pago específico
+        $pago = Pago::findOne($pago_id);
+        
+        if ($pago) {
+            // Cambiamos el estado utilizando la lógica de estados existentes
+            $pago->estado = 'Verificado'; 
+
+            // Guardamos los cambios
+            if ($pago->save(false)) {
+                Yii::$app->session->setFlash('success', 'El pago ha sido marcado como VERIFICADO exitosamente.');
+            } else {
+                Yii::$app->session->setFlash('error', 'Error al intentar actualizar el estado del pago.');
+            }
+        } else {
+            Yii::$app->session->setFlash('error', 'El pago especificado no existe.');
+        }
+
+        // Redireccionamos de vuelta al panel de detalles del registro
         return $this->redirect(['view', 'id' => $pago->registration_id]);
     }
 	

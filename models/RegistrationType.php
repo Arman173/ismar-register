@@ -44,10 +44,10 @@ class RegistrationType extends \yii\db\ActiveRecord
     {
         return [
             'id' => Yii::t('app', 'ID'),
-            'name' => Yii::t('app', 'Registration Type'),
+            'name' => Yii::t('app', 'Tipo de registro'),
             'cost' => Yii::t('app', 'Cost'),
-            'cost_early_bird' => Yii::t('app', 'Advanced Fee'),
-            'cost_late' => Yii::t('app', 'Late Fee'),
+            'cost_early_bird' => Yii::t('app', 'Costo preventa'),
+            'cost_late' => Yii::t('app', 'Tarifa regular'),
             'cost_us' => Yii::t('app', 'U.S. Fee'),
         ];
     }

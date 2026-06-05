@@ -7,7 +7,7 @@ use yii\grid\GridView;
 /* @var $searchModel app\models\RegistrationTypeSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 
-$this->title = Yii::t('app', 'Registration Types');
+$this->title = Yii::t('app', 'Tipo De Registros');
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="registration-type-index">
@@ -16,7 +16,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
 
     <p>
-        <?= Html::a(Yii::t('app', 'Create Registration Type'), ['create'], ['class' => 'btn btn-success']) ?>
+        <?= Html::a(Yii::t('app', 'Crear Tipo de Registro'), ['create'], ['class' => 'btn btn-success']) ?>
     </p>
 
     <?= GridView::widget([
@@ -27,7 +27,14 @@ $this->params['breadcrumbs'][] = $this->title;
 
             'id',
             'name',
-            'cost',
+            [
+                'attribute' => 'cost_early_bird',
+                'label' => 'Costo Preventa'
+            ],
+            [
+                'attribute' => 'cost_late',
+                'label' => 'Costo'
+            ],
 
             ['class' => 'yii\grid\ActionColumn'],
         ],

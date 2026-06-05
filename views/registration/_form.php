@@ -93,16 +93,56 @@ $this->registerJsFile('@web/js/registrationForm.js');
 
     <?= $form->field($registration, 'state')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($registration, 'country')->textInput(['maxlength' => true]) ?>
+<?php
+    $paises = [
+        'México' => 'México',
+        'Argentina' => 'Argentina',
+        'Bolivia' => 'Bolivia',
+        'Brasil' => 'Brasil',
+        'Canadá' => 'Canadá',
+        'Chile' => 'Chile',
+        'Colombia' => 'Colombia',
+        'Costa Rica' => 'Costa Rica',
+        'Cuba' => 'Cuba',
+        'Ecuador' => 'Ecuador',
+        'El Salvador' => 'El Salvador',
+        'España' => 'España',
+        'Estados Unidos' => 'Estados Unidos',
+        'Guatemala' => 'Guatemala',
+        'Honduras' => 'Honduras',
+        'Nicaragua' => 'Nicaragua',
+        'Panamá' => 'Panamá',
+        'Paraguay' => 'Paraguay',
+        'Perú' => 'Perú',
+        'Puerto Rico' => 'Puerto Rico',
+        'República Dominicana' => 'República Dominicana',
+        'Uruguay' => 'Uruguay',
+        'Venezuela' => 'Venezuela',
+        // Puedes agregar más países del resto del mundo si tu evento es internacional
+        'Alemania' => 'Alemania',
+        'Francia' => 'Francia',
+        'Reino Unido' => 'Reino Unido',
+        'Italia' => 'Italia',
+        'Japón' => 'Japón',
+        'China' => 'China',
+        'Otro' => 'Otro',
+    ];
+?>
+
+    <?= $form->field($registration, 'country')->dropDownList($paises, ['prompt' => 'Seleccione un país...']) ?>
 
     <?= $form->field($registration, 'business_phone')->textInput([
 		'maxlength' => true,
+        'type' => 'tel',
 		'placeholder' => 'Por favor, ingrese su número de teléfono (ej. 529995555555)',
+        'oninput' => "this.value = this.value.replace(/[^0-9]/g, '');"
 	]) ?>
 
-    <?= $form->field($registration, 'email')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($registration, 'email')->textInput([
+        'maxlength' => true,
+        'readonly' => ($registration->scenario == 'Update') ? true : false,
+    ]) ?>
 	
-    
     
     <?= $form->field($registration, 'registration_type_id')->hiddenInput()->label(false) ?>
     
@@ -174,39 +214,35 @@ $this->registerJsFile('@web/js/registrationForm.js');
 		'disabled' => ($registration->scenario == 'Update')? true: false,
 	]) ?>
 
-	<p> <?= Html::encode('* El registro de estudiante y de profesores de la UADY requiere una prueba de estatus o, para estudiantes, una credencial de estudiante que confirme que la persona registrada es estudiante de tiempo completo en el momento de la conferencia.')?> </p>
+    <div id="contenedor-estudiante">
 
+	<p> <?= Html::encode('* El registro de estudiante y de profesores de la UADY requiere una prueba de estatus o, para estudiantes, una credencial de estudiante que confirme que la persona registrada es estudiante de tiempo completo en el momento de la conferencia. El archivo debe ser legible y podrá estar en formato: pdf, png, jpg, jpeg.')?> </p>
 
 	<?= $form->field($registration, 'file_student_id')->fileInput() ?>
+
+    </div>
 	
 	<?php $dataProvider = new ActiveDataProvider([
 		'query' => Registration::find(),
 	]); ?>
-    
-	<h3><?= Html::encode('Información para Autores') ?></h3>
-    <p> <?= Html::encode('Se requiere que los autores se registren. Al menos un registro no reembolsable debe estar asociado a cada artículo aceptado.')?> </p>
-    <p> <?= Html::encode('Por cada contribución, por favor indique:')?>
-    <br/>
-    <?= Html::encode('1) El tipo de contribución (artículo, póster, demostración).')?>
-    <br/>
-    <?= Html::encode('2) El título de la contribución.')?> 
-    <br/>
-    
-    </p>
-    <table>
-    <tr>
-        <td>Contribución 1:</td>
-        <td><?= $form->field($registration, 'type1')->textInput(['maxlength' => true])->label('Tipo') ?></td>
-        <td><?= $form->field($registration, 'title1')->textInput(['maxlength' => true])->label('Título') ?></td>
-    </tr>
-    <tr>
-        <td>Contribución 2:</td>
-        <td><?= $form->field($registration, 'type2')->textInput(['maxlength' => true])->label('Tipo') ?></td>
-        <td><?= $form->field($registration, 'title2')->textInput(['maxlength' => true])->label('Título') ?></td>
-    </tr>
-    </table>
 
-	<?php
+    <h3><?= Html::encode('Información para Autores') ?></h3>
+    <p> <?= Html::encode('Se requiere que los autores se registren. Al menos un registro no reembolsable debe estar asociado a cada artículo aceptado.')?> </p>
+    
+    <?php
+    // Definimos las listas de opciones una sola vez para reutilizarlas en ambas secciones
+    $tiposContribucion = [
+    'Artículo' => 'Artículo',
+    'Póster' => 'Póster',
+    ];
+
+    // Nuevo: Arreglo para el nivel del trabajo
+    $nivelesTrabajo = [
+        'Licenciatura' => 'Licenciatura',
+        'Maestría' => 'Maestría',
+        'Doctorado' => 'Doctorado',
+    ];
+
     $areasTrabajo = [
         'Energías renovables' => 'Energías renovables',
         'Ingeniería ambiental' => 'Ingeniería ambiental',
@@ -226,37 +262,100 @@ $this->registerJsFile('@web/js/registrationForm.js');
         'Tecnologías emergentes en computación' => 'Tecnologías emergentes en computación',
         'Educación, sociedad y formación humanista en ciencias' => 'Educación, sociedad y formación humanista en ciencias',
     ];
+
+    $modalidades = [
+        'Presencial' => 'Presencial',
+        'Virtual' => 'Virtual',
+        'Cualquiera' => 'Cualquiera',
+    ];
+
+    $revistasDropdown = [
+        'Ninguna' => 'Ninguna',
+        'IEEE Latin America Transactions' => 'IEEE Latin America Transactions (Requiere un pago de $250 USD después de aceptación en la revista)',
+        'Ingeniería Revista Académica' => 'Ingeniería Revista Académica (Sin costo extra)',
+        'Abstraction & Application' => 'Abstraction & Application (Sin costo extra)',
+    ];
     ?>
 
-    <?= $form->field($registration, 'area_trabajo')->dropDownList($areasTrabajo, ['prompt' => 'Seleccione el área de su trabajo...']) ?>
-
-	<div id="div-modalidad-presentacion">
-        <?= $form->field($registration, 'modalidad_presentacion')->dropDownList([
-            'Presencial' => 'Presencial',
-            'Virtual' => 'Virtual',
-            'Cualquiera' => 'Cualquiera',
-        ], ['prompt' => 'Seleccione una modalidad...']) ?>
-    </div>
-
-    <div id="leyenda-modalidad-uady" style="display: none; color: #7f8c8d; font-size: 0.9em; margin-bottom: 15px; margin-left: 200px;">
-        <em>* Nota: Para Estudiantes y Profesores UADY, la modalidad de presentación es Presencial.</em>
-    </div>
-    <div class="panel panel-default" style="margin-top: 20px; border: 1px solid #ddd;">
-
-        <div class="panel-heading" style="background-color: #f5f5f5; font-weight: bold;">
-            Selección de Revista (Número Especial)
+    <hr>
+    
+    <div class="panel panel-info" style="border: 1px solid #bce8f1; margin-bottom: 25px;">
+        <div class="panel-heading" style="background-color: #d9edf7; color: #31708f; font-weight: bold; font-size: 1.1em;">
+            Detalles de la Contribución 1
         </div>
         <div class="panel-body">
-            <p style="font-size: 0.9em; color: #555; margin-bottom: 15px;">
-                En caso de que su trabajo fuera elegido para un número especial de revista, 
-                favor de seleccionar la revista de su preferencia y que concuerde con el área de su investigación:
-            </p>
-            <?= $form->field($registration, 'revista_seleccionada')->dropDownList([
-                'Ninguna' => 'Ninguna',
-                'IEEE Latin America Transactions' => 'IEEE Latin America Transactions (Requiere un pago de $250 USD después de aceptación)',
-                'Ingeniería Revista Académica' => 'Ingeniería Revista Académica (Sin costo extra)',
-                'Abstraction & Application' => 'Abstraction & Application (Sin costo extra)',
-            ])->label(false) ?>
+            <div class="row">
+                <div class="col-md-6">
+                   <?= $form->field($registration, 'type1')->dropDownList($tiposContribucion, ['prompt' => 'Seleccione el tipo...'])->label('Tipo de contribución') ?>
+                </div>
+                <div class="col-md-6">
+                    <?= $form->field($registration, 'title1')->textInput(['maxlength' => true])->label('Título de la contribución') ?>
+                </div>
+            </div>
+
+            <?= $form->field($registration, 'area_trabajo')->dropDownList($areasTrabajo, ['prompt' => 'Seleccione el área de su trabajo...']) ?>
+
+            <?= $form->field($registration, 'nivel_trabajo')->dropDownList($nivelesTrabajo, ['prompt' => 'Seleccione el nivel del trabajo...'])->label('Nivel del trabajo') ?>
+
+            <div id="div-modalidad-presentacion">
+                <?= $form->field($registration, 'modalidad_presentacion')->dropDownList($modalidades, ['prompt' => 'Seleccione una modalidad...']) ?>
+            </div>
+            
+            <div id="leyenda-modalidad-uady" style="display: none; color: #7f8c8d; font-size: 0.9em; margin-bottom: 15px; margin-left: 15px;">
+                <em>* Nota: Para Estudiantes y Profesores UADY, la modalidad de presentación es Presencial.</em>
+            </div>
+
+            <div class="panel panel-default" style="margin-top: 15px; border: 1px solid #ddd;">
+                <div class="panel-heading" style="background-color: #f5f5f5; font-weight: bold;">
+                    Selección de Revista (Número Especial) - Contribución 1
+                </div>
+                <div class="panel-body">
+                    <p style="font-size: 0.9em; color: #555; margin-bottom: 15px;">
+                        En caso de que su trabajo fuera elegido para un número especial de revista, favor de seleccionar la revista de su preferencia y que concuerde con el área de su investigación:
+                    </p>
+                    <?= $form->field($registration, 'revista_seleccionada')->dropDownList($revistasDropdown)->label(false) ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel panel-default" style="border: 1px solid #fcffc3; margin-bottom: 25px;">
+        <div class="panel-heading" style="background-color: #ffffc8; color: #333; font-weight: bold; font-size: 1.1em;">
+            Detalles de la Contribución 2
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <?= $form->field($registration, 'type2')->dropDownList($tiposContribucion, ['prompt' => 'Seleccione el tipo...'])->label('Tipo de contribución') ?>
+                </div>
+                <div class="col-md-6">
+                    <?= $form->field($registration, 'title2')->textInput(['maxlength' => true])->label('Título de la contribución') ?>
+                </div>
+            </div>
+
+            <?= $form->field($registration, 'area_trabajo_2')->dropDownList($areasTrabajo, ['prompt' => 'Seleccione el área de su trabajo...']) ?>
+
+            <?= $form->field($registration, 'nivel_trabajo_2')->dropDownList($nivelesTrabajo, ['prompt' => 'Seleccione el nivel del trabajo...'])->label('Nivel del trabajo') ?>
+
+            <div id="div-modalidad-presentacion-2">
+                <?= $form->field($registration, 'modalidad_presentacion_2')->dropDownList($modalidades, ['prompt' => 'Seleccione una modalidad...']) ?>
+            </div>
+
+            <div id="leyenda-modalidad-uady-2" style="display: none; color: #7f8c8d; font-size: 0.9em; margin-bottom: 15px; margin-left: 15px;">
+                <em>* Nota: Para Estudiantes y Profesores UADY, la modalidad de presentación es Presencial.</em>
+            </div>
+
+            <div class="panel panel-default" style="margin-top: 15px; border: 1px solid #ddd;">
+                <div class="panel-heading" style="background-color: #f5f5f5; font-weight: bold;">
+                    Selección de Revista (Número Especial) - Contribución 2
+                </div>
+                <div class="panel-body">
+                    <p style="font-size: 0.9em; color: #555; margin-bottom: 15px;">
+                        En caso de que su trabajo fuera elegido para un número especial de revista, favor de seleccionar la revista de su preferencia y que concuerde con el área de su investigación:
+                    </p>
+                    <?= $form->field($registration, 'revista_seleccionada_2')->dropDownList($revistasDropdown)->label(false) ?>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -397,11 +496,16 @@ $this->registerJsFile('@web/js/registrationForm.js');
         </button>
     </div>
 
+    <div id="resumen-talleres-seleccionados" style="margin-top: -10px; margin-bottom: 20px; padding: 10px; background: #fff; border: 1px dashed #ccc; border-radius: 4px;">
+        <em style="color:#999;">Ninguno seleccionado</em>
+    </div>
+
     <div id="modal-talleres" class="modal-fs-container oculto">
+
         <div class="modal-fs-header">
             <h4 class="modal-fs-title">Selección de Talleres</h4>
             <button type="button" class="btn btn-fs-close btn-cerrar-modal-fs">
-                Cerrar <span class="glyphicon glyphicon-remove"></span>
+                Continuar <span class="glyphicon glyphicon-remove"></span>
             </button>
         </div>
         <div class="modal-fs-body">
@@ -451,11 +555,15 @@ $this->registerJsFile('@web/js/registrationForm.js');
         </button>
     </div>
 
+    <div id="resumen-visitas-seleccionados" style="margin-top: -10px; margin-bottom: 20px; padding: 10px; background: #fff; border: 1px dashed #ccc; border-radius: 4px;">
+        <em style="color:#999;">Ninguna seleccionada</em>
+    </div>
+
     <div id="modal-visitas" class="modal-fs-container oculto">
         <div class="modal-fs-header">
             <h4 class="modal-fs-title">Selección de Visitas Industriales</h4>
             <button type="button" class="btn btn-fs-close btn-cerrar-modal-fs">
-                Cerrar <span class="glyphicon glyphicon-remove"></span>
+                Continuar <span class="glyphicon glyphicon-remove"></span>
             </button>
         </div>
         <div class="modal-fs-body">
@@ -496,7 +604,6 @@ $this->registerJsFile('@web/js/registrationForm.js');
 
     <?= $form->field($invoice, 'email')->textInput(['maxlength' => true]) ?>
         
-    <?= $form->field($invoice, 'email')->textInput(['maxlength' => true]) ?>
         
     
     <h3><?= Html::encode('Bolsa de Trabajo')?></h3>
@@ -507,6 +614,11 @@ $this->registerJsFile('@web/js/registrationForm.js');
 	<p> <?= Html::encode('Las cuotas de inscripción, talleres y visitas industriales no serán rembolsables. Es importante destacar que a los autores que no se presenten se les retirará su artículo de las memorias del congreso. Para cualquier duda o aclaracion favor de contactar concei@correo.uady.mx')?> </p>
     
 	<h3>Resumen de Pago</h3>
+
+    <p class="text-muted" style="margin-top: 5px; margin-bottom: 20px; font-size: 0.9em; font-style: italic;">
+        * Las cuotas de registro son válidas hasta antes del 10 de sep 2026.
+    </p>
+
     <div class="panel panel-default" style="margin-top: 20px;">
         <table class="table table-bordered" style="background-color: #fff;">
             <tr>
@@ -576,14 +688,17 @@ $this->registerJsFile('@web/js/registrationForm.js');
 
 </div>
 
-        <?= $form->field($registration, 'payment_type')->radioList([
+    <?= $form->field($registration, 'payment_type', [
+        'template' => "<div class=\"col-sm-12\">\n    <div style=\"background-color: #ffffff; border-left: 4px solid #ff1212; padding: 10px; margin-bottom: 15px; color: #ff1d1d; font-size: 0.95em;\">\n        <span class=\"glyphicon glyphicon-info-sign\"></span> \n        <b>Sugerencia:</b> Para agilizar la validación de su registro, le recomendamos adjuntar el <b>comprobante SPEI de Banxico</b>.\n    </div>\n</div>\n{label}\n{beginWrapper}\n{input}\n{hint}\n{error}\n{endWrapper}"
+    ])->radioList([
          2 => 'Transferencia bancaria (Cargue su recibo)',
     ], [
         'itemOptions' => [], 
         'unselect' => null,
     ])->label('Tipo de Pago') ?>
 
-	<?php echo $form->field($registration, 'file_payment_receipt')->fileInput() ?>
+
+    <?= $form->field($registration, 'file_payment_receipt')->fileInput() ?>
     
 	<?php /*
     <div class="form-group">
@@ -591,11 +706,11 @@ $this->registerJsFile('@web/js/registrationForm.js');
     </div>
 	*/?>
 
-	<div class="form-group">
+    <div class="form-group">
         <?= Html::submitButton($registration->isNewRecord ? Yii::t('app', 'Submit') : Yii::t('app', 'Update data'), [
             'class' => $registration->isNewRecord ? 'btn btn-success' : 'btn btn-primary',
             'id' => 'btn-submit',
-            'onclick' => "this.disabled=true; this.innerText='Enviando...'; this.form.submit();" 
+            'onclick' => "return validarAntesDeEnviar(this, event);" 
         ]) ?>
     </div>
 

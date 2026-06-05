@@ -306,13 +306,13 @@ function inicializarModals() {
 function showFileStudentId()
 {
     $("[name='Registration[file_student_id]']").removeAttr("disabled");
-    $(".field-registration-file_student_id").show();
+    $("#contenedor-estudiante").show();
 }
 
 function hideFileStudentId()
 {
     $("[name='Registration[file_student_id]']").attr("disabled","disabled");
-    $(".field-registration-file_student_id").hide();
+    $("#contenedor-estudiante").hide();
 }
 
 function showFilePaymentReceipt()
@@ -373,12 +373,13 @@ function toggleFilePaymentReceipt() {
     if (requierePago) {
         $('#instrucciones-pago').show();
         $('.field-registration-payment_type').show();
+
+        // 1. Forzamos a que el circulito de "Transferencia" se marque solo
+        $("input[name='Registration[payment_type]'][value='2']").prop('checked', true);
         
-        if (paymentType == "2") {
-            showFilePaymentReceipt();
-        } else {
-            hideFilePaymentReceipt();
-        }
+        // 2. Mostramos el campo del archivo sin preguntar si hizo clic
+        showFilePaymentReceipt();
+    
     } else {
         $('#instrucciones-pago').hide();
         $('.field-registration-payment_type').hide();
@@ -469,12 +470,12 @@ function toggleModalidadPresentacion() {
     var registrationType = $("[name='Registration[registration_type_id]']").val();
     // El ID 17 corresponde a "Estudiantes y Profesores UADY"
         if (registrationType == "17") {
-        $("#div-modalidad-presentacion").hide();
-        $("#registration-modalidad_presentacion").val("");
-        $("#leyenda-modalidad-uady").show(); // <--- MUESTRA LA LEYENDA
+        $("#div-modalidad-presentacion, #div-modalidad-presentacion-2").hide();
+        $("#registration-modalidad_presentacion, #registration-modalidad_presentacion_2").val("");
+        $("#leyenda-modalidad-uady, #leyenda-modalidad-uady-2").show(); // <--- MUESTRA LA LEYENDA
     } else { 
-        $("#div-modalidad-presentacion").show();
-        $("#leyenda-modalidad-uady").hide(); // <--- OCULTA LA LEYENDA
+        $("#div-modalidad-presentacion,#div-modalidad-presentacion-2").show();
+        $("#leyenda-modalidad-uady, #leyenda-modalidad-uady-2").hide(); // <--- OCULTA LA LEYENDA
         }
 }
 
@@ -515,6 +516,7 @@ function toggleInvoice()
         $(".field-invoice-email").show();
     }
 } // end of toogleInvoice()
+
 
 // document.addEventListener('DOMContentLoaded', (event) => {
 //     console.log('El DOM está listo');
@@ -715,6 +717,7 @@ window.addEventListener('load', function() {
                 console.log('Seleccionados:', estado.todosLosSeleccionados);
                 contadorTalleres.textContent = estado.todosLosSeleccionados.length;
                 calculateTotal();
+                actualizarResumenTextual();
             }
         });
     
@@ -756,6 +759,7 @@ window.addEventListener('load', function() {
                 console.log('Seleccionados:', estado.todosLosSeleccionados);
                 contadorVisitas.textContent = estado.todosLosSeleccionados.length;
                 calculateTotal();
+                actualizarResumenTextual();
             }
         });
 
@@ -763,24 +767,6 @@ window.addEventListener('load', function() {
 		toggleInvoice();
 	});
 
-
-
-    // $("input[name=kvradio][value='1']").prop("checked",true);
-    // $grid.on( 'grid.radiochecked', function(ev, key, val){
-    //     $("#registration-registration_type_id").val(val);
-
-    //     toggleRegistrationCode();
-    //     // console.log("...")
-
-    //     actualizarConceptoPago();
-    //         switch( val )
-    //         {
-    //             case "12": showFileStudentId(); break;
-    //             case "17": showFileStudentId(); break;
-    //             default: hideFileStudentId(); break;
-    //         }
-    //     toggleModalidadPresentacion();
-    // });
 
     inicializarModals();
     toggleStudentId();
@@ -794,6 +780,97 @@ window.addEventListener('load', function() {
         toggleFilePaymentReceipt();
     });
     
-    // Ejecutar la función una vez al cargar la página para revisar el estado inicial
     toggleFilePaymentReceipt();
 });
+
+window.validarAntesDeEnviar = function(btn, event) {
+    // Obtenemos el tipo de pago seleccionado
+    var paymentType = $("input[name='Registration[payment_type]']:checked").val();
+    
+    // Contamos cuántos talleres o visitas NUEVAS seleccionó el usuario
+    var tText = document.getElementById('contador-talleres') ? document.getElementById('contador-talleres').textContent : "0";
+    var vText = document.getElementById('contador-visitas') ? document.getElementById('contador-visitas').textContent : "0";
+    var totalExtrasCount = (parseInt(tText) || 0) + (parseInt(vText) || 0);
+
+    var requiereComprobante = false;
+
+    if (window.es_nuevo_registro) {
+        // En registros nuevos: Si se ve la instrucción de pago y eligió Transferencia
+        if ($('#instrucciones-pago').is(':visible') && paymentType == "2") {
+            requiereComprobante = true;
+        }
+    } else {
+        // En update: Solo es obligatorio si agregó elementos nuevos y eligió Transferencia
+        if (totalExtrasCount > 0 && paymentType == "2") {
+            requiereComprobante = true;
+        }
+    }
+    // Verificamos que el archivo de comprobante no esté vacío
+    if (requiereComprobante) {
+        var inputPago = document.getElementById('registration-file_payment_receipt');
+        if (!inputPago || !inputPago.value) {
+            alert("¡Atención! Ha seleccionado opciones que requieren pago mediante Transferencia. Es obligatorio adjuntar su COMPROBANTE DE PAGO para continuar.");
+            if (event) { event.preventDefault(); }
+            return false;
+        }
+    }
+    //Verificamos lo de la credencial de estudiante
+    if (window.es_nuevo_registro && $('#contenedor-estudiante').is(':visible')) {
+        var inputCredencial = document.getElementById('registration-file_student_id');
+        if (!inputCredencial || !inputCredencial.value) {
+            alert("Por favor, adjunte su credencial de estudiante o profesor para poder continuar.");
+            if (event) { event.preventDefault(); }
+            return false;
+        }
+    }
+
+    btn.disabled = true;
+    btn.innerText = 'Enviando...';
+    btn.form.submit();
+    return true;
+};
+function actualizarResumenTextual() {
+    // Talleres
+    var htmlTalleres = '<em style="color:#999;">Ninguno seleccionado</em>';
+    var nombresTalleres = [];
+    
+    $('input[name="talleres_seleccionados[]"]:checked').each(function() {
+        var idSeleccionado = $(this).val();
+        
+        if (window.datosTalleres) {
+            var taller = window.datosTalleres.find(t => t.id == idSeleccionado);
+            if (taller) {
+                nombresTalleres.push('<div style="margin: 4px 0; color: #31708f;"><span class="glyphicon glyphicon-ok"></span> ' + taller.nombre + '</div>');
+            }
+        }
+    });
+
+    if (nombresTalleres.length > 0) {
+        htmlTalleres = nombresTalleres.join('');
+    }
+    
+    $('#resumen-talleres-seleccionados').html(htmlTalleres);
+    $('#display-talleres-nombres').html(htmlTalleres);
+
+    // Visitas
+    var htmlVisitas = '<em style="color:#999;">Ninguna seleccionada</em>';
+    var nombresVisitas = [];
+    
+    $('input[name="visitas_seleccionadas[]"]:checked').each(function() {
+        var idSeleccionado = $(this).val();
+        
+        if (window.datosVisitas) {
+            var visita = window.datosVisitas.find(v => v.id == idSeleccionado);
+            if (visita) {
+                nombresVisitas.push('<div style="margin: 4px 0; color: #3c763d;"><span class="glyphicon glyphicon-ok"></span> ' + visita.nombre + '</div>');
+            }
+        }
+    });
+
+    if (nombresVisitas.length > 0) {
+        htmlVisitas = nombresVisitas.join('');
+    }
+    
+    $('#resumen-visitas-seleccionados').html(htmlVisitas);
+    $('#display-visitas-nombres').html(htmlVisitas);
+}

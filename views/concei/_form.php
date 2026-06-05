@@ -23,7 +23,10 @@ use yii\widgets\ActiveForm;
     <?= $form->field($model, 'costo_visita')->textInput() ?>
 
     <?php// para que el input sea una fecha valida ?>
-    <?= $form->field($model, 'fin_preventa')->input('date') ?>
+    <?=
+        // $form->field($model, 'fin_preventa')->input('date')
+        $form->field($model, 'fin_preventa')->input('date', ['value' => $model->fin_preventa ? date('Y-m-d', strtotime($model->fin_preventa)) : ''])
+    ?>
 
     <div class="form-group">
         <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>

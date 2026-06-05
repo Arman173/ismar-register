@@ -59,7 +59,7 @@ $concei = Concei::find()->one();
 				'visible' => !Yii::$app->user->isGuest,
 			],
 			[
-				'label' => 'Registration Type',
+				'label' => 'Tipo Registro',
 				'url' => ['/registration-type/index'],
 				'visible' => !Yii::$app->user->isGuest,
 			],
@@ -84,7 +84,7 @@ $concei = Concei::find()->one();
                 'visible' => !Yii::$app->user->isGuest,
             ],
             [
-				'label' => 'Registration Code',
+				'label' => 'Codigo Registro',
 				'url' => ['/registration-code/index'],
 				'visible' => !Yii::$app->user->isGuest,
 			],

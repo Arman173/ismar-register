@@ -6,7 +6,7 @@ use yii\bootstrap\ActiveForm;
 /* @var $this yii\web\View */
 /* @var $registration app\models\Registration */
 
-$this->title = Yii::t('app', 'Upload Payment Receipt');
+$this->title = Yii::t('app', 'Subir recibo de pago');
 $this->params['breadcrumbs'][] = ['label' => Yii::t('app', 'Registrations'), 'url' => ['index']];
 $this->params['breadcrumbs'][] = ['label' => $registration->id, 'url' => ['view', 'id' => $registration->id]];
 $this->params['breadcrumbs'][] = Yii::t('app', 'Update');
@@ -25,7 +25,7 @@ $this->params['breadcrumbs'][] = Yii::t('app', 'Update');
 		<?= $form->field($registration, 'file_payment_receipt')->fileInput() ?>
 		
 		<div class="form-group">
-			<?= Html::submitButton(Yii::t('app', 'Upload Receipt'), ['class' => 'btn btn-success']) ?>
+			<?= Html::submitButton(Yii::t('app', 'Subir Recibo'), ['class' => 'btn btn-success']) ?>
 		</div>
 
 		<?php ActiveForm::end(); ?>

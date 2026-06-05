@@ -23,7 +23,7 @@ return [
     
     // Archivos y Estatus
     'Student Proof' => 'Comprobante de Estudiante',
-    'Status Proof (PDF)' => 'Comprobante de Estatus (PDF)',
+    'Status Proof (PDF)' => 'Comprobante de Estatus',
     'Payment Receipt' => 'Recibo de Pago',
     'Payment Receipt File' => 'Archivo del Recibo de Pago',
     

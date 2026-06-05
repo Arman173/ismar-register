@@ -4,7 +4,7 @@ namespace app\models;
 
 use Yii;
 use app\models\RegistrationType;
-use app\models\Pagos;
+use app\models\Pago;
 use app\models\Concei;
 
 /**
@@ -50,6 +50,9 @@ class Registration extends \yii\db\ActiveRecord
     public $title2;
     public $revista_seleccionada;
 
+    public $nivel_trabajo;
+    public $nivel_trabajo_2;
+
  	public $file_cv; // <-- Para el CV
 
  	// --- VARIABLES PARA TALLERES, VISITAS Y COSTO TOTAL ---
@@ -59,6 +62,9 @@ class Registration extends \yii\db\ActiveRecord
 
 	public $talleres;
 	public $visitas;
+
+    // Variable que guarda el ultimo pago realizado
+    public $ultimo_pago = NULL;
  
     /**
      * @inheritdoc
@@ -202,6 +208,8 @@ class Registration extends \yii\db\ActiveRecord
                 },
                 'on' => 'Update',
             ],
+            [['file_payment_receipt'], 'file', 'skipOnEmpty' => false, 'extensions' => 'png, jpg, jpeg, pdf', 'on' => 'UploadPaymentReceipt'],
+            [['confirmado'], 'integer', 'on' => 'UploadPaymentReceipt'],
             [
                 ['registration_code'],
                 'required',
@@ -223,7 +231,7 @@ class Registration extends \yii\db\ActiveRecord
                 return false;
             }, 'except' => ['Update']],
             
-            [['file_student_id'], 'file', 'skipOnEmpty' => true, 'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx'],
+            [['file_student_id'], 'file', 'skipOnEmpty' => true, 'extensions' => 'pdf, png, jpg, jpeg'],
             // <-- CV-->
             [['file_cv'], 'file', 'skipOnEmpty' => true, 'extensions' => 'pdf'], 
             // <-- CAMPO DE LA BD (cv_file) -->
@@ -231,13 +239,16 @@ class Registration extends \yii\db\ActiveRecord
 
             [['invoice_required'], 'boolean'],
             [['change_file_payment_receipt', 'change_file_student_id'], 'each', 'rule'=>['in', 'range'=>[0,1]]],
-            [['type2', 'title2', 'revista_seleccionada'], 'safe'],
             
+            // Se agrega revista_seleccionada_2
+            [['type2', 'title2', 'revista_seleccionada', 'revista_seleccionada_2', 'nivel_trabajo', 'nivel_trabajo_2'], 'safe'],
+                        
             [['talleres_seleccionados', 'visitas_seleccionadas'], 'safe'],
             [['total_amount'], 'number'], // Valida que sea numérico
 
-            [['area_trabajo'], 'string', 'max' => 255],
-            [['modalidad_presentacion'], 'string', 'max' => 50],
+            // Se agregan las reglas string para la contribución 2
+            [['area_trabajo', 'area_trabajo_2'], 'string', 'max' => 255],
+            [['modalidad_presentacion', 'modalidad_presentacion_2'], 'string', 'max' => 50],
 
             // campo para confirmar validacion del comprobante de pago
             [['confirmado'], 'boolean'],
@@ -286,6 +297,11 @@ class Registration extends \yii\db\ActiveRecord
 			'file_cv' => Yii::t('app', 'Curriculum Vitae (CV)'), // <-- Línea nueva para el CV
 			'area_trabajo' => Yii::t('app', 'Área a la que pertenece su trabajo'),
             'modalidad_presentacion' => Yii::t('app', 'Modalidad de presentación deseada'),
+            'revista_seleccionada' => Yii::t('app', 'Revista seleccionada'),
+            //Contribución 2
+            'area_trabajo_2' => Yii::t('app', 'Área a la que pertenece su trabajo'),
+            'modalidad_presentacion_2' => Yii::t('app', 'Modalidad de presentación deseada'),
+            'revista_seleccionada_2' => Yii::t('app', 'Revista seleccionada'),
    			'confirmado' => Yii::t('app', 'Confirmado'),
         ];
     }
@@ -338,12 +354,12 @@ class Registration extends \yii\db\ActiveRecord
         $countVisitas = is_array($this->visitas) ? count($this->visitas) : 0;
         $totalExtrasCount = $countTalleres + $countVisitas;
 
-        // Lógica de cobro (1 gratis para General(1) y Estudiante(12))
+        // Lógica de cobro (1 gratis para General(1), Codigo de registro(18) y Estudiante(12))
         $paidExtras = 0;
         $typeIdStr = (string)$this->registration_type_id;
 
         if ($totalExtrasCount > 0) {
-            if ($typeIdStr === '1' || $typeIdStr === '12') {
+            if ($typeIdStr === '1' || $typeIdStr === '12' || $typeIdStr === '18') {
                 $paidExtras = max(0, $totalExtrasCount - 1);
             } elseif ($typeIdStr === '17') {
                 $paidExtras = $totalExtrasCount;
@@ -625,20 +641,25 @@ class Registration extends \yii\db\ActiveRecord
  // "pendiente"  -> al menos un pago de los relacionados al registro no esta en verificado
  //				   y ninguno esta en rechazado
  // "rechazado"  -> al menos un pago de los relacionado esta en rechazado
- public function estadoPagos()
+public function estadoPagos()
  {
   $pagos = $this->pagos;
 
   $estado = "verificado";
   foreach ($pagos as $pago) {
-   if ($pago->estado != "verificado") {
-    if ($pago->estado == "confirmado") {
+    if ($pago->remplazado) continue;
+   // Convertimos a minúsculas para evitar errores entre "Verificado" y "verificado"
+   $estadoActual = strtolower($pago->estado);
+
+   if ($estadoActual != "verificado") {
+    if ($estadoActual == "confirmado") {
      $estado = "confirmado";
     } else {
      return "rechazado";
     }
    }
   }
+
   return $estado;
  }
 

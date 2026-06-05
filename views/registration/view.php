@@ -149,6 +149,36 @@ use app\models\RegistroVisita;
             'country',
             'business_phone',
             'email:email',
+
+			[
+                'label' => 'Talleres Seleccionados',
+                'value' => function($model) {
+                    $registros = \app\models\RegistroTaller::find()->where(['registration_id' => $model->id])->all();
+                    if (empty($registros)) return 'Ninguno';
+                    
+                    $nombres = [];
+                    foreach ($registros as $rt) {
+                        $taller = \app\models\Taller::findOne($rt->taller_id);
+                        if ($taller) $nombres[] = $taller->nombre;
+                    }
+                    return implode(', ', $nombres);
+                },
+            ],
+            [
+                'label' => 'Visitas Seleccionadas',
+                'value' => function($model) {
+                    $registros = \app\models\RegistroVisita::find()->where(['registration_id' => $model->id])->all();
+                    if (empty($registros)) return 'Ninguna';
+                    
+                    $nombres = [];
+                    foreach ($registros as $rv) {
+                        $visita = \app\models\Visita::findOne($rv->visita_id);
+                        if ($visita) $nombres[] = $visita->nombre;
+                    }
+                    return implode(', ', $nombres);
+                },
+            ],
+
 			[
 				'label' => 'Recibo de pago',
 				'value' => Html::a($model->payment_receipt, ['registration/view-payment-receipt', 'id'=>$model->id, 'token'=>$model->token]),
@@ -183,24 +213,35 @@ use app\models\RegistroVisita;
 		</thead>
 		<tbody>
 			<?php foreach ($model->pagos as $pago): ?>
+				<?php if (!$pago->remplazado || !Yii::$app->user->isGuest): ?>
 				<tr>
 					<?php if (!Yii::$app->user->isGuest): ?>
 						<td><?= $pago->id ?></td>
 					<?php endif; ?>
-					<td><?= Html::encode($pago->concepto) ?></td>
-					<td>
-						<span class="badge <?= $pago->estado == 'Rechazado' ? 'bg-danger' : 'bg-warning' ?>">
-							<?= Html::encode($pago->estado) ?>
-						</span>
-					</td>
-					<td>
+				
+						<td><?= Html::encode($pago->concepto) ?></td>
+                    <td>
+                        <?php 
+                            // Colores hexadecimales en lugar de clases de Bootstrap
+                            $badgeColor = '#f0ad4e'; // Amarillo para pendientes
+                            if (strtolower($pago->estado) == 'rechazado') {
+                                $badgeColor = '#d9534f'; // Rojo
+                            } elseif (strtolower($pago->estado) == 'verificado' || strtolower($pago->estado) == 'confirmado') {
+                                $badgeColor = '#9a9d9a'; // Verde
+                            }
+							$estadoVisual = $pago->estado === 'Verificado' ? 'aprobado':$pago->estado;
+                        ?>
+                        <span class="badge" style="background-color: <?= $badgeColor ?>; color: white;">
+                            <?= Html::encode($estadoVisual) ?>
+                        </span>
+                    </td>
+                    <td>	
 						<?php if ($pago->comprobante_pago): ?>
 							<?= \yii\helpers\Html::a('Ver Comprobante', 
+
 								[
 									'view-payment-receipt', 
 									'pago_id' => $pago->id, 
-									// Pasamos el token del registro. Si es un admin viéndolo, pasará el token igual, 
-									// pero el controlador lo ignorará gracias a la regla de arriba.
 									'token' => $model->token 
 								], 
 								[
@@ -208,25 +249,47 @@ use app\models\RegistroVisita;
 									'target' => '_blank'
 								]
 							) ?>
-							<!-- <a href="<?= Yii::getAlias('@web/files/payment/') . $pago->comprobante_pago ?>" target="_blank">Ver Recibo</a> -->
 						<?php else: ?>
-							Sin archivo
+							Sin Recibo
 						<?php endif; ?>
 					</td>
+
+					<?php if ($pago->estado === 'rechazado' && !$pago->remplazado): ?>
+					<td>
+						<?= Html::a(Yii::t('app', 'Subir Comprobante'), ['upload-payment-receipt', 'id' => $model->id, 'pago_id' => $pago->id, 'token' => $model->token ], ['class' => 'btn btn-primary']) ?>
+					</td>
+					<?php endif; ?>
+					
 					<?php if (!Yii::$app->user->isGuest): ?>
 					<td>
-						<?php if ($pago->estado !== 'Rechazado' && $pago->comprobante_pago): ?>
-							<?= Html::a('Rechazar Pago', ['rechazar-pago', 'pago_id' => $pago->id], [
-								'class' => 'btn btn-sm btn-danger',
-								'data' => [
-									'confirm' => '¿Estás seguro de que deseas rechazar el comprobante de este pago específico y notificar al usuario?',
-									'method' => 'post', 
-								],
-							]) ?>
+						<?php if ($pago->comprobante_pago && !$pago->remplazado): ?>
+							
+							<?php if (strtolower($pago->estado) !== 'verificado'): ?>
+								<?= Html::a('<span class="glyphicon glyphicon-ok"></span> Verificar', ['verificar-pago', 'pago_id' => $pago->id], [
+									'class' => 'btn btn-sm btn-success',
+									'style' => 'margin-right: 5px;',
+									'data' => [
+										'confirm' => '¿Estás seguro de que deseas APROBAR el comprobante de este pago?',
+										'method' => 'post', 
+									],
+								]) ?>
+							<?php endif; ?>
+
+							<?php if (strtolower($pago->estado) !== 'rechazado'): ?>
+								<?= Html::a('<span class="glyphicon glyphicon-remove"></span> Rechazar', ['rechazar-pago', 'pago_id' => $pago->id], [
+									'class' => 'btn btn-sm btn-danger',
+									'data' => [
+										'confirm' => '¿Estás seguro de que deseas RECHAZAR el comprobante de este pago específico y notificar al usuario?',
+										'method' => 'post', 
+									],
+								]) ?>
+							<?php endif; ?>
+
 						<?php endif; ?>
 					</td>
 					<?php endif; ?>
 				</tr>
+				<?php endif; ?>
 			<?php endforeach; ?>
 		</tbody>
 	</table>

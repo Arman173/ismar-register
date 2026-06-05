@@ -42,6 +42,8 @@ class Pago extends \yii\db\ActiveRecord
             // [['comprobante_pago'], 'string', 'max' => 45],
             [['comprobante_pago'], 'file', 'skipOnEmpty' => true, 'extensions' => 'png, jpg, jpeg, pdf', 'maxSize' => 1024 * 1024 * 5], // Límite de 5MB
             [['estado'], 'string', 'max' => 16],
+            [['remplazado'], 'default', 'value' => 0],
+            [['remplazado'], 'boolean']
         ];
     }
 
@@ -58,6 +60,7 @@ class Pago extends \yii\db\ActiveRecord
             'created_at' => 'Created At',
             'comprobante_pago' => 'Comprobante Pago',
             'estado' => 'Estado',
+            'remplazado' => 'Remplazado'
         ];
     }
 

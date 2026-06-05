@@ -40,7 +40,19 @@ $config = [
         'errorHandler' => [
             'errorAction' => 'site/error',
         ],
-       //  para produccion, se recomienda configurar un servidor SMTP y descomentar esta sección
+        // 'mailer' => [
+        //     'class' => 'app\components\GraphMailer',
+        //     'viewPath' => '@app/mail',
+        //     // En desarrollo, pon esto en 'true' para que no envíe nada y solo cree archivos .eml en runtime/mail/
+        //     // En producción (para que cURL se ejecute), cámbialo a 'false'
+        //     'useFileTransport' => false, 
+            
+        //     // Inyección de dependencias desde params
+        //     'tenant_id' => $params['graph_tenant_id'],
+        //     'client_id' => $params['graph_client_id'],
+        //     'client_secret' => $params['graph_client_secret'],
+        // ],
+        // para produccion, se recomienda configurar un servidor SMTP y descomentar esta sección
          'mailer' => (file_exists(__DIR__ . '/smtp.php')) 
              ? require(__DIR__ . '/smtp.php') 
              : [
