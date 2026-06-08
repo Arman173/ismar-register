@@ -6,6 +6,8 @@ use Yii;
 use app\models\RegistrationType;
 use app\models\Pago;
 use app\models\Concei;
+use app\models\RegistroTaller;
+use app\models\RegistroVisita;
 
 /**
  * This is the model class for table "registration".
@@ -198,16 +200,63 @@ class Registration extends \yii\db\ActiveRecord
             ],
             [
                 ['file_payment_receipt'],
-                'file',
-                'skipOnEmpty' => true,
-                'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx, zip',
-                'when' => function ($model) {
-                    $tCount = is_array($model->talleres) ? count($model->talleres) : 0;
-                    $vCount = is_array($model->visitas) ? count($model->visitas) : 0;
-                    return ($tCount + $vCount) > 0;
-                },
+                'required',
                 'on' => 'Update',
+                'when' => function ($model) {
+                    // 1. Tipo 17: Siempre es obligatorio
+                    if ($model->registration_type_id == 17) {
+                        return true;
+                    }
+
+                    // 2. Tipos 1, 12 y 18 con 1 cortesía
+                    if (in_array($model->registration_type_id, [1, 12, 18])) {
+                        
+                        // A. Contar actividades provenientes del POST
+                        $tCountPost = is_array($model->talleres) ? count($model->talleres) : 0;
+                        $vCountPost = is_array($model->visitas) ? count($model->visitas) : 0;
+                        $totalPost = $tCountPost + $vCountPost;
+
+                        // B. Contar actividades directamente en la Base de Datos
+                        $tCountDB = RegistroTaller::find()
+                            ->where(['registration_id' => $model->id])
+                            ->count();
+                            
+                        $vCountDB = RegistroVisita::find()
+                            ->where(['registration_id' => $model->id])
+                            ->count();
+                            
+                        $totalDB = (int)$tCountDB + (int)$vCountDB;
+
+                        // Escenario 1: Ya tenían su cortesía guardada (al menos 1 en DB)
+                        if ($totalDB >= 1) {
+                            // Obligatorio solo si están intentando registrar más actividades de las que ya tenían
+                            return $totalPost > $totalDB; 
+                        }
+
+                        // Escenario 2: No tenían nada en DB (aún tienen su cortesía intacta)
+                        if ($totalDB == 0) {
+                            // Obligatorio solo si eligen más de 1 en este momento
+                            return $totalPost > 1; 
+                        }
+                    }
+
+                    // Cualquier otro tipo de registro no contemplado
+                    return false;
+                },
+                'message' => 'Debe subir su comprobante de pago al exceder la actividad gratuita.'
             ],
+            // [
+            //     ['file_payment_receipt'],
+            //     'file',
+            //     'skipOnEmpty' => true,
+            //     'extensions' => 'pdf, png, jpg, jpeg, bmp, doc, docx, zip',
+            //     'when' => function ($model) {
+            //         $tCount = is_array($model->talleres) ? count($model->talleres) : 0;
+            //         $vCount = is_array($model->visitas) ? count($model->visitas) : 0;
+            //         return ($tCount + $vCount) > 0;
+            //     },
+            //     'on' => 'Update',
+            // ],
             [['file_payment_receipt'], 'file', 'skipOnEmpty' => false, 'extensions' => 'png, jpg, jpeg, pdf', 'on' => 'UploadPaymentReceipt'],
             [['confirmado'], 'integer', 'on' => 'UploadPaymentReceipt'],
             [
@@ -303,6 +352,10 @@ class Registration extends \yii\db\ActiveRecord
             'modalidad_presentacion_2' => Yii::t('app', 'Modalidad de presentación deseada'),
             'revista_seleccionada_2' => Yii::t('app', 'Revista seleccionada'),
    			'confirmado' => Yii::t('app', 'Confirmado'),
+
+            'creation_date' => Yii::t('app', 'Fecha de Registro'),
+            'modification_date' => Yii::t('app', 'Última Modificación'),
+            'invoice_required' => Yii::t('app', 'Requiere Factura')
         ];
     }
 
@@ -337,9 +390,9 @@ class Registration extends \yii\db\ActiveRecord
 
     public function calculateTotalCost()
     {
-  $concei = Concei::find()->one();
+        $concei = Concei::find()->one();
         $costoTaller = $concei->getCostoTaller();
-  $costoVisita = $concei->getCostoVisita();
+        $costoVisita = $concei->getCostoVisita();
         $isEarlyBird = $concei->es_preventa();
 
         // Obtener costo base usando la relación (si está cargada) o buscando el tipo
@@ -524,7 +577,7 @@ class Registration extends \yii\db\ActiveRecord
    case 1: return "RG";
    case 12: return "RE";
    case 17: return "RU";
-   case 18: return "";
+   case 18: return "RC";
   }
   return "XX";
  }

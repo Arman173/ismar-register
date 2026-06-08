@@ -50,9 +50,15 @@ $esRechazo = isset($pago) && $pago->estado === 'rechazado';
 
     <p style="color: #555; font-size: 0.9em;">
         <?php
+
+        date_default_timezone_set('America/Merida');
+
         $dias = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-        $meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-        echo $dias[date('w')] . ", " . date('d') . " de " . $meses[date('n')-1] . " de " . date('Y');
+        $meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+        $fecha = $dias[date('w')] . ", " . date('d') . " de " . $meses[date('n')-1] . " de " . date('Y');
+        $hora = date('H:i');
+        echo $fecha . ", " . $hora;
+
         ?>
     </p>
 

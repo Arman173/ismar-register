@@ -7,7 +7,7 @@ use yii\grid\GridView;
 /* @var $searchModel app\models\RegistrationCodeSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 
-$this->title = 'Registration Codes';
+$this->title = 'Códigos de registro';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="registration-code-index">
@@ -16,8 +16,8 @@ $this->params['breadcrumbs'][] = $this->title;
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
 
     <p>
-        <?= Html::a('Create One', ['create'], ['class' => 'btn btn-success']) ?>
-		<?= Html::a('Generate All', ['generate'], ['class' => 'btn btn-warning', 'data'=>[
+        <?= Html::a('Crear un código', ['create'], ['class' => 'btn btn-success']) ?>
+		<?= Html::a('Eliminar y generar múltples códigos', ['generate'], ['class' => 'btn btn-warning', 'data'=>[
 			'confirm'=>'This operation will empty the table. Are you shure?',
 			'method' => 'post'
 		]]) ?>

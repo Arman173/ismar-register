@@ -18,7 +18,10 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'concepto')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'created_at')->textInput() ?>
+    <?= $form->field($model, 'created_at')->textInput([
+    'type' => 'date',
+    'value' => !empty($model->created_at) ? date('Y-m-d', strtotime($model->created_at)) : ''
+    ]) ?>
 
     <?= $form->field($model, 'comprobante_pago')->textInput(['maxlength' => true]) ?>
 

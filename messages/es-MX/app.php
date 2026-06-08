@@ -34,8 +34,14 @@ return [
     'One Day Registration' => 'Registro por un día',
     'Additional Ticket to Attend the Banquet ' => 'Boleto adicional para el Banquete',
     'Additional Copy of Conference Proceedings' => 'Copia adicional de las memorias',
+    'Invoice Required' => 'Requiere Factura',
     
     // Botones (Yii suele usar estos por defecto, pero por si acaso)
     'Submit' => 'Enviar Registro',
     'Update data' => 'Actualizar Datos',
+
+    'Registrations' => 'Registros',
+    'Registration' => 'Registro',
+    'Create Registration' => 'Crear Registro',
+    'Update Registration' => 'Actualizar Registro',
 ];

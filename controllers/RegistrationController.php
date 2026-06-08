@@ -178,10 +178,17 @@ class RegistrationController extends Controller
             'invoice'            => 'Facturacion'
         ];
 
+        // 3. NUEVO: Definimos qué columnas SÍ queremos exportar (Lista Blanca).
+        // Si una tabla NO se pone en este arreglo, se exportarán todas sus columnas por defecto.
+        $includedColumns = [
+            'registration' => ['id', 'registration_type_id', 'first_name', 'last_name', 'display_name', 'email', 'business_phone', 'organization_name', 'city', 'state', 'country', 'creation_date', 'modification_date'],
+            'pagos'        => ['id', 'registration_id', 'mount', 'concepto', 'estado', 'remplazado'],
+            // 'talleres'     => ['id', 'nombre', 'modalidad', 'cupos', 'reservados']
+        ];
+
         $sheetIndex = 0;
 
         foreach ($tablesToExport as $tableName => $sheetTitle) {
-            // Instanciamos la hoja correctamente usando la clase importada
             $worksheet = new Worksheet($spreadsheet, $sheetTitle);
             $spreadsheet->addSheet($worksheet, $sheetIndex);
 
@@ -189,38 +196,56 @@ class RegistrationController extends Controller
             if (!$schema) {
                 continue; 
             }
-            $columns = $schema->getColumnNames();
+            
+            $allColumns = $schema->getColumnNames();
+            
+            // 4. NUEVO: Lógica de selección de columnas
+            if (isset($includedColumns[$tableName])) {
+                // array_intersect evita que la base de datos tire un error 
+                // si llegas a escribir mal el nombre de una columna en el arreglo de arriba.
+                $columnsToExport = array_intersect($includedColumns[$tableName], $allColumns);
+            } else {
+                // Si la tabla no está especificada, exportamos todas sus columnas
+                $columnsToExport = $allColumns;
+            }
+
+            // Validamos que haya columnas para exportar (por si el arreglo quedó vacío)
+            if (empty($columnsToExport)) {
+                continue;
+            }
 
             // Escribimos los encabezados
             $colLetter = 'A';
-            foreach ($columns as $column) {
+            foreach ($columnsToExport as $column) {
                 $worksheet->setCellValue($colLetter . '1', strtoupper($column));
                 $worksheet->getStyle($colLetter . '1')->getFont()->setBold(true);
                 $colLetter++;
             }
 
-            // Consultamos los datos
-            $data = (new Query())->from($tableName)->all();
+            // 5. NUEVO: Optimización en BD
+            // Al usar select(), la base de datos usa menos memoria RAM.
+            $data = (new Query())
+                ->select($columnsToExport)
+                ->from($tableName)
+                ->all();
 
             // Volcamos los datos
             $rowNum = 2;
             foreach ($data as $row) {
                 $colLetter = 'A';
-                foreach ($columns as $column) {
+                foreach ($columnsToExport as $column) {
                     $worksheet->setCellValue($colLetter . $rowNum, $row[$column]);
                     $colLetter++;
                 }
                 $rowNum++;
             }
-            
-            // ELIMINAMOS la parte del AutoSize para evitar errores por falta de ext-gd
 
             $sheetIndex++;
         }
 
         $spreadsheet->setActiveSheetIndex(0);
 
-        $filename = 'Resumen_ConCEI_Completo_' . date('Ymd_His') . '.xlsx';
+        $filename = 'Resumen_ConCEI_Filtrado_' . date('Ymd_His') . '.xlsx';
         $writer = new Xlsx($spreadsheet);
 
         ob_start();
@@ -695,61 +720,71 @@ class RegistrationController extends Controller
                     // ==========================================
                     
                     // Obtenemos lo que el usuario YA tiene registrado en la BD
-                    $talleresPagados = RegistroTaller::find()->select('taller_id')->where(['registration_id' => $registration->id])->column();
-                    $visitasPagadas  = RegistroVisita::find()->select('visita_id')->where(['registration_id' => $registration->id])->column();
+                    // $talleresPagados = RegistroTaller::find()->select('taller_id')->where(['registration_id' => $registration->id])->column();
+                    // $visitasPagadas  = RegistroVisita::find()->select('visita_id')->where(['registration_id' => $registration->id])->column();
 
-                    // Obtenemos lo que viene del formulario (POST)
-                    $talleresPost = Yii::$app->request->post('talleres_seleccionados', []);
-                    $visitasPost  = Yii::$app->request->post('visitas_seleccionadas', []);
+                    // // Obtenemos lo que viene del formulario (POST)
+                    // $talleresPost = Yii::$app->request->post('talleres_seleccionados', []);
+                    // $visitasPost  = Yii::$app->request->post('visitas_seleccionadas', []);
 
-                    // Comparamos y nos quedamos ÚNICAMENTE con los IDs nuevos.
-                    $nuevosTalleres = array_diff($talleresPost, $talleresPagados);
-                    $nuevasVisitas  = array_diff($visitasPost, $visitasPagadas);
+                    // // Comparamos y nos quedamos ÚNICAMENTE con los IDs nuevos.
+                    // $nuevosTalleres = array_diff($talleresPost, $talleresPagados);
+                    // $nuevasVisitas  = array_diff($visitasPost, $visitasPagadas);
 
-                    // Si realmente hay talleres o visitas nuevas, generamos un NUEVO pago
-                    if (!empty($nuevosTalleres) || !empty($nuevasVisitas)) {
+                    // // Si realmente hay talleres o visitas nuevas, generamos un NUEVO pago
+                    // if (!empty($nuevosTalleres) || !empty($nuevasVisitas)) {
                         
-                        $nuevoPago = new Pago();
-                        $nuevoPago->registration_id = $registration->id;
+                    //     $nuevoPago = new Pago();
+                    //     $nuevoPago->registration_id = $registration->id;
 
-                        //Se comentó esto 11/05/2026
+                    //     //Se comentó esto 11/05/2026
 
-                       /*$nuevoPago->estado = 'No Verificado';
+                    //    /*$nuevoPago->estado = 'No Verificado';
                         
-                        // Si subió un nuevo comprobante para estos nuevos talleres, lo asignamos
-                        if (isset($registration->change_file_payment_receipt[0]) && $registration->change_file_payment_receipt[0] === '1') {
-                            $nuevoPago->comprobante_pago = $registration->file_payment_receipt;
-                        }*/
+                    //     // Si subió un nuevo comprobante para estos nuevos talleres, lo asignamos
+                    //     if (isset($registration->change_file_payment_receipt[0]) && $registration->change_file_payment_receipt[0] === '1') {
+                    //         $nuevoPago->comprobante_pago = $registration->file_payment_receipt;
+                    //     }*/
 
-                        $nuevoPago->estado = 'confirmado'; // Cambiamos a confirmado
+                    //     // NUEVO: se agregó la generación del concepto de pago
+                    //     $nuevoPago->generarConcepto(
+                    //         $registration->getLastNameCode(), $registration->getFirstNameCode(),
+                    //         '',
+                    //         $nuevosTalleres ?? [], $nuevasVisitas ?? []
+                    //     );
+
+                    //     $nuevoPago->estado = 'confirmado'; // Cambiamos a confirmado
                             
-                        // Asignamos el comprobante directamente si el usuario subió uno
-                        if ($registration->file_payment_receipt) {
-                            $nuevoPago->comprobante_pago = $registration->file_payment_receipt;
-                        }
+                    //     // Asignamos el comprobante directamente si el usuario subió uno
+                    //     if ($registration->file_payment_receipt) {
+                    //         $nuevoPago->comprobante_pago = $registration->file_payment_receipt;
+                    //     }
 
-                        // Guardamos el nuevo pago
-                        if (!$nuevoPago->save(false)) {
-                            throw new \Exception('No se pudo generar el nuevo registro de pago para los talleres/visitas adicionales.');
-                        }
+                    //     // Guardamos el nuevo pago
+                    //     if (!$nuevoPago->save(false)) {
+                    //         throw new \Exception('No se pudo generar el nuevo registro de pago para los talleres/visitas adicionales.');
+                    //     }
 
-                        // Reutilizamos tus funciones para insertar en las tablas relacionales
-                        if (!empty($nuevosTalleres)) {
-                            // Nota: Asumo que generarTalleres hace sus propios inserts o arroja excepciones si falla.
-                            $this->generarTalleres($nuevosTalleres, $registration->id, $nuevoPago->id);
-                        }
-                        if (!empty($nuevasVisitas)) {
-                            $this->generarVisitas($nuevasVisitas, $registration->id, $nuevoPago->id);
-                        }
+                    //     // Reutilizamos tus funciones para insertar en las tablas relacionales
+                    //     if (!empty($nuevosTalleres)) {
+                    //         // Nota: Asumo que generarTalleres hace sus propios inserts o arroja excepciones si falla.
+                    //         $this->generarTalleres($nuevosTalleres, $registration->id, $nuevoPago->id);
+                    //     }
+                    //     if (!empty($nuevasVisitas)) {
+                    //         $this->generarVisitas($nuevasVisitas, $registration->id, $nuevoPago->id);
+                    //     }
                         
-                        $registration->ultimo_pago = $nuevoPago->id;
+                    //     $registration->ultimo_pago = $nuevoPago->id;
 
-                        $registration->save(false);
-                        // (Opcional) Si necesitas recalcular el costo o actualizar el monto del nuevo pago, hazlo aquí
-                        // $nuevoPago->mount = ...;
-                        // $nuevoPago->save();
-                    }
+                    //     $registration->save(false);
+                    //     // (Opcional) Si necesitas recalcular el costo o actualizar el monto del nuevo pago, hazlo aquí
+                    //     // $nuevoPago->mount = ...;
+                    //     // $nuevoPago->save();
+                    // }
                     // FIN DEL BLINDAJE
+
+                    // NUEVO: creamos nuestro nuevo pago
+                    $this->generarPago($registration);
 
                     // Si llegamos hasta aquí sin que nada truene, confirmamos los cambios en la BD
                     $transaction->commit();
@@ -758,6 +793,8 @@ class RegistrationController extends Controller
                     return $this->redirect(['view', 'id' => $registration->id]);
 
                 } catch (\Throwable $e) {
+                    // NUEVO: rollback para deshacer los insert que se generán en la actualización (pagos y talleres/visitas)
+                    $transaction->rollBack();
                     Yii::error("Error al actualizar Registration/Invoice: " . $e->getMessage() . "\n" . $e->getTraceAsString(), __METHOD__);
                     Yii::$app->session->setFlash('error', 'An unexpected error occurred while updating your registration. Please try again later or contact support.');
                     return $this->redirect(['update', 'id' => $registration->id, 'token' => $registration->token]);
@@ -957,72 +994,74 @@ class RegistrationController extends Controller
                      // Inicio de lo nuevo para ocultar talleres y visitas ya seleccionados
                     if ($isSaved) {
                         // Obtenemos lo que el usuario YA tiene registrado en la BD
-                        $talleresPagados = RegistroTaller::find()->select('taller_id')->where(['registration_id' => $registration->id])->column();
-                        $visitasPagadas  = RegistroVisita::find()->select('visita_id')->where(['registration_id' => $registration->id])->column();
+                        // $talleresPagados = RegistroTaller::find()->select('taller_id')->where(['registration_id' => $registration->id])->column();
+                        // $visitasPagadas  = RegistroVisita::find()->select('visita_id')->where(['registration_id' => $registration->id])->column();
 
                         // Obtenemos lo que viene del formulario (POST)
-                        $talleresPost = Yii::$app->request->post('talleres_seleccionados', []);
-                        $visitasPost  = Yii::$app->request->post('visitas_seleccionadas', []);
+                        // $talleresPost = Yii::$app->request->post('talleres_seleccionados', []);
+                        // $visitasPost  = Yii::$app->request->post('visitas_seleccionadas', []);
 
                         // Comparamos y nos quedamos ÚNICAMENTE con los IDs nuevos.
                         // array_diff ignora lo que ya existe y extrae solo las adiciones reales.
-                        $nuevosTalleres = array_diff($talleresPost, $talleresPagados);
-                        $nuevasVisitas  = array_diff($visitasPost, $visitasPagadas);
+                        // $nuevosTalleres = array_diff($talleresPost, $talleresPagados);
+                        // $nuevasVisitas  = array_diff($visitasPost, $visitasPagadas);
 
                         // Si realmente hay talleres o visitas nuevas, generamos un NUEVO pago
-                        if (!empty($nuevosTalleres) || !empty($nuevasVisitas)) {
+                        // if (!empty($nuevosTalleres) || !empty($nuevasVisitas)) {
                             
-                            $nuevoPago = new Pago();
-                            $nuevoPago->registration_id = $registration->id;
+                        //     $nuevoPago = new Pago();
+                        //     $nuevoPago->registration_id = $registration->id;
 
-                           /* $nuevoPago->estado = 'No Verificado';
+                        //    /* $nuevoPago->estado = 'No Verificado';
                             
-                            // Si subió un nuevo comprobante para estos nuevos talleres, lo asignamos
-                            if (isset($registration->change_file_payment_receipt[0]) && $registration->change_file_payment_receipt[0] === '1') {
-                                $nuevoPago->comprobante_pago = $registration->file_payment_receipt;
-                            }*/
+                        //     // Si subió un nuevo comprobante para estos nuevos talleres, lo asignamos
+                        //     if (isset($registration->change_file_payment_receipt[0]) && $registration->change_file_payment_receipt[0] === '1') {
+                        //         $nuevoPago->comprobante_pago = $registration->file_payment_receipt;
+                        //     }*/
 
-                            $nuevoPago->estado = 'confirmado'; // Directo a confirmado
+                        //     $nuevoPago->estado = 'confirmado'; // Directo a confirmado
                             
-                            if ($registration->file_payment_receipt) {
-                                $nuevoPago->comprobante_pago = $registration->file_payment_receipt;
-                            }
+                        //     if ($registration->file_payment_receipt) {
+                        //         $nuevoPago->comprobante_pago = $registration->file_payment_receipt;
+                        //     }
                             
 
-                            if ($nuevoPago->save(false)) {
-                                // Reutilizamos tus funciones generarTalleres y generarVisitas
-                                if (!empty($nuevosTalleres)) {
-                                    $talleresGenerados = $this->generarTalleres($nuevosTalleres, $registration->id, $nuevoPago->id);
-                                }
-                                if (!empty($nuevasVisitas)) {
-                                    $visitasGeneradas = $this->generarVisitas($nuevasVisitas, $registration->id, $nuevoPago->id);
-                                }
+                        //     if ($nuevoPago->save(false)) {
+                        //         // Reutilizamos tus funciones generarTalleres y generarVisitas
+                        //         if (!empty($nuevosTalleres)) {
+                        //             $talleresGenerados = $this->generarTalleres($nuevosTalleres, $registration->id, $nuevoPago->id);
+                        //         }
+                        //         if (!empty($nuevasVisitas)) {
+                        //             $visitasGeneradas = $this->generarVisitas($nuevasVisitas, $registration->id, $nuevoPago->id);
+                        //         }
 
-                                // Nuevo
-                                $concei = \app\models\Concei::find()->one();
-                                $costoTaller = $concei->getCostoTaller();
-                                $costoVisita = $concei->getCostoVisita();
+                        //         // Nuevo
+                        //         $concei = \app\models\Concei::find()->one();
+                        //         $costoTaller = $concei->getCostoTaller();
+                        //         $costoVisita = $concei->getCostoVisita();
 
-                                $montoNuevosTalleres = count($nuevosTalleres) * $costoTaller;
-                                $montoNuevasVisitas  = count($nuevasVisitas) * $costoVisita;
+                        //         $montoNuevosTalleres = count($nuevosTalleres) * $costoTaller;
+                        //         $montoNuevasVisitas  = count($nuevasVisitas) * $costoVisita;
 
-                                $nuevoPago->mount = $montoNuevosTalleres + $montoNuevasVisitas;
-                                $nuevoPago->save(false);
-                                // Fin de lo nuevo
+                        //         $nuevoPago->mount = $montoNuevosTalleres + $montoNuevasVisitas;
+                        //         $nuevoPago->save(false);
+                        //         // Fin de lo nuevo
 
-                                // Opcional: Generar el concepto del nuevo pago como lo haces en actionSubmit
-                                $nuevoPago->generarConcepto(
-                                    $registration->getLastNameCode(), $registration->getFirstNameCode(),
-                                    '',
-                                    $nuevosTalleres ?? [], $nuevasVisitas ?? []
-                                );
-                                $nuevoPago->save(false);
+                        //         // Opcional: Generar el concepto del nuevo pago como lo haces en actionSubmit
+                        //         $nuevoPago->generarConcepto(
+                        //             $registration->getLastNameCode(), $registration->getFirstNameCode(),
+                        //             '',
+                        //             $nuevosTalleres ?? [], $nuevasVisitas ?? []
+                        //         );
+                        //         $nuevoPago->save(false);
 
-                                $registration->ultimo_pago = $nuevoPago->id;
-                                $registration->save(false);
-                            }
-                        }
+                        //         $registration->ultimo_pago = $nuevoPago->id;
+                        //         $registration->save(false);
+                        //     }
+                        // }
                     }
+
+                    $this->generarPago($registration);
 
                     // Fin de lo nuevo
                     if($isSaved)
@@ -1303,8 +1342,97 @@ class RegistrationController extends Controller
     }
 
     // NUEVO: función para generar el pago
-    public function generarPago($tipo_registro) {
-        $nuevo_pago = new Pago();
+    public function generarPago($registration) {
+        
+        // 1. Obtenemos lo que el usuario YA tiene registrado en la BD (Historial)
+        $talleresPagados = RegistroTaller::find()->select('taller_id')->where(['registration_id' => $registration->id])->column();
+        $visitasPagadas  = RegistroVisita::find()->select('visita_id')->where(['registration_id' => $registration->id])->column();
+
+        // 2. Obtenemos lo que viene del formulario (POST)
+        $talleresPost = Yii::$app->request->post('talleres_seleccionados', []);
+        $visitasPost  = Yii::$app->request->post('visitas_seleccionadas', []);
+
+        // 3. Comparamos y nos quedamos ÚNICAMENTE con los IDs nuevos.
+        $nuevosTalleres = array_diff($talleresPost, $talleresPagados);
+        $nuevasVisitas  = array_diff($visitasPost, $visitasPagadas);
+
+        // Si NO hay nada nuevo, abortamos la creación del pago y devolvemos false
+        if (empty($nuevosTalleres) && empty($nuevasVisitas)) {
+            return false;
+        }
+
+        // ========================================================
+        // 4. LÓGICA DEL BENEFICIO (1 elemento gratis)
+        // ========================================================
+        $tipoRegistro = (int) $registration->registration_type_id;
+        $tieneBeneficio = in_array($tipoRegistro, [1, 12, 18]); // El 17 queda excluido automáticamente
+        
+        $historialTotal = count($talleresPagados) + count($visitasPagadas);
+        $beneficioDisponible = ($tieneBeneficio && $historialTotal === 0);
+
+        // Cantidades reales que se van a GUARDAR
+        $cantidadGuardarTalleres = count($nuevosTalleres);
+        $cantidadGuardarVisitas  = count($nuevasVisitas);
+
+        // Cantidades que se van a COBRAR
+        $cantidadCobrarTalleres = $cantidadGuardarTalleres;
+        $cantidadCobrarVisitas  = $cantidadGuardarVisitas;
+
+        // Si tiene el beneficio intacto, descontamos 1 elemento de la cuenta a cobrar
+        if ($beneficioDisponible) {
+            if ($cantidadCobrarTalleres > 0) {
+                $cantidadCobrarTalleres--; // Descontamos 1 taller
+            } else if ($cantidadCobrarVisitas > 0) {
+                $cantidadCobrarVisitas--; // Si no eligió talleres, descontamos 1 visita
+            }
+        }
+        // ========================================================
+
+        // 5. Calculamos el monto final con las cantidades ya descontadas
+        $concei = \app\models\Concei::find()->one();
+        $costoTaller = $concei->getCostoTaller();
+        $costoVisita = $concei->getCostoVisita();
+
+        $montoTotal = ($cantidadCobrarTalleres * $costoTaller) + ($cantidadCobrarVisitas * $costoVisita);
+
+        // 6. CREAMOS EL NUEVO PAGO
+        $nuevoPago = new Pago();
+        $nuevoPago->registration_id = $registration->id;
+        $nuevoPago->estado = 'confirmado'; 
+        $nuevoPago->mount = $montoTotal; // Si solo eligió su gratis, el monto será 0.00 y es correcto.
+
+        // Si subió un comprobante, lo asignamos
+        if ($registration->file_payment_receipt) {
+            $nuevoPago->comprobante_pago = $registration->file_payment_receipt;
+        }
+
+        if ($nuevoPago->save(false)) {
+            // 7. Generamos los registros en BD reutilizando tus funciones
+            if (!empty($nuevosTalleres)) {
+                $this->generarTalleres($nuevosTalleres, $registration->id, $nuevoPago->id);
+            }
+            if (!empty($nuevasVisitas)) {
+                $this->generarVisitas($nuevasVisitas, $registration->id, $nuevoPago->id);
+            }
+
+            // 8. Generamos el concepto para el banco
+            $nuevoPago->generarConcepto(
+                $registration->getLastNameCode(), 
+                $registration->getFirstNameCode(),
+                '', 
+                $nuevosTalleres ?? [], 
+                $nuevasVisitas ?? []
+            );
+            $nuevoPago->save(false);
+
+            // 9. Actualizamos el registro con su último pago
+            $registration->ultimo_pago = $nuevoPago->id;
+            $registration->save(false);
+
+            return true; // Éxito
+        }
+
+        return false;
     }
 
     // NUEVO: funcion para calcular el monto del pago

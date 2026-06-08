@@ -2,11 +2,13 @@
 
 namespace app\controllers;
 
+use Yii;
 use app\models\Visita;
 use app\models\VisitaSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use app\models\Registration;
 
 /**
  * VisitasController implements the CRUD actions for Visita model.
@@ -25,6 +27,16 @@ class VisitasController extends Controller
                     'class' => VerbFilter::className(),
                     'actions' => [
                         'delete' => ['POST'],
+                    ],
+                ],
+                'access' => [
+                    'class' => 'yii\filters\AccessControl',
+                    'rules' => [
+                        [
+                            'allow' => true,
+                            'actions' => ['index','view','create','update','delete'],
+                            'roles' => ['@'],
+                        ],
                     ],
                 ],
             ]
@@ -130,5 +142,52 @@ class VisitasController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    public function actionExport($id)
+    {
+        $visita = $this->findModel($id);
+
+        // Hacemos un INNER JOIN para traer solo las personas registradas a ESTA visita
+        $registrations = Registration::find()
+            ->innerJoin('registros_visitas', 'registros_visitas.registration_id = registration.id')
+            ->where(['registros_visitas.visita_id' => $id])
+            ->all();
+
+        $safeName = preg_replace('/[^A-Za-z0-9\-]/', '_', $visita->nombre);
+        $filename = 'Asistentes_Visita_' . $safeName . '.csv';
+
+        $output = fopen('php://temp', 'w');
+        
+        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+
+        fputcsv($output, [
+            'ID', 'Folio', 'Nombre', 'Apellido', 'Organización/Compañía',
+            'Email', 'Teléfono', 'Ciudad', 'País', 'Estado de Pagos'
+        ]);
+
+        foreach ($registrations as $model) {
+            fputcsv($output, [
+                $model->id,
+                $model->getFolio(),             
+                $model->first_name,
+                $model->last_name,
+                $model->organization_name,
+                $model->email,
+                $model->business_phone,
+                $model->city,
+                $model->country,
+                $model->estadoPagos()
+            ]);
+        }
+
+        rewind($output);
+        $csvContent = stream_get_contents($output);
+        fclose($output);
+
+        return Yii::$app->response->sendContentAsFile($csvContent, $filename, [
+            'mimeType' => 'text/csv',
+            'inline' => false
+        ]);
     }
 }

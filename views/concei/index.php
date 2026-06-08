@@ -34,6 +34,7 @@ $this->params['breadcrumbs'][] = $this->title;
             'fin_preventa',
             [
                 'class' => ActionColumn::className(),
+                'template' => '{view} {update}',
                 'urlCreator' => function ($action, Concei $model, $key, $index, $column) {
                     return Url::toRoute([$action, 'id' => $model->id]);
                  }

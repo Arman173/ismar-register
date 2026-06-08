@@ -128,7 +128,9 @@ function calculateConceptoPago() {
         } else if (typeId === '12') {
             typeCode = 'RE';
         } else if (typeId === '17') {
-            typeCode = 'RU'
+            typeCode = 'RU';
+        } else if (typeId === '18') {
+            typeCode = 'RC';
         } else {
             typeCode = '';
         }
@@ -154,6 +156,7 @@ function actualizarConceptoPago() {
         tipoStr = 'RU'; // UADY
         if (tipoId == '1') tipoStr = 'RG'; //General
         else if (tipoId == '12') tipoStr = 'RE'; //Estudiante
+        else if (tipoId == '18') tipoStr = 'RC'; //C. de registro
     }
 
     let concepto = apellido + nombre + tipoStr;
@@ -231,7 +234,10 @@ function calculateTotal() {
                 paidExtras = totalExtrasCount; 
             }
         } else {
-            paidExtras = totalExtrasCount;
+            const registrationType = $("[name='Registration[registration_type_id]']").val();
+            const talleres_y_visitas_agregados = window.talleresPagados.length + window.visitasPagadas.length;
+            const gratis = (talleres_y_visitas_agregados >= 1 || registrationType == "17") ? 0:1;
+            paidExtras = totalExtrasCount - gratis;
         }
     }
     
@@ -365,7 +371,12 @@ function toggleFilePaymentReceipt() {
         }
     } else {
         // CORRECCIÓN: Si agregó extras O si seleccionó Transferencia bancaria (2)
-        if (totalExtrasCount > 0 || paymentType == "2") {
+        const registrationType = $("[name='Registration[registration_type_id]']").val();
+        const talleres_y_visitas_agregados = window.talleresPagados.length + window.visitasPagadas.length;
+        const gratis = (talleres_y_visitas_agregados >= 1 || registrationType == "17") ? 0:1;
+        console.log(gratis, totalExtrasCount > gratis);
+        if (totalExtrasCount > gratis) {
+            console.log("Requiere pago!");
             requierePago = true;
         }
     }
@@ -647,6 +658,8 @@ function toggleInvoice()
 
 window.addEventListener('load', function() {
     console.log('DOM cargado...');
+    console.log(window.talleresPagados.length, window.visitasPagadas.length);
+    
 
     // Cargamos los datos de talleres y visitas inyectados por PHP en
     // variables globales del window.
@@ -664,6 +677,7 @@ window.addEventListener('load', function() {
     const firstName = document.querySelector('#registration-first_name');
     const lastName = document.querySelector('#registration-last_name');
 
+
     firstName.addEventListener('input', (e) => {
         actualizarConceptoPago();
     });
@@ -671,6 +685,39 @@ window.addEventListener('load', function() {
     lastName.addEventListener('input', (e) => {
         actualizarConceptoPago();
     });
+
+    // Validación de la razón social
+    const razonSocial = document.querySelector('#invoice-business_name');
+    if (razonSocial) {
+        razonSocial.addEventListener('input', function(e) {
+            const regex = /uady|universidad aut[oó]noma de yucat[aá]n/i;
+            
+            const contenedor = e.target.closest('.form-group');
+            const mensajeError = contenedor.querySelector('.help-block');
+            
+            if (regex.test(e.target.value)) {
+                // Borramos inmediatamente la palabra
+                e.target.value = ""; 
+                
+                // Ponemos el campo en color rojo
+                contenedor.classList.add('has-error');
+                
+                // Escribimos el mensaje de error
+                if (mensajeError) {
+                    mensajeError.innerHTML = "Razón Social no válida.";
+                }
+                
+                // Se quita el mensaje rojo después de 5 segundos
+                // para que el usuario pueda intentar escribir algo válido
+                setTimeout(() => {
+                    contenedor.classList.remove('has-error');
+                    if (mensajeError) {
+                        mensajeError.innerHTML = "";
+                    }
+                }, 5000);
+            }
+        });
+    }
 
     if (!talleres || !visitas) {
         console.error("No se encontraron los datos de talleres o visitas. Asegúrate de que estén definidos en el servidor.");
@@ -801,7 +848,10 @@ window.validarAntesDeEnviar = function(btn, event) {
         }
     } else {
         // En update: Solo es obligatorio si agregó elementos nuevos y eligió Transferencia
-        if (totalExtrasCount > 0 && paymentType == "2") {
+        const registrationType = $("[name='Registration[registration_type_id]']").val();
+        const talleres_y_visitas_agregados = window.talleresPagados.length + window.visitasPagadas.length;
+        const gratis = (talleres_y_visitas_agregados >= 1 || registrationType == "17") ? 0:1;
+        if (totalExtrasCount > gratis) {
             requiereComprobante = true;
         }
     }

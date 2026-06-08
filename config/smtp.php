@@ -1,15 +1,21 @@
 <?php
 // Archivo: config/smtp.php
 
+//IMPORTANTE
+//Cambia los datos en el ENV, a mí no me aparece el archivo
+
 return [
     'class' => 'yii\swiftmailer\Mailer',
     'useFileTransport' => false,
     'transport' => [
         'class' => 'Swift_SmtpTransport',
         'host' => 'smtp.gmail.com',
-        // AQUI HACEMOS EL CAMBIO:
-        'username' => $_ENV['SMTP_USERNAME'], 
-        'password' => $_ENV['SMTP_PASSWORD'],
+        //Descomentar esto
+        //'username' => $_ENV['SMTP_USERNAME'], 
+        //'password' => $_ENV['SMTP_PASSWORD'],
+        //Comentar o eliminar esto
+        'username' => 'pruebasconcei3@gmail.com', 
+        'password' => 'jkutthxdievaxeez',
         'port' => '587',
         'encryption' => 'tls',
         'streamOptions' => [ 

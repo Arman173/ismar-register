@@ -44,10 +44,10 @@ class RegistroTaller extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'registration_id' => 'Registration ID',
-            'taller_id' => 'Taller ID',
-            'created_at' => 'Created At',
-            'pago_id' => 'Pago ID',
+            'registration_id' => 'ID del registro',
+            'taller_id' => 'ID del Taller',
+            'created_at' => 'Fecha de registro',
+            'pago_id' => 'ID del pago',
         ];
     }
 

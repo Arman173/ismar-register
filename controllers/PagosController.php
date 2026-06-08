@@ -27,6 +27,16 @@ class PagosController extends Controller
                         'delete' => ['POST'],
                     ],
                 ],
+                'access' => [
+                    'class' => 'yii\filters\AccessControl',
+                    'rules' => [
+                        [
+                            'allow' => true,
+                            'actions' => ['index','view','create','update','delete'],
+                            'roles' => ['@'],
+                        ],
+                    ],
+                ],
             ]
         );
     }

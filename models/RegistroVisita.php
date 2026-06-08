@@ -44,10 +44,10 @@ class RegistroVisita extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'registration_id' => 'Registration ID',
-            'visita_id' => 'Visita ID',
-            'created_at' => 'Created At',
-            'pago_id' => 'Pago ID',
+            'registration_id' => 'ID del registro',
+            'visita_id' => 'ID de la visita',
+            'created_at' => 'Fecha de registro',
+            'pago_id' => 'ID del pago',
         ];
     }
 

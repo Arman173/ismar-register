@@ -9,6 +9,7 @@ use yii\grid\GridView;
 
 $this->title = Yii::t('app', 'Registrations');
 $this->params['breadcrumbs'][] = $this->title;
+
 ?>
 <div class="registration-index">
 
@@ -17,7 +18,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <p>
         <?= Html::a(Yii::t('app', 'Create Registration'), ['create'], ['class' => 'btn btn-success']) ?>
-        <?= Html::a('Exportar a CSV', array_merge(['export-resume'], Yii::$app->request->queryParams), [
+        <?= Html::a('Exportar', array_merge(['export-resume'], Yii::$app->request->queryParams), [
         'class' => 'btn btn-info', 
         'data-pjax' => 0, 
         //'target' => '_blank'
@@ -33,7 +34,7 @@ $this->params['breadcrumbs'][] = $this->title;
             'id',
 			[
 				'attribute' => 'registration_type_name',
-				'label' => 'Registration Type',
+				'label' => 'Tipo de registro',
 				'value' => function ($model, $key, $index, $column){
 					return $model->registrationType->name;
 				}
@@ -61,10 +62,10 @@ $this->params['breadcrumbs'][] = $this->title;
 			// 'diet',
 			'creation_date',
 			// 'modification_date',
-			'payment',
+			//'payment',
 			[
 				'attribute' => 'invoice_required',
-				'label' => 'Invoice Required',
+				'label' => 'Requiere Factura',
 				'value' => function ($model, $key, $index, $column){
 					return ($model->invoice_required)?'true':'false';
 				},

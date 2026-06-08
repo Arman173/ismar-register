@@ -2,11 +2,13 @@
 
 namespace app\controllers;
 
+use Yii;
 use app\models\Taller;
 use app\models\TallerSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use app\models\Registration;
 
 /**
  * TalleresController implements the CRUD actions for Taller model.
@@ -25,6 +27,16 @@ class TalleresController extends Controller
                     'class' => VerbFilter::className(),
                     'actions' => [
                         'delete' => ['POST'],
+                    ],
+                ],
+                'access' => [
+                    'class' => 'yii\filters\AccessControl',
+                    'rules' => [
+                        [
+                            'allow' => true,
+                            'actions' => ['index','view','create','update','delete'],
+                            'roles' => ['@'],
+                        ],
                     ],
                 ],
             ]
@@ -130,5 +142,54 @@ class TalleresController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    public function actionExport($id)
+    {
+        $taller = $this->findModel($id);
+
+        // Hacemos un INNER JOIN para traer solo las personas registradas a ESTE taller
+        $registrations = Registration::find()
+            ->innerJoin('registros_talleres', 'registros_talleres.registration_id = registration.id')
+            ->where(['registros_talleres.taller_id' => $id])
+            ->all();
+
+        // Limpiamos el nombre para que el archivo no truene si el nombre tiene tildes o caracteres raros
+        $safeName = preg_replace('/[^A-Za-z0-9\-]/', '_', $taller->nombre);
+        $filename = 'Asistentes_Taller_' . $safeName . '.csv';
+
+        $output = fopen('php://temp', 'w');
+        
+        // Escribimos el BOM para UTF-8 (Excel lee los acentos correctamente con esto)
+        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+
+        fputcsv($output, [
+            'ID', 'Folio', 'Nombre', 'Apellido', 'Organización/Compañía',
+            'Email', 'Teléfono', 'Ciudad', 'País', 'Estado de Pagos'
+        ]);
+
+        foreach ($registrations as $model) {
+            fputcsv($output, [
+                $model->id,
+                $model->getFolio(),             
+                $model->first_name,
+                $model->last_name,
+                $model->organization_name,
+                $model->email,
+                $model->business_phone,
+                $model->city,
+                $model->country,
+                $model->estadoPagos(),
+            ]);
+        }
+
+        rewind($output);
+        $csvContent = stream_get_contents($output);
+        fclose($output);
+
+        return Yii::$app->response->sendContentAsFile($csvContent, $filename, [
+            'mimeType' => 'text/csv',
+            'inline' => false
+        ]);
     }
 }

@@ -54,11 +54,11 @@ class Pago extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'registration_id' => 'Registration ID',
-            'mount' => 'Mount',
+            'registration_id' => 'ID del registro',
+            'mount' => 'Monto',
             'concepto' => 'Concepto',
-            'created_at' => 'Created At',
-            'comprobante_pago' => 'Comprobante Pago',
+            'created_at' => 'Fecha de registro',
+            'comprobante_pago' => 'Comprobante de pago',
             'estado' => 'Estado',
             'remplazado' => 'Remplazado'
         ];

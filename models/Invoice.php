@@ -52,7 +52,7 @@ class Invoice extends \yii\db\ActiveRecord
             'business_name' => Yii::t('app', 'Razón Social'),
             'rfc' => Yii::t('app', 'RFC'),
             'address' => Yii::t('app', 'Dirección'),
-            // 'zip_code' => Yii::t('app', 'Código Postal'),
+            'zip_code' => Yii::t('app', 'Código Postal'),
             'city' => Yii::t('app', 'Ciudad'),
             'state' => Yii::t('app', 'Estado'),
             'email' => Yii::t('app', 'Correo'),

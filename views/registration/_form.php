@@ -93,40 +93,15 @@ $this->registerJsFile('@web/js/registrationForm.js');
 
     <?= $form->field($registration, 'state')->textInput(['maxlength' => true]) ?>
 
-<?php
-    $paises = [
-        'México' => 'México',
-        'Argentina' => 'Argentina',
-        'Bolivia' => 'Bolivia',
-        'Brasil' => 'Brasil',
-        'Canadá' => 'Canadá',
-        'Chile' => 'Chile',
-        'Colombia' => 'Colombia',
-        'Costa Rica' => 'Costa Rica',
-        'Cuba' => 'Cuba',
-        'Ecuador' => 'Ecuador',
-        'El Salvador' => 'El Salvador',
-        'España' => 'España',
-        'Estados Unidos' => 'Estados Unidos',
-        'Guatemala' => 'Guatemala',
-        'Honduras' => 'Honduras',
-        'Nicaragua' => 'Nicaragua',
-        'Panamá' => 'Panamá',
-        'Paraguay' => 'Paraguay',
-        'Perú' => 'Perú',
-        'Puerto Rico' => 'Puerto Rico',
-        'República Dominicana' => 'República Dominicana',
-        'Uruguay' => 'Uruguay',
-        'Venezuela' => 'Venezuela',
-        // Puedes agregar más países del resto del mundo si tu evento es internacional
-        'Alemania' => 'Alemania',
-        'Francia' => 'Francia',
-        'Reino Unido' => 'Reino Unido',
-        'Italia' => 'Italia',
-        'Japón' => 'Japón',
-        'China' => 'China',
-        'Otro' => 'Otro',
-    ];
+    <?php
+    // Buscamos el archivo PHP con la lista en español ('es') dentro de la librería
+    $rutaLibreria = Yii::getAlias('@vendor/umpirsky/country-list/data/es/country.php');
+    
+    // Cargamos el arreglo (esto nos da algo como ['MX' => 'México', 'CO' => 'Colombia'])
+    $paisesBrutos = require($rutaLibreria);
+
+    //Formateamos el arreglo para que guarde el nombre y no las siglas ('México' => 'México')
+    $paises = array_combine(array_values($paisesBrutos), array_values($paisesBrutos));
 ?>
 
     <?= $form->field($registration, 'country')->dropDownList($paises, ['prompt' => 'Seleccione un país...']) ?>
@@ -285,10 +260,10 @@ $this->registerJsFile('@web/js/registrationForm.js');
         </div>
         <div class="panel-body">
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-4">
                    <?= $form->field($registration, 'type1')->dropDownList($tiposContribucion, ['prompt' => 'Seleccione el tipo...'])->label('Tipo de contribución') ?>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-8">
                     <?= $form->field($registration, 'title1')->textInput(['maxlength' => true])->label('Título de la contribución') ?>
                 </div>
             </div>
@@ -325,10 +300,10 @@ $this->registerJsFile('@web/js/registrationForm.js');
         </div>
         <div class="panel-body">
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <?= $form->field($registration, 'type2')->dropDownList($tiposContribucion, ['prompt' => 'Seleccione el tipo...'])->label('Tipo de contribución') ?>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-8">
                     <?= $form->field($registration, 'title2')->textInput(['maxlength' => true])->label('Título de la contribución') ?>
                 </div>
             </div>
@@ -421,9 +396,14 @@ $this->registerJsFile('@web/js/registrationForm.js');
     $jsonTalleres = Json::encode($talleresJs);
     $jsonVisitas = Json::encode($visitasJs);
 
+    $jsonTalleresPagados = Json::encode($talleresPagadosIds);
+    $jsonVisitasPagadas = Json::encode($visitasPagadasIds);
+
     $this->registerJs("
         window.datosTalleres = {$jsonTalleres};
         window.datosVisitas = {$jsonVisitas};
+        window.talleresPagados = {$jsonTalleresPagados};
+        window.visitasPagadas = {$jsonVisitasPagadas};
     ", \yii\web\View::POS_HEAD); // POS_HEAD asegura que cargue antes que nuestro JS externo
     ?>
 	

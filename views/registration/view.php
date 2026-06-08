@@ -178,12 +178,6 @@ use app\models\RegistroVisita;
                     return implode(', ', $nombres);
                 },
             ],
-
-			[
-				'label' => 'Recibo de pago',
-				'value' => Html::a($model->payment_receipt, ['registration/view-payment-receipt', 'id'=>$model->id, 'token'=>$model->token]),
-				'format' => 'html',
-			],
 			[
 				'attribute' => 'creation_date',
 				'label' => 'Fecha de Creación'
@@ -254,7 +248,7 @@ use app\models\RegistroVisita;
 						<?php endif; ?>
 					</td>
 
-					<?php if ($pago->estado === 'rechazado' && !$pago->remplazado): ?>
+					<?php if ($pago->estado === 'rechazado' && !$pago->remplazado && Yii::$app->user->isGuest): ?>
 					<td>
 						<?= Html::a(Yii::t('app', 'Subir Comprobante'), ['upload-payment-receipt', 'id' => $model->id, 'pago_id' => $pago->id, 'token' => $model->token ], ['class' => 'btn btn-primary']) ?>
 					</td>

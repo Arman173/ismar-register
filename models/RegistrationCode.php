@@ -44,8 +44,8 @@ class RegistrationCode extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'code' => 'Code',
-            'registration_id' => 'Registration ID',
+            'code' => 'Código',
+            'registration_id' => 'ID de registro',
         ];
     }
 	

@@ -10,7 +10,7 @@ use yii\grid\GridView;
 /** @var app\models\RegistroTallerSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Registro Tallers';
+$this->title = 'Registro Talleres';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="registro-taller-index">
@@ -18,7 +18,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <h1><?= Html::encode($this->title) ?></h1>
 
     <p>
-        <?= Html::a('Create Registro Taller', ['create'], ['class' => 'btn btn-success']) ?>
+        <?= Html::a('Crear Registro Taller', ['create'], ['class' => 'btn btn-success']) ?>
     </p>
 
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>

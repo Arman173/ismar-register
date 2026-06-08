@@ -78,8 +78,18 @@ $estadoPago = $model->estadoPagos();
                 
                 $costoGafete = $esPreventa ? $model->registrationType->cost_early_bird : $model->registrationType->cost_late;
 
-                $ultimo_pago_id = $model->ultimo_pago;
-                $pago = Pago::find()->where(['id' => $ultimo_pago_id])->one();
+                //$ultimo_pago_id = $model->ultimo_pago;
+                //$pago = Pago::find()->where(['id' => $ultimo_pago_id])->one();
+
+                // Buscamos directamente en la base de datos el último pago registrado para este usuario
+                $pago = Pago::find()
+                    ->where(['registration_id' => $model->id])
+                    ->andWhere(['!=', 'estado', 'rechazado'])
+                    ->orderBy(['id' => SORT_DESC])
+                    ->one();
+
+                // Asignamos el ID correcto obtenido directamente de la base de datos para los bucles de los talleres
+                $ultimo_pago_id = $pago ? $pago->id : null;
 
                 // --- NUEVA LÓGICA PARA ITEMS COBRADOS ---
                 //Buscamos los IDs de los pagos ANTERIORES de este usuario

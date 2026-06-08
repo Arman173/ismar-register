@@ -6,7 +6,7 @@ use yii\helpers\Html;
 /* @var $this yii\web\View */
 /* @var $model app\models\RegistrationCode */
 
-$this->title = 'Create Registration Code';
+$this->title = 'Crear código de registro';
 $this->params['breadcrumbs'][] = ['label' => 'Registration Codes', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
