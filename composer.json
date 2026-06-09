@@ -27,6 +27,9 @@
         "process-timeout": 1800,
         "allow-plugins": {
             "yiisoft/yii2-composer": true
+        },
+        "audit": {
+            "block-insecure": false
         }
     },
     "scripts": {

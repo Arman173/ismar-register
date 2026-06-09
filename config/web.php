@@ -28,7 +28,7 @@ $config = [
 		],
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
-            'cookieValidationKey' => '1234567890',
+            'cookieValidationKey' => $_ENV['COOKIE_VALIDATION_KEY'] ?? '',
         ],
         'cache' => [
             'class' => 'yii\caching\FileCache',
@@ -43,8 +43,8 @@ $config = [
         // 'mailer' => [
         //     'class' => 'app\components\GraphMailer',
         //     'viewPath' => '@app/mail',
-        //     // En desarrollo, pon esto en 'true' para que no envíe nada y solo cree archivos .eml en runtime/mail/
-        //     // En producción (para que cURL se ejecute), cámbialo a 'false'
+        //     // Para desarrollo, poner esto en 'true' para que no envíe nada y solo cree archivos .eml en runtime/mail/
+        //     // Para producción (para que cURL se ejecute), cámbiar a 'false'
         //     'useFileTransport' => false, 
             
         //     // Inyección de dependencias desde params

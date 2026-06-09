@@ -11,11 +11,8 @@ return [
         'class' => 'Swift_SmtpTransport',
         'host' => 'smtp.gmail.com',
         //Descomentar esto
-        //'username' => $_ENV['SMTP_USERNAME'], 
-        //'password' => $_ENV['SMTP_PASSWORD'],
-        //Comentar o eliminar esto
-        'username' => 'pruebasconcei3@gmail.com', 
-        'password' => 'jkutthxdievaxeez',
+        'username' => $_ENV['SMTP_USERNAME'], 
+        'password' => $_ENV['SMTP_PASSWORD'],
         'port' => '587',
         'encryption' => 'tls',
         'streamOptions' => [ 
