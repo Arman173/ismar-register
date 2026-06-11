@@ -4,7 +4,7 @@ return [
     'ID' => 'ID',
     'Registration Number' => 'Número de Registro',
     'Registration Fee' => 'Cuota de Registro',
-    'Organization / Company' => 'Organización / Empresa',
+    'Organization / Company' => 'Universidad / Empresa',
     'Prefix' => 'Prefijo (Sr./Sra.)',
     'First Name' => 'Nombre(s)',
     'Last name / Family name' => 'Apellidos',

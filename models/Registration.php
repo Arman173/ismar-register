@@ -83,7 +83,7 @@ class Registration extends \yii\db\ActiveRecord
     {
         return [
             // 1. ELIMINADO 'zip' de la lista de required
-            [['registration_type_id', 'organization_name', 'first_name', 'last_name', 'email', 'invoice_required', 'city', 'country'], 'required'],
+            [['registration_type_id', 'organization_name', 'first_name', 'last_name', 'email', 'invoice_required', 'city', 'state', 'country'], 'required'],
             
             [['registration_type_id', 'banquet_ticket', 'proceedings_copies'], 'integer'],
             

@@ -40,6 +40,7 @@ $config = [
         'errorHandler' => [
             'errorAction' => 'site/error',
         ],
+        /*------ MAIL CON MICROSOFT GRAPH API ------*/
         // 'mailer' => [
         //     'class' => 'app\components\GraphMailer',
         //     'viewPath' => '@app/mail',
@@ -52,6 +53,8 @@ $config = [
         //     'client_id' => $params['graph_client_id'],
         //     'client_secret' => $params['graph_client_secret'],
         // ],
+
+        /*------ MAIL CON SMTP ------*/
         // para produccion, se recomienda configurar un servidor SMTP y descomentar esta sección
          'mailer' => (file_exists(__DIR__ . '/smtp.php')) 
              ? require(__DIR__ . '/smtp.php') 
@@ -59,6 +62,8 @@ $config = [
                 'class' => 'yii\swiftmailer\Mailer',
                 'useFileTransport' => true,
          ],
+         
+        /*------ MAIL PARA DESARROLLO - SE GUARDA LOCALMENTE ------*/
         // para desarrollo, los guarda como archivos .eml en la carpeta "runtime/mail/"
         //'mailer' => [
         //    'class' => 'yii\swiftmailer\Mailer',

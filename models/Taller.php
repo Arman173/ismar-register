@@ -58,7 +58,7 @@ class Taller extends \yii\db\ActiveRecord
             'horario' => 'Horario',
             'modalidad' => 'Modalidad',
             'tallerista' => 'Tallerista',
-            'cupos' => 'Cupos',
+            'cupos' => 'Cupos sin reservados',
             'reservados' => 'Reservados',
         ];
     }

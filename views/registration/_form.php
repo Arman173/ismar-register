@@ -133,6 +133,10 @@ $this->registerJsFile('@web/js/registrationForm.js');
 		<br> <b> <?= Html::encode('Estudiante y Profesor UADY:')?> </b> <?= Html::encode('Acceso a todas las conferencias. No incluye talleres ni visitas industriales.')?>
     </p>
 
+    <div style="margin-bottom: 15px; margin-left: 0.5cm; color: #31708f; font-size: 1.1em;">
+        <strong>Nota importante:</strong> Todos los precios mostrados están en <strong>Pesos Mexicanos (MXN)</strong>.
+    </div>
+
     <?php if($registration->scenario == 'Update'): ?>
 	<p class="alert alert-warning"><em>Nota: No puede actualizar su tipo de registro, si tiene algún conflicto con esto por favor contáctenos</em></p>
 	<?php endif; ?>

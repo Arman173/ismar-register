@@ -24,7 +24,7 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'cupos')->textInput() ?>
 
-    <?= $form->field($model, 'reservados')->textInput() ?>
+    <?= $form->field($model, 'reservados')->textInput()->hint('El valor en "cupos" ya es el total. Los "reservados" se descuentan de esa cantidad') ?>
 
     <div class="form-group">
         <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
