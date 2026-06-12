@@ -41,7 +41,7 @@ class Taller extends \yii\db\ActiveRecord
             [['nombre', 'tallerista'], 'string', 'max' => 150],
             [['descripcion'], 'string', 'max' => 1024],
             [['fecha', 'horario'], 'string', 'max' => 255],
-            [['modalidad'], 'string', 'max' => 64],
+            [['modalidad'], 'string', 'max' => 150],
         ];
     }
 
